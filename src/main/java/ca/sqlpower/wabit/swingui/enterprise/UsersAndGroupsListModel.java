@@ -32,16 +32,16 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.User;
 
-public class UsersAndGroupsListModel implements ListModel, WabitListener {
+public class UsersAndGroupsListModel implements ListModel, SPListener {
 
 	private final List<WabitObject> items;
 	private final WabitWorkspace workspace;
@@ -53,12 +53,12 @@ public class UsersAndGroupsListModel implements ListModel, WabitListener {
 		items = new ArrayList<WabitObject>();
 		this.workspace = workspace;
 		updateList();
-		this.workspace.addWabitListener(this);
+		this.workspace.addSPListener(this);
 		for (Group group : this.workspace.getGroups()) {
-			group.addWabitListener(this);
+			group.addSPListener(this);
 		}
 		for (User user : this.workspace.getUsers()) {
-			user.addWabitListener(this);
+			user.addSPListener(this);
 		}
 	}
 	
@@ -126,10 +126,10 @@ public class UsersAndGroupsListModel implements ListModel, WabitListener {
 		// no-op
 	}
 
-	public void wabitChildAdded(WabitChildEvent e) {
+	public void childAdded(SPChildEvent e) {
 		if (e.getChild() instanceof Group ||
 				e.getChild() instanceof Group) {
-			e.getChild().addWabitListener(this);
+			e.getChild().addSPListener(this);
 			updateList();
 			fireChange();
 		} else if ((e.getSource() instanceof Group ||
@@ -140,10 +140,10 @@ public class UsersAndGroupsListModel implements ListModel, WabitListener {
 		}
 	}
 
-	public void wabitChildRemoved(WabitChildEvent e) {
+	public void childRemoved(SPChildEvent e) {
 		if (e.getChild() instanceof Group ||
 				e.getChild() instanceof Group) {
-			e.getChild().removeWabitListener(this);
+			e.getChild().removeSPListener(this);
 			updateList();
 			fireChange();
 		} else if ((e.getSource() instanceof Group ||

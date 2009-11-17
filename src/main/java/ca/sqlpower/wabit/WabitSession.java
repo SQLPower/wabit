@@ -70,14 +70,6 @@ public interface WabitSession extends SPSession{
      */
     DataSourceCollection<SPDataSource> getDataSources();
 
-	/**
-	 * Returns true if the current thread is the thread defined as the
-	 * foreground thread.
-	 * 
-	 * @see #runInForeground(Runnable)
-	 */
-    boolean isForegroundThread();
-    
     /**
      * Returns true if the current session is in fact a remote session
      * with the wabit enterprise server.

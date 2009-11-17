@@ -25,6 +25,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -96,16 +97,20 @@ public class Grant extends AbstractWabitObject {
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
 
     public boolean allowsChildren() {
         return false;
     }
-
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
-        return 0;
+    
+    public int childPositionOffset(Class<? extends SPObject> childType) {
+    	return 0;
+    }
+    
+    public List<Class<? extends SPObject>> allowedChildTypes() {
+    	return Collections.emptyList();
     }
 
     public List<? extends WabitObject> getChildren() {
@@ -116,7 +121,7 @@ public class Grant extends AbstractWabitObject {
         return Collections.emptyList();
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         // no-op
     }
 

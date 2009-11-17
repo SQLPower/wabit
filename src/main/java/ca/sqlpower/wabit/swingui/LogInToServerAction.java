@@ -28,7 +28,7 @@ import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 
 /**
  * An action that, when invoked, opens all visible sessions on a specific target server.
@@ -48,7 +48,7 @@ public class LogInToServerAction extends AbstractAction {
 
 	public void actionPerformed(ActionEvent e) {
 		try {
-			WabitServerSession.openServerSessions(context, serviceInfo);
+			WabitClientSession.openServerSessions(context, serviceInfo);
 		} catch (Exception ex) {
 			SPSUtils.showExceptionDialogNoReport(dialogOwner,
 					"Log in to server "

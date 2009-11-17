@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.query;
 import java.beans.PropertyChangeEvent;
 import java.util.Set;
 
+import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
@@ -32,7 +33,6 @@ import ca.sqlpower.query.StringItem;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.StubWabitSessionContext;
-import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.rs.query.WabitContainer;
@@ -151,14 +151,14 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		item.setSelected(null);
 		
 		CountingWabitListener listener = new CountingWabitListener();
-		queryCache.addWabitListener(listener);
+		queryCache.addSPListener(listener);
 		queryCache.addTable(container);
 		
 		assertEquals(1, listener.getAddedCount());
 		assertEquals(2, queryCache.getChildren().size());
 		WabitObject queryChild = queryCache.getChildren().get(1);
 		assertEquals(WabitTableContainer.class, queryChild.getClass());
-		WabitChildEvent evt = listener.getLastEvent();
+		SPChildEvent evt = listener.getLastEvent();
 		assertEquals(queryCache, evt.getSource());
 		assertEquals(queryChild, evt.getChild());
 		assertEquals(0, evt.getIndex());
@@ -176,7 +176,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         item.setSelected(null);
         
         CountingWabitListener listener = new CountingWabitListener();
-        queryCache.addWabitListener(listener);
+        queryCache.addSPListener(listener);
         queryCache.addTable(container);
         
         assertEquals(1, listener.getAddedCount());
@@ -188,7 +188,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
         
         assertEquals(1, listener.getRemovedCount());
         assertEquals(1, queryCache.getChildren().size());
-        WabitChildEvent evt = listener.getLastEvent();
+        SPChildEvent evt = listener.getLastEvent();
         assertEquals(queryCache, evt.getSource());
         assertEquals(container, ((WabitTableContainer) evt.getChild()).getDelegate());
         assertEquals(0, evt.getIndex());

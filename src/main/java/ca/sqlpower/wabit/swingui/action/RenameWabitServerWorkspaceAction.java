@@ -31,7 +31,7 @@ import javax.swing.JTextField;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -44,10 +44,10 @@ import com.jgoodies.forms.layout.FormLayout;
  */
 public class RenameWabitServerWorkspaceAction extends AbstractAction {
 
-	private final WabitServerSession session;
+	private final WabitClientSession session;
 	private final Component dialogParent;
 
-	public RenameWabitServerWorkspaceAction(WabitServerSession session, Component dialogParent) {
+	public RenameWabitServerWorkspaceAction(WabitClientSession session, Component dialogParent) {
 		super("Rename workspace...");
 		this.session = session;
 		this.dialogParent = dialogParent;

@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -149,7 +150,7 @@ public class ChartColumn extends AbstractWabitObject {
         return false;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -163,7 +164,7 @@ public class ChartColumn extends AbstractWabitObject {
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         //do nothing.
     }
     
@@ -206,7 +207,11 @@ public class ChartColumn extends AbstractWabitObject {
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
 }

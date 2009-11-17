@@ -43,6 +43,8 @@ import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.StubSPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPChildEvent.EventType;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -51,7 +53,6 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.NewValueMaker;
-import ca.sqlpower.wabit.WabitChildEvent.EventType;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
@@ -125,6 +126,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     public Set<String> getPropertiesToIgnoreForEvents() {
         Set<String> ignore = new HashSet<String>();
         ignore.add("class");
+        ignore.add("session");
         return ignore;
     }
     
@@ -149,6 +151,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("parent");
     	ignore.add("dependencies");
     	ignore.add("UUID");
+    	ignore.add("session");
     	return ignore;
     }
     
@@ -213,7 +216,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         CountingWabitListener listener = new CountingWabitListener();
         WabitObject wo = getObjectUnderTest();
-        wo.addWabitListener(listener);
+        wo.addSPListener(listener);
 
         List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -272,7 +275,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     			new StubWabitSession(new StubWabitSessionContext()), countingPersister);
     	
         WabitObject wo = getObjectUnderTest();
-        wo.addWabitListener(listener);
+        wo.addSPListener(listener);
 
         SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
@@ -538,13 +541,13 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         int oldChildCount = parent.getChildren().size();
   
         listener.transactionStarted(null);
-        listener.wabitChildRemoved(new WabitChildEvent(parent, wo.getClass(), wo, parent.getChildren().indexOf(wo), EventType.REMOVED));
+        listener.childRemoved(new SPChildEvent(parent, wo.getClass(), wo, parent.getChildren().indexOf(wo), EventType.REMOVED));
         listener.transactionEnded(null);
         
         //persist the object
         wo.setParent(parent);
         listener.transactionStarted(null);
-        listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
+        listener.childAdded(new SPChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
         listener.transactionEnded(null);
         
         //the object must now be added to the super parent
@@ -606,7 +609,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		wo.setParent(parent);
     	}
     	
-    	listener.wabitChildAdded(new WabitChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
+    	listener.childAdded(new SPChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
     	
     	assertTrue(persister.getPersistObjectCount() > 0);
     	PersistedWabitObject persistedWabitObject = persister.getAllPersistedObjects().get(0);
@@ -688,7 +691,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         WabitObject wo = getObjectUnderTest();
 
         CountingWabitListener listener = new CountingWabitListener();
-        wo.addWabitListener(listener);
+        wo.addSPListener(listener);
         
         Method[] allMethods = wo.getClass().getMethods();
         for (Method method : allMethods) {
@@ -742,7 +745,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
 		WabitUtils.listenToHierarchy(getWorkspace(), listener);
-		wo.addWabitListener(countingListener);
+		wo.addSPListener(countingListener);
 		
 		List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -866,7 +869,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
 		WabitUtils.listenToHierarchy(getWorkspace(), listener);
-		parent.addWabitListener(countingListener);
+		parent.addSPListener(countingListener);
 		
 		int childrenBefore = parent.getChildren().size();
 		
@@ -926,7 +929,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
 		WabitUtils.listenToHierarchy(getWorkspace(), listener);
-		parent.addWabitListener(countingListener);
+		parent.addSPListener(countingListener);
 		
 		int childrenBefore = parent.getChildren().size();
 		

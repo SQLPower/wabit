@@ -23,10 +23,13 @@ import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
-public class StubWabitObject implements WabitObject {
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.SPSession;
 
-    public void addWabitListener(WabitListener l) {
-    }
+public class StubWabitObject implements WabitObject {
 
     public void addPropertyChangeListener(PropertyChangeListener l) {
     }
@@ -35,7 +38,7 @@ public class StubWabitObject implements WabitObject {
         return false;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -43,7 +46,7 @@ public class StubWabitObject implements WabitObject {
         return Collections.emptyList();
     }
     
-    public <T extends WabitObject> List<T> getChildren(Class<T> type) {
+    public <T extends SPObject> List<T> getChildren(Class<T> type) {
     	return Collections.emptyList();
     }
 
@@ -59,7 +62,7 @@ public class StubWabitObject implements WabitObject {
         return null;
     }
 
-    public void removeWabitListener(WabitListener l) {
+    public void removeWabitListener(SPListener l) {
     }
 
     public void removePropertyChangeListener(PropertyChangeListener l) {
@@ -79,7 +82,7 @@ public class StubWabitObject implements WabitObject {
         return null;
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         //do nothing
     }
 
@@ -114,6 +117,47 @@ public class StubWabitObject implements WabitObject {
 	}
 
 	public void rollback(String message) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addChild(SPObject child, int index) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addSPListener(SPListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
+
+	public int compare(Class<? extends SPObject> c1,
+			Class<? extends SPObject> c2) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public SPSession getSession() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public boolean removeChild(SPObject child) throws ObjectDependentException,
+			IllegalArgumentException {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	public void removeSPListener(SPListener l) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void setParent(SPObject parent) {
 		// TODO Auto-generated method stub
 		
 	}

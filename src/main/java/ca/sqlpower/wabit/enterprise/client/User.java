@@ -26,6 +26,7 @@ import java.util.List;
 import org.springframework.security.GrantedAuthority;
 import org.springframework.security.userdetails.UserDetails;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -45,7 +46,7 @@ public class User extends AbstractWabitObject implements UserDetails {
         super.setName(username);
     }
 
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
     	if (child instanceof Grant) {
     		return removeGrant((Grant) child);
     	} else {
@@ -57,7 +58,7 @@ public class User extends AbstractWabitObject implements UserDetails {
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
     	if (Grant.class.isAssignableFrom(childType)) {
     		return 0;
     	} else {
@@ -73,7 +74,7 @@ public class User extends AbstractWabitObject implements UserDetails {
         return Collections.emptyList();
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         // no-op
     }
 
@@ -109,7 +110,7 @@ public class User extends AbstractWabitObject implements UserDetails {
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
     	childPositionOffset(child.getClass());
     	addGrant((Grant) child, index);
     }
@@ -176,5 +177,11 @@ public class User extends AbstractWabitObject implements UserDetails {
 	@Override
 	public String toString() {
 		return "Wabit User \"" + getName() + "\"";
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(Grant.class);
+		return childTypes;
 	}
 }

@@ -37,12 +37,12 @@ import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -235,13 +235,13 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
      */
-    private WabitListener contentRendererListener = new WabitListener() {
+    private SPListener contentRendererListener = new SPListener() {
         
-		public void wabitChildRemoved(WabitChildEvent e) {
+		public void childRemoved(SPChildEvent e) {
 			setSwingContentRenderer(null);
 		}
 		
-		public void wabitChildAdded(WabitChildEvent e) {
+		public void childAdded(SPChildEvent e) {
 			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
 	        setSwingContentRenderer(renderer);
 
@@ -310,7 +310,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         this.workspace = workspace;
         
         setSwingContentRenderer(contentBox.getContentRenderer());
-		contentBox.addWabitListener(contentRendererListener);
+		contentBox.addSPListener(contentRendererListener);
         contentBox.addRepaintListener(modelRepaintListener);
         addInputEventListener(inputHandler);
         updateBoundsFromContentBox();
@@ -428,7 +428,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
     }
 
     public void cleanup() {
-        contentBox.removeWabitListener(contentRendererListener);
+        contentBox.removeSPListener(contentRendererListener);
         contentBox.removeRepaintListener(modelRepaintListener);
     }
 

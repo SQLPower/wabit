@@ -29,6 +29,7 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
@@ -37,6 +38,7 @@ import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
@@ -75,8 +77,6 @@ import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
 import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 
-import ca.sqlpower.sql.SPDataSource;
-
 public class WabitNewValueMaker extends GenericNewValueMaker {
     
     private PlDotIni plIni;
@@ -109,7 +109,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
     public Object makeNewValue(Class<?> valueType, Object oldVal, String propName) {
         Object newValue;
         
-        if (valueType.equals(WabitObject.class)) {
+        if (valueType.equals(SPObject.class) || valueType.equals(WabitObject.class)) {
         	WabitImage image = new WabitImage();
         	
         	if (!propName.equals("addImage")) {

@@ -87,9 +87,9 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
  * Server. Provides database connection information and file storage capability
  * based on the remote server.
  */
-public class WabitServerSession extends WabitSessionImpl {
+public class WabitClientSession extends WabitSessionImpl {
     
-    private static final Logger logger = Logger.getLogger(WabitServerSession.class);
+    private static final Logger logger = Logger.getLogger(WabitClientSession.class);
     
     private final Updater updater;
 
@@ -126,7 +126,7 @@ public class WabitServerSession extends WabitSessionImpl {
      */
     private final DataSourceCollectionUpdater dataSourceCollectionUpdater = new DataSourceCollectionUpdater();
 
-    public WabitServerSession(
+    public WabitClientSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
     		@Nonnull WabitSessionContext context) {
         super(context);
@@ -144,7 +144,7 @@ public class WabitServerSession extends WabitSessionImpl {
         
         sessionPersister = new WabitSessionPersister(
         		"inbound-" + workspaceLocation.getUuid(),
-        		WabitServerSession.this);
+        		WabitClientSession.this);
         // Whatever updates come from the server, it can override the user's stuff.
         sessionPersister.setGodMode(true);
         updater = new Updater(workspaceLocation.getUuid(), new SPJSONMessageDecoder(sessionPersister));
@@ -503,8 +503,8 @@ public class WabitServerSession extends WabitSessionImpl {
 	 *            remote workspace to be opened
 	 * @return A remote WabitSession based on the given workspace
 	 */
-    public static WabitServerSession openServerSession(WabitSessionContext context, WorkspaceLocation workspaceLoc) {
-    	final WabitServerSession session = new WabitServerSession(workspaceLoc, context);
+    public static WabitClientSession openServerSession(WabitSessionContext context, WorkspaceLocation workspaceLoc) {
+    	final WabitClientSession session = new WabitClientSession(workspaceLoc, context);
 		context.registerChildSession(session);
 		session.startUpdaterThread();
 		return session;
@@ -521,9 +521,9 @@ public class WabitServerSession extends WabitSessionImpl {
 	 * @throws URISyntaxException 
 	 * @throws IOException 
 	 */
-	public static List<WabitServerSession> openServerSessions(WabitSessionContext context, SPServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
-		List<WabitServerSession> openedSessions = new ArrayList<WabitServerSession>();
-		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
+	public static List<WabitClientSession> openServerSessions(WabitSessionContext context, SPServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
+		List<WabitClientSession> openedSessions = new ArrayList<WabitClientSession>();
+		for (WorkspaceLocation workspaceLoc : WabitClientSession.getWorkspaceNames(serverInfo)) {
 			openedSessions.add(openServerSession(context, workspaceLoc));
 		}
         return openedSessions;

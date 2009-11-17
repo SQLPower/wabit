@@ -29,6 +29,9 @@ import javax.annotation.Nonnull;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -46,15 +49,15 @@ public class WabitUtils {
      * @param root
      *            The object at the top of the subtree to listen to. Must not be
      *            null.
-     * @param wcl
-     *            The Wabit child listener to add to root and all its
+     * @param spcl
+     *            The SQL Power child listener to add to root and all its
      *            WabitObject descendants. If you do not want Wabit child
      *            events, you can provide null for this parameter.
      */
-    public static void listenToHierarchy(WabitObject root, WabitListener wcl) {
-        root.addWabitListener(wcl);
-        for (WabitObject wob : root.getChildren()) {
-            listenToHierarchy(wob, wcl);
+    public static void listenToHierarchy(SPObject root, SPListener spcl) {
+        root.addSPListener(spcl);
+        for (SPObject wob : root.getChildren()) {
+            listenToHierarchy(wob, spcl);
         }
     }
 
@@ -65,15 +68,15 @@ public class WabitUtils {
      * @param root
      *            The object at the top of the subtree to unlisten to. Must not
      *            be null.
-     * @param wcl
-     *            The Wabit child listener to remove from root and all its
+     * @param spcl
+     *            The SQL Power child listener to remove from root and all its
      *            WabitObject descendants. If you do not want to unlisten to
      *            Wabit child events, you can provide null for this parameter.
      */
-    public static void unlistenToHierarchy(WabitObject root, WabitListener wcl) {
-        root.removeWabitListener(wcl);
-        for (WabitObject wob : root.getChildren()) {
-            unlistenToHierarchy(wob, wcl);
+    public static void unlistenToHierarchy(SPObject root, SPListener spcl) {
+        root.removeSPListener(spcl);
+        for (SPObject wob : root.getChildren()) {
+            unlistenToHierarchy(wob, spcl);
         }
     }
 

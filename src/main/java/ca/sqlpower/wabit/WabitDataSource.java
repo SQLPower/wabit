@@ -26,6 +26,8 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.SPDataSource;
 
 /**
@@ -120,7 +122,7 @@ public class WabitDataSource extends AbstractWabitObject {
 		return false;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		throw new UnsupportedOperationException("This object doesn't have children at all");
 	}
 
@@ -154,7 +156,15 @@ public class WabitDataSource extends AbstractWabitObject {
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
+
+	public void removeDependency(SPObject dependency) {
+		//no-op
+	}
 }

@@ -31,6 +31,7 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.SortOrder;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -180,7 +181,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 	    if (initialized) {
 	        WabitOlapDimension dimension = (WabitOlapDimension) child;
 	        
@@ -211,7 +212,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected void addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(SPObject child, int index) {
 	    WabitOlapDimension dimension = (WabitOlapDimension) child;
 	    if (initialized) {
 	        try {
@@ -237,7 +238,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		return true;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		if (childType == WabitOlapDimension.class){
 			return 0;
 		} else {
@@ -257,7 +258,7 @@ public class WabitOlapAxis extends AbstractWabitObject {
 		return Collections.EMPTY_LIST;
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 		//no-op
 	}
 	
@@ -334,5 +335,11 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	@Override
 	public OlapQuery getParent() {
 	    return (OlapQuery) super.getParent();
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(WabitOlapDimension.class);
+		return childTypes;
 	}
 }

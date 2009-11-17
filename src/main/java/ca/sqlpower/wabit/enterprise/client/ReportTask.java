@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Report;
@@ -134,7 +135,7 @@ public class ReportTask extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 		return false;
 	}
 
@@ -142,7 +143,7 @@ public class ReportTask extends AbstractWabitObject {
 		return false;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		return 0;
 	}
 
@@ -160,7 +161,7 @@ public class ReportTask extends AbstractWabitObject {
 		}
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 		this.report = null;
 	}
 
@@ -255,5 +256,9 @@ public class ReportTask extends AbstractWabitObject {
 
 	public void setNoob(boolean noob) {
 		this.noob = noob;
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
 	}
 }

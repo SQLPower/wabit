@@ -28,8 +28,9 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.Guide.Axis;
@@ -490,7 +491,7 @@ public class Page extends AbstractWabitObject {
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         if (childType == ContentBox.class) {
             return 0;
         } else if (childType == Guide.class) {
@@ -593,14 +594,14 @@ public class Page extends AbstractWabitObject {
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         for (int i = getChildren().size() - 1; i >= 0; i--) {
             getChildren().get(i).removeDependency(dependency);
         }
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (child instanceof Guide) {
             return removeGuide((Guide) child);
         } else if (child instanceof ContentBox) {
@@ -613,7 +614,7 @@ public class Page extends AbstractWabitObject {
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         if (child instanceof Guide) {
             addGuide((Guide) child, index);
         } else if (child instanceof ContentBox) {
@@ -624,4 +625,11 @@ public class Page extends AbstractWabitObject {
                     " of type " + getClass());
         }
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(ContentBox.class);
+		childTypes.add(Guide.class);
+		return childTypes;
+	}
 }

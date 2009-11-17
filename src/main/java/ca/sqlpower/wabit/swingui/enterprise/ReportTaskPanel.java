@@ -41,16 +41,17 @@ import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.Logger;
 
-import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.AbstractWabitListener;
-import ca.sqlpower.wabit.ObjectDependentException;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -99,7 +100,7 @@ public class ReportTaskPanel implements WabitPanel {
 	private final WabitToolBarBuilder toolbarBuilder = new WabitToolBarBuilder();
 	private final WabitWorkspace workspace;
 	
-	private final WabitListener taskListener = new AbstractWabitListener() {
+	private final SPListener taskListener = new AbstractSPListener() {
 		@Override
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
 			reinitGuiModel();
@@ -110,7 +111,7 @@ public class ReportTaskPanel implements WabitPanel {
 		this.task = baseTask;
 		this.workspace = (WabitWorkspace)this.task.getParent();
 		
-		baseTask.addWabitListener(taskListener);
+		baseTask.addSPListener(taskListener);
 		
 		this.reportComboBox = new JComboBox();
 		this.reportComboBox.addActionListener(new ActionListener() {

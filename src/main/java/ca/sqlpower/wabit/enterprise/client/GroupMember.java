@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.enterprise.client;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -42,7 +43,7 @@ public class GroupMember extends AbstractWabitObject {
     }
     
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
 
@@ -50,7 +51,7 @@ public class GroupMember extends AbstractWabitObject {
         return false;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -62,7 +63,7 @@ public class GroupMember extends AbstractWabitObject {
         return Collections.singletonList((WabitObject)this.user);
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (dependency.equals(this.user)) {
             ((Group)getParent()).removeMember(this);
         }
@@ -70,6 +71,10 @@ public class GroupMember extends AbstractWabitObject {
 
 	public User getUser() {
 		return user;
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
 	}
 
     

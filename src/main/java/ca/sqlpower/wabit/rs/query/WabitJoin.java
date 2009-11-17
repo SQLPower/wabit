@@ -27,16 +27,17 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Join;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
- * Wraps a {@link SQLJoin} and converts events on the join to {@link WabitListener}
+ * Wraps a {@link SQLJoin} and converts events on the join to {@link SPListener}
  * events.
  */
 public class WabitJoin extends AbstractWabitObject implements Join {
@@ -80,7 +81,7 @@ public class WabitJoin extends AbstractWabitObject implements Join {
 
     /**
      * Constructs a WabitJoin that converts {@link SQLJoin} events to
-     * {@link WabitListener} events.
+     * {@link SPListener} events.
      * 
      * @param query
      *            The {@link QueryCache} this WabitJoin will be a part of. This
@@ -157,15 +158,19 @@ public class WabitJoin extends AbstractWabitObject implements Join {
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
 
     public boolean allowsChildren() {
         return false;
     }
+    
+    public List<Class<? extends SPObject>> allowedChildTypes() {
+    	return Collections.emptyList();
+    }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -180,7 +185,7 @@ public class WabitJoin extends AbstractWabitObject implements Join {
         return dependency;
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (dependency.equals(leftItem) || dependency.equals(rightItem)) {
             query.removeJoin(delegate);
         }

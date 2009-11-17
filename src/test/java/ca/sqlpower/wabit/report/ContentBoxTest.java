@@ -114,7 +114,7 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
 		WabitUtils.listenToHierarchy(getWorkspace(), listener);
-		cb.addWabitListener(countingListener);
+		cb.addSPListener(countingListener);
 		
 		persister.begin();
 		

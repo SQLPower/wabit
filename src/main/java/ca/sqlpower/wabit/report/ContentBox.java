@@ -28,11 +28,12 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -77,15 +78,15 @@ public class ContentBox extends AbstractWabitObject {
      * children of a renderer changes. It also fires a repaint request when 
      * there is a change to the children of this content box.
      */
-    private final WabitListener childListener = new AbstractWabitListener() {
+    private final SPListener childListener = new AbstractSPListener() {
         
         @Override
-		public void wabitChildRemovedImpl(WabitChildEvent e) {
+		public void childRemovedImpl(SPChildEvent e) {
 		    WabitUtils.unlistenToHierarchy(e.getChild(), childListener);
 		}
 		
         @Override
-		public void wabitChildAddedImpl(WabitChildEvent e) {
+		public void childAddedImpl(SPChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), childListener);
 		}
 
@@ -238,7 +239,7 @@ public class ContentBox extends AbstractWabitObject {
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
     	if (ReportContentRenderer.class.isAssignableFrom(childType)) {
     		return 0;
     	} else {
@@ -281,14 +282,14 @@ public class ContentBox extends AbstractWabitObject {
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (contentRenderer != null) {
             contentRenderer.removeDependency(dependency);
         }
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (child != null && child.equals(getContentRenderer())) {
             setContentRenderer(null);
             return true;
@@ -297,7 +298,7 @@ public class ContentBox extends AbstractWabitObject {
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         if (index > 0) {
             throw new IllegalArgumentException("There is only one child in a content box, " +
             		"index " + index + " is out of range");
@@ -326,5 +327,15 @@ public class ContentBox extends AbstractWabitObject {
             }
         });
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(ResultSetRenderer.class);
+		childTypes.add(CellSetRenderer.class);
+		childTypes.add(ChartRenderer.class);
+		childTypes.add(ImageRenderer.class);
+		childTypes.add(Label.class);
+		return childTypes;
+	}
     
 }

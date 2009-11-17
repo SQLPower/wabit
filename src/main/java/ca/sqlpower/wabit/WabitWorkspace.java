@@ -33,6 +33,8 @@ import javax.swing.event.UndoableEditListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
@@ -430,7 +432,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         return Collections.unmodifiableList(charts);
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         int offset = 0;
 
         if (isSystemWorkspace()) {
@@ -820,7 +822,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         return Collections.unmodifiableList(olapQueries);
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         //do nothing
     }
 
@@ -850,7 +852,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (child instanceof WabitDataSource) {
             return removeDataSource((WabitDataSource) child);
         } else if (child instanceof QueryCache) {
@@ -877,7 +879,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         if (child instanceof WabitDataSource) {
             addDataSource((WabitDataSource) child, index);
         } else if (child instanceof QueryCache) {
@@ -1016,4 +1018,22 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		child.cleanup();
     	}
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		if (getUUID().equals("system")) {
+			childTypes.add(User.class);
+			childTypes.add(Group.class);
+		} else {
+			childTypes.add(WabitDataSource.class);
+			childTypes.add(QueryCache.class);
+			childTypes.add(OlapQuery.class);
+			childTypes.add(Chart.class);
+			childTypes.add(WabitImage.class);
+			childTypes.add(Template.class);
+			childTypes.add(Report.class);
+			childTypes.add(ReportTask.class);
+		}
+		return childTypes;
+	}
 }

@@ -66,13 +66,14 @@ import org.olap4j.query.SortOrder;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
-import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.rs.ResultSetAndUpdateCountCollection;
@@ -240,7 +241,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     @GuardedBy("this")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
-    private WabitListener childListener = new WabitListener(){
+    private SPListener childListener = new SPListener(){
     	private int transactionCount;
     	
 		public void transactionEnded(TransactionEvent e) {
@@ -263,12 +264,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 			transactionCount++;
 		}
 		
-		public void wabitChildAdded(WabitChildEvent e) {
+		public void childAdded(SPChildEvent e) {
 			logger.debug("Listening to child " + e.getChild().getName());
 			WabitUtils.listenToHierarchy(e.getChild(), this);
 		}
 
-		public void wabitChildRemoved(WabitChildEvent e) {
+		public void childRemoved(SPChildEvent e) {
 			logger.debug("Removing child " + e.getChild().getName());
 			WabitUtils.unlistenToHierarchy(e.getChild(), this);
 		}
@@ -709,7 +710,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         if (childType.equals(WabitOlapAxis.class)) {
         	return 0;
         } else {
@@ -740,7 +741,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         return dependencies;
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (dependency.equals(getOlapDataSource())) {
             setOlapDataSource(null);
         }
@@ -1338,11 +1339,11 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * will only remove the Wabit wrapper around the axis of the query object.
 	 */
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 	    if (axes.contains(child)) {
 	        int index = axes.indexOf(child);
 	        axes.remove(child);
-	        WabitUtils.unlistenToHierarchy(child, childListener);
+	        WabitUtils.unlistenToHierarchy((WabitObject) child, childListener);
 	        fireChildRemoved(child.getClass(), child, index);
 	    }
 	    return false;
@@ -1354,7 +1355,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * query will only add a Wabit wrapper for an axis of the query.
      */
 	@Override
-	protected void addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(SPObject child, int index) {
 	    WabitOlapAxis axis = (WabitOlapAxis) child;
 	    for (WabitObject existingChild : axes) {
 	        if (((WabitOlapAxis) existingChild).getOrdinal().equals(axis.getOrdinal())) {
@@ -1401,6 +1402,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 			return cubeName;
 		}
 	}
+	
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(WabitOlapAxis.class);
+		return childTypes;
+	}
+
 
 	// -------------- WabitBackgroundWorker interface --------------
 	

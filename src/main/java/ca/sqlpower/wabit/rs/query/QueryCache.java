@@ -36,6 +36,8 @@ import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -54,7 +56,6 @@ import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -626,8 +627,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean allowsChildren() {
         return true;
     }
+    
+    public List<Class<? extends SPObject>> allowedChildTypes() {
+    	List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+    	childTypes.add(WabitConstantsContainer.class);
+    	childTypes.add(WabitTableContainer.class);
+    	childTypes.add(WabitJoin.class);
+    	return childTypes;
+    }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         int offset = 0;
         if (childType.equals(WabitConstantsContainer.class)) {
             return offset;
@@ -664,7 +673,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return new ArrayList<WabitObject>(Collections.singleton(getWabitDataSource()));
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (dependency.equals(getWabitDataSource())) {
             setDataSource(null);
         }
@@ -709,7 +718,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (child instanceof WabitConstantsContainer) {
             throw new IllegalStateException("Cannot remove the constants container from this query.");
         } else if (child instanceof WabitTableContainer) {
@@ -723,7 +732,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         if (child instanceof WabitConstantsContainer) {
             throw new IllegalArgumentException("Cannot change the constants table of a query.");
         } else if (child instanceof WabitTableContainer) {

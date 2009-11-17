@@ -62,7 +62,9 @@ public class LabelTest extends AbstractWabitObjectTest {
 
     @Override
     public Set<String> getPropertiesToIgnoreForEvents() {
-        return Collections.singleton("variableContext");
+    	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
+        ignored.add("variableContext");
+        return ignored;
     }
     
 }

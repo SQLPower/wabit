@@ -33,6 +33,7 @@ import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -154,7 +155,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected void addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(SPObject child, int index) {
 	    if (initialized) {
 	        final OlapQuery query = getParent().getParent();
 	        if (child instanceof WabitOlapInclusion) {
@@ -211,7 +212,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 	    if (initialized) {
 	        if (child instanceof WabitOlapInclusion) {
 	            WabitOlapInclusion inclusion = (WabitOlapInclusion) child;
@@ -352,7 +353,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		return true;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		if (childType.equals(WabitOlapInclusion.class)) {
 			return 0;
 		} else if (childType.equals(WabitOlapExclusion.class)){
@@ -391,7 +392,7 @@ public class WabitOlapDimension extends AbstractWabitObject {
 		return Collections.EMPTY_LIST;
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 		//no-op
 	}
 	
@@ -424,6 +425,13 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	@Override
 	public WabitOlapAxis getParent() {
 	    return (WabitOlapAxis) super.getParent();
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(WabitOlapInclusion.class);
+		childTypes.add(WabitOlapExclusion.class);
+		return childTypes;
 	}
 
 }

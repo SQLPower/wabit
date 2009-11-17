@@ -39,6 +39,8 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -49,9 +51,7 @@ import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
@@ -494,7 +494,7 @@ public class WorkspaceTreeModel implements TreeModel {
 	 * {@link WabitChildEvent} from the business model and 'translates' them
 	 * into {@link TreeModelEvent} for the WorkspaceTreeModel.
 	 */
-    private class WabitTreeModelEventAdapter implements WabitListener {
+    private class WabitTreeModelEventAdapter implements SPListener {
         
 		public void propertyChange(PropertyChangeEvent evt) {
 			WabitObject node = (WabitObject) evt.getSource();
@@ -548,12 +548,12 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesChanged(e);
 		}
 
-		public void wabitChildAdded(WabitChildEvent e) {
+		public void childAdded(SPChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), this);
-		    if (!appearsInTree(e.getChild())) {
+		    if (!appearsInTree((WabitObject) e.getChild())) {
 		        return;
 		    }
-		    TreePath treePath = createTreePathForObject(e.getChild());
+		    TreePath treePath = createTreePathForObject((WabitObject) e.getChild());
 		    
 			int index;
 			if (e.getChild() instanceof OlapQuery) {
@@ -568,12 +568,12 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesInserted(treeEvent);
 		}
 
-		public void wabitChildRemoved(WabitChildEvent e) {
+		public void childRemoved(SPChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this);
-            if (!appearsInTree(e.getChild())) {
+            if (!appearsInTree((WabitObject) e.getChild())) {
                 return;
             }
-		    TreePath treePath = createTreePathForObject(e.getChild());
+		    TreePath treePath = createTreePathForObject((WabitObject) e.getChild());
 		    
 		    int index;
 			if (e.getChild() instanceof OlapQuery) {

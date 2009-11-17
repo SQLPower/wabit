@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -63,7 +64,7 @@ public class Guide extends AbstractWabitObject {
         return false;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         throw new UnsupportedOperationException("Guides don't have child nodes.");
     }
 
@@ -127,12 +128,16 @@ public class Guide extends AbstractWabitObject {
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         //do nothing
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();		
+	}
 }

@@ -29,15 +29,15 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.User;
 
-public class GroupsListModel implements ListModel, WabitListener {
+public class GroupsListModel implements ListModel, SPListener {
 
 	private final List<Group> items;
 	private final WabitWorkspace workspace;
@@ -51,9 +51,9 @@ public class GroupsListModel implements ListModel, WabitListener {
 		items = new ArrayList<Group>();
 		this.workspace = workspace;
 		updateList();
-		this.workspace.addWabitListener(this);
+		this.workspace.addSPListener(this);
 		for (Group group : workspace.getGroups()) {
-			group.addWabitListener(this);
+			group.addSPListener(this);
 		}
 	}
 	
@@ -127,23 +127,23 @@ public class GroupsListModel implements ListModel, WabitListener {
 		// no-op
 	}
 
-	public void wabitChildAdded(WabitChildEvent e) {
+	public void childAdded(SPChildEvent e) {
 		if (e.getChild() instanceof GroupMember) {
 			updateList();
 			fireChange();
 		} else if (e.getChild() instanceof Group) {
-			e.getChild().addWabitListener(this);
+			e.getChild().addSPListener(this);
 			updateList();
 			fireChange();
 		}
 	}
 
-	public void wabitChildRemoved(WabitChildEvent e) {
+	public void childRemoved(SPChildEvent e) {
 		if (e.getChild() instanceof GroupMember) {
 			updateList();
 			fireChange();
 		} else if (e.getChild() instanceof Group) {
-			e.getChild().removeWabitListener(this);
+			e.getChild().removeSPListener(this);
 			updateList();
 			fireChange();
 		}

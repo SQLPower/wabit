@@ -111,7 +111,7 @@ public abstract class ServerInfoProvider {
 			HttpParams params = new BasicHttpParams();
 	        HttpConnectionParams.setConnectionTimeout(params, 2000);
 	        DefaultHttpClient httpClient = new DefaultHttpClient(params);
-	        httpClient.setCookieStore(WabitServerSession.getCookieStore());
+	        httpClient.setCookieStore(WabitClientSession.getCookieStore());
 	        httpClient.getCredentialsProvider().setCredentials(
 	            new AuthScope(url.getHost(), AuthScope.ANY_PORT), 
 	            new UsernamePasswordCredentials(username, password));

@@ -27,7 +27,7 @@ import javax.swing.AbstractAction;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
@@ -49,8 +49,8 @@ public class NewServerWorkspaceAction extends AbstractAction {
 
 	public void actionPerformed(ActionEvent e) {
 		try {
-			WorkspaceLocation workspaceLoc = WabitServerSession.createNewServerSession(serviceInfo);
-			WabitServerSession.openServerSession(context, workspaceLoc);
+			WorkspaceLocation workspaceLoc = WabitClientSession.createNewServerSession(serviceInfo);
+			WabitClientSession.openServerSession(context, workspaceLoc);
 		} catch (Exception ex) {
 			SPSUtils.showExceptionDialogNoReport(dialogOwner,
 					"Log in to server "

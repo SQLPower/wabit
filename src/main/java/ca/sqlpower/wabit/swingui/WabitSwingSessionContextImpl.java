@@ -121,6 +121,8 @@ import org.olap4j.OlapConnection;
 
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -147,10 +149,8 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.ServerListListener;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -163,7 +163,7 @@ import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.enterprise.client.security.CachingWabitAccessManager;
 import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -1350,7 +1350,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             }
             stackedTabPane.removeTabAt(tabIndex);
             sessionTabs.remove(child);
-            child.getWorkspace().removeWabitListener(nameChangeListener);
+            child.getWorkspace().removeSPListener(nameChangeListener);
         }
 	};
 
@@ -1978,7 +1978,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * Listens for changes to the workspace name and updates the name on the
      * stacked tab accordingly.
      */
-    private final WabitListener nameChangeListener = new AbstractWabitListener() {
+    private final SPListener nameChangeListener = new AbstractSPListener() {
     	public void propertyChangeImpl(PropertyChangeEvent evt) {
     		if (evt.getPropertyName().equals("name")) {
     			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();
@@ -2009,13 +2009,13 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         // mark the session clean (this is the correct way, according to interface docs)
         swingSession.setCurrentURI(swingSession.getCurrentURI());
-        swingSession.getWorkspace().addWabitListener(nameChangeListener);
+        swingSession.getWorkspace().addSPListener(nameChangeListener);
         
         final StackedTab tab = stackedTabPane.addTab(swingSession.getWorkspace().getName(), new JScrollPane(swingSession.getTree()), true);
-        if (child instanceof WabitServerSession) {
+        if (child instanceof WabitClientSession) {
         	final JPopupMenu tabMenu = new JPopupMenu();
         	tabMenu.add(new DeleteWabitServerWorkspaceAction(WabitSwingSessionContextImpl.this));
-        	tabMenu.add(new RenameWabitServerWorkspaceAction((WabitServerSession) child, getFrame()));
+        	tabMenu.add(new RenameWabitServerWorkspaceAction((WabitClientSession) child, getFrame()));
 			tab.getTabComponent().addMouseListener(new MouseAdapter() {
 				public void mouseClicked(MouseEvent e) {
 	            	maybeShowPopup(e);

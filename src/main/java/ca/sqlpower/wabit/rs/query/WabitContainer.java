@@ -26,18 +26,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.ContainerChildEvent;
 import ca.sqlpower.query.ContainerChildListener;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
  * This container wraps any other kind of Container to allow attaching
- * {@link WabitListener}s that will be notified appropriately when events happen
+ * {@link SPListener}s that will be notified appropriately when events happen
  * on the container.
  */
 public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitObject {
@@ -176,14 +177,14 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	}
 
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 	    Item item = ((WabitItem) child).getDelegate();
 	    delegate.removeItem(item);
 	    return true;
 	}
 	
 	@Override
-	protected void addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(SPObject child, int index) {
 	    final WabitItem wabitItem = (WabitItem) child;
 	    children.add(index, (T) child);
 	    child.setParent(this);
@@ -196,8 +197,14 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	public boolean allowsChildren() {
 		return true;
 	}
+	
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(getChildClass());
+		return childTypes;
+	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		if (!childType.equals(getChildClass())) throw new IllegalArgumentException("Only children of " + WabitItem.class + " are allowed in this class.");
 		return 0;
 	}
@@ -210,7 +217,7 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 		return Collections.emptyList();
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 	    //do nothing, no dependencies
 	}
 	

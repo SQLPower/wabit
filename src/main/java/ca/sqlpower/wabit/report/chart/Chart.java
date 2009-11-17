@@ -34,6 +34,8 @@ import org.apache.log4j.Logger;
 import org.jfree.data.general.Dataset;
 import org.olap4j.CellSet;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
 import ca.sqlpower.sql.RowSetChangeEvent;
@@ -41,7 +43,6 @@ import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
@@ -432,17 +433,17 @@ public class Chart extends AbstractWabitObject {
     }
 
     // --------------- WabitObject implementation ------------------
-    
+
     @Override
-    public void setParent(WabitObject parent) {
-        super.setParent(parent);
+    public void setParent(SPObject parent) {
+    	super.setParent(parent);
     }
 
     public boolean allowsChildren() {
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -459,7 +460,7 @@ public class Chart extends AbstractWabitObject {
         return Collections.singletonList((WabitObject) query);
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         if (dependency.equals(query)) {
             try {
                 setQuery(null);
@@ -722,7 +723,7 @@ public class Chart extends AbstractWabitObject {
      * removing a child to a chart should only be done in special cases such as
      * through an undo manager or synchronizing with a server.
      */
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (getColumns().contains(child)) {
             removeColumnIdentifier((ChartColumn) child);
             return true;
@@ -735,7 +736,7 @@ public class Chart extends AbstractWabitObject {
      * Adding a child to a chart should only be done in special cases such as
      * through an undo manager or synchronizing with a server.
      */
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         addChartColumn((ChartColumn) child, index);
     }
     
@@ -797,4 +798,10 @@ public class Chart extends AbstractWabitObject {
         
         return exceptions;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(ChartColumn.class);
+		return childTypes;
+	}
 }

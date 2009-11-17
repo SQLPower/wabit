@@ -35,10 +35,10 @@ import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -81,7 +81,7 @@ public class GuideNode extends PNode implements WabitNode {
     
     public GuideNode(Guide model) {
         this.model = model;
-        this.model.addWabitListener(modelChangeHandler);
+        this.model.addSPListener(modelChangeHandler);
         setPaint(normalColour);
         addInputEventListener(inputEventHandler);
         // Note that guides are pickable so they can get input events, but our
@@ -233,7 +233,7 @@ public class GuideNode extends PNode implements WabitNode {
     /**
      * Adjusts this guide's position and length based on it's model.
      */
-    private final WabitListener modelChangeHandler = new WabitListener() {
+    private final SPListener modelChangeHandler = new SPListener() {
 
 		public void transactionEnded(TransactionEvent e) {
 			// TODO Auto-generated method stub
@@ -250,12 +250,12 @@ public class GuideNode extends PNode implements WabitNode {
 			
 		}
 
-		public void wabitChildAdded(WabitChildEvent e) {
+		public void childAdded(SPChildEvent e) {
 			// TODO Auto-generated method stub
 			
 		}
 
-		public void wabitChildRemoved(WabitChildEvent e) {
+		public void childRemoved(SPChildEvent e) {
 			// TODO Auto-generated method stub
 			
 		}
@@ -321,7 +321,7 @@ public class GuideNode extends PNode implements WabitNode {
     }
 
     public void cleanup() {
-        model.removeWabitListener(modelChangeHandler);
+        model.removeSPListener(modelChangeHandler);
     }
 
     public Guide getModel() {

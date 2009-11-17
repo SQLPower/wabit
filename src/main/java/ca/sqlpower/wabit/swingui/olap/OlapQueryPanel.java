@@ -86,14 +86,14 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.query.Query;
 
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
-import ca.sqlpower.wabit.AbstractWabitListener;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.OlapQueryEvent;
@@ -232,7 +232,7 @@ public class OlapQueryPanel implements WabitPanel {
     /**
      * This updates the displayed name of the query when it changes.
      */
-    private final WabitListener queryPropertyListener = new AbstractWabitListener() {
+    private final SPListener queryPropertyListener = new AbstractSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("currentCube")) {
                 if (query.getCurrentCube() != null) {
@@ -311,7 +311,7 @@ public class OlapQueryPanel implements WabitPanel {
         this.session = session;
         final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
         cellSetViewer = new CellSetViewer(session, query);
-        query.addWabitListener(queryPropertyListener);
+        query.addSPListener(queryPropertyListener);
         
         this.undoManager  = new UndoManager();
         cubeTree = new JTree();
@@ -562,7 +562,7 @@ public class OlapQueryPanel implements WabitPanel {
      * the panel is being disposed.
      */
     private void cleanup() {
-        query.removeWabitListener(queryPropertyListener);
+        query.removeSPListener(queryPropertyListener);
         query.removeOlapQueryListener(queryListener);
         session.getWorkspace().removeDatabaseListChangeListener(dbListChangeListener);
     }

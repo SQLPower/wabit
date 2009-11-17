@@ -27,6 +27,7 @@ import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;

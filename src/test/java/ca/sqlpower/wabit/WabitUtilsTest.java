@@ -22,9 +22,10 @@ package ca.sqlpower.wabit;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rc.retroweaver.runtime.Collections;
-
 import junit.framework.TestCase;
+import ca.sqlpower.object.CleanupExceptions;
+
+import com.rc.retroweaver.runtime.Collections;
 
 public class WabitUtilsTest extends TestCase {
 

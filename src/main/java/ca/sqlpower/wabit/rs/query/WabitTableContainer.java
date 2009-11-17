@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.rs.query;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLObjectItem;
@@ -62,7 +63,7 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
      * underlying TableContainer cannot be modified so this will only add a new
      * wrapper for one of the children of the TableContainer.
      */
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         final WabitColumnItem wabitItem = (WabitColumnItem) child;
         if (!getDelegate().getItems().contains(wabitItem.getDelegate())) {
             throw new IllegalArgumentException("Cannot add " + child.getName() + " to " + getName() + 
@@ -89,7 +90,7 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
      * underlying TableContainer cannot be modified so this will only remove
      * the Wabit wrapper for one of the columns in the container
      */
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (getChildren().contains(child)) {
             int index = children.indexOf(child);
             children.remove(child);

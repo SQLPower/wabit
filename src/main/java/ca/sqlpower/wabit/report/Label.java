@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.Variables;
@@ -198,7 +199,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         return false;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         throw new UnsupportedOperationException("Labels don't have children");
     }
 
@@ -223,7 +224,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         ((ContentBox) getParent()).setContentRenderer(null);        
     }
 
@@ -238,8 +239,12 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 	}
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
     
 }

@@ -32,8 +32,9 @@ import org.apache.log4j.Logger;
 import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
@@ -157,7 +158,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		return false;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		return 0;
 	}
 
@@ -169,7 +170,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
         return Collections.singletonList((WabitObject) chart);
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         ((ContentBox) getParent()).setContentRenderer(null);
     }
 
@@ -192,7 +193,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	}
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
     
@@ -200,4 +201,8 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     public ContentBox getParent() {
         return (ContentBox) super.getParent();
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
 }

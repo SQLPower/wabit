@@ -85,6 +85,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
@@ -108,7 +109,6 @@ import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.action.CreateLayoutFromQueryAction;
@@ -419,7 +419,7 @@ public class QueryPanel implements WabitPanel {
     /**
      * This will listen to any change in the query cache and update the results
      * table as needed. 
-     * TODO This should be changed to a {@link WabitListener}
+     * TODO This should be changed to a {@link SPListener}
      * now that there are proper wabit events and objects for the query.
      */
 	private final QueryChangeListener queryListener = new QueryChangeListener() {

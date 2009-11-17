@@ -54,7 +54,7 @@ import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 
@@ -478,7 +478,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		String newWorkspaceId = UUID.randomUUID().toString();
 		WorkspaceLocation workspaceLocation =
 			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);
-		WabitServerSession newSession = new WabitServerSession(workspaceLocation, this);
+		WabitClientSession newSession = new WabitClientSession(workspaceLocation, this);
 		try {
 			newSession.persistWorkspaceToServer();
 		} catch (SPPersistenceException e) {

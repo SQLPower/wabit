@@ -17,23 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit;
+package ca.sqlpower.object;
 
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.util.TransactionEvent;
-
 import junit.framework.TestCase;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.TransactionEvent;
+import ca.sqlpower.wabit.AbstractWabitObject;
+import ca.sqlpower.wabit.StubWabitObject;
+import ca.sqlpower.wabit.WabitObject;
 
-public class AbstractWabitListenerTest extends TestCase {
+public class AbstractSPListenerTest extends TestCase {
     
     /**
      * This listener tracks the order events were handled in Wabit.
      */
-    private static class ExecutionOrderWabitListener extends AbstractWabitListener {
+    private static class ExecutionOrderWabitListener extends AbstractSPListener {
 
         /**
          * A list of events that were handled in the order they were handled by
@@ -63,12 +68,12 @@ public class AbstractWabitListenerTest extends TestCase {
         }
         
         @Override
-        protected void wabitChildAddedImpl(WabitChildEvent e) {
+        protected void childAddedImpl(SPChildEvent e) {
             wabitEventsInOrder.add(e);
         }
         
         @Override
-        protected void wabitChildRemovedImpl(WabitChildEvent e) {
+        protected void childRemovedImpl(SPChildEvent e) {
             wabitEventsInOrder.add(e);
         }
         
@@ -80,7 +85,7 @@ public class AbstractWabitListenerTest extends TestCase {
     private final AbstractWabitObject wo = new AbstractWabitObject() {
 
         @Override
-        protected boolean removeChildImpl(WabitObject child) {
+        protected boolean removeChildImpl(SPObject child) {
             return false;
         }
 
@@ -89,7 +94,7 @@ public class AbstractWabitListenerTest extends TestCase {
         }
 
         public int childPositionOffset(
-                Class<? extends WabitObject> childType) {
+                Class<? extends SPObject> childType) {
             return 0;
         }
 
@@ -101,10 +106,14 @@ public class AbstractWabitListenerTest extends TestCase {
             return null;
         }
 
-        public void removeDependency(WabitObject dependency) {
+        public void removeDependency(SPObject dependency) {
             //do nothing
         }
-        
+
+		public List<Class<? extends SPObject>> allowedChildTypes() {
+			return Collections.emptyList();
+		}
+
     };
 
     /**
@@ -112,9 +121,9 @@ public class AbstractWabitListenerTest extends TestCase {
      */
     public void testTransactionActsOnEvents() throws Exception {
         ExecutionOrderWabitListener listener = new ExecutionOrderWabitListener();
-        wo.addWabitListener(listener);
-        WabitChildEvent event1 = wo.fireChildAdded(WabitObject.class, new StubWabitObject(), 0);
-        WabitChildEvent event2 = wo.fireChildRemoved(WabitObject.class, new StubWabitObject(), 0);
+        wo.addSPListener(listener);
+        SPChildEvent event1 = wo.fireChildAdded(WabitObject.class, new StubWabitObject(), 0);
+        SPChildEvent event2 = wo.fireChildRemoved(WabitObject.class, new StubWabitObject(), 0);
         PropertyChangeEvent event3 = wo.firePropertyChange("dummyProperty", "oldValue", "newValue");
         
         List<Object> wabitEventsInOrder = listener.getWabitEventsInOrder();
@@ -129,11 +138,11 @@ public class AbstractWabitListenerTest extends TestCase {
      */
     public void testTransactionEndActsOnEvents() throws Exception {
         ExecutionOrderWabitListener listener = new ExecutionOrderWabitListener();
-        wo.addWabitListener(listener);
+        wo.addSPListener(listener);
         TransactionEvent event1 = wo.fireTransactionStarted("Start");
         PropertyChangeEvent event2 = wo.firePropertyChange("dummyProperty", "oldValue", "newValue");
-        WabitChildEvent event3 = wo.fireChildAdded(WabitObject.class, new StubWabitObject(), 0);
-        WabitChildEvent event4 = wo.fireChildRemoved(WabitObject.class, new StubWabitObject(), 0);
+        SPChildEvent event3 = wo.fireChildAdded(WabitObject.class, new StubWabitObject(), 0);
+        SPChildEvent event4 = wo.fireChildRemoved(WabitObject.class, new StubWabitObject(), 0);
         PropertyChangeEvent event5 = wo.firePropertyChange("dummyProperty", "oldValue", "newValue");
         
         assertEquals(1, listener.getWabitEventsInOrder().size());
@@ -151,7 +160,7 @@ public class AbstractWabitListenerTest extends TestCase {
     
     public void testTransactionRollbackDoesNotActOnEvents() throws Exception {
         ExecutionOrderWabitListener listener = new ExecutionOrderWabitListener();
-        wo.addWabitListener(listener);
+        wo.addSPListener(listener);
         TransactionEvent event1 = wo.fireTransactionStarted("Start");
         wo.firePropertyChange("dummyProperty", "oldValue", "newValue");
         wo.fireChildAdded(WabitObject.class, new StubWabitObject(), 0);

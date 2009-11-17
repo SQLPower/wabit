@@ -30,9 +30,10 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.AbstractWabitListener;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
 
@@ -84,8 +85,8 @@ public class ImageRenderer extends AbstractWabitObject implements
 	 * {@link #preservingAspectRatio} value based on the
 	 * {@link #preserveAspectRatioWhenResizing} value.
 	 */
-	private final WabitListener contentBoxResizingListener = 
-		new AbstractWabitListener() {
+	private final SPListener contentBoxResizingListener = 
+		new AbstractSPListener() {
 	
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("width") 
@@ -95,8 +96,8 @@ public class ImageRenderer extends AbstractWabitObject implements
 		}
 	};
 	
-	private final WabitListener imageListener = 
-		new AbstractWabitListener() {
+	private final SPListener imageListener = 
+		new AbstractSPListener() {
 		
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("image")) {
@@ -198,7 +199,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return false;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		return 0;
 	}
 
@@ -213,11 +214,11 @@ public class ImageRenderer extends AbstractWabitObject implements
 	public void setImage(WabitImage image) {
 	    WabitImage oldImage = this.image;
 	    if (oldImage != null) {
-	    	oldImage.removeWabitListener(imageListener);
+	    	oldImage.removeSPListener(imageListener);
 	    }
 		this.image = image;
 		if (image != null) {
-			image.addWabitListener(imageListener);
+			image.addSPListener(imageListener);
 		} 
 		firePropertyChange("image", oldImage, image);
 	}
@@ -227,19 +228,19 @@ public class ImageRenderer extends AbstractWabitObject implements
         return new ArrayList<WabitObject>(Collections.singleton(getImage()));
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         ((ContentBox) getParent()).setContentRenderer(null);
     }
-    
+
     @Override
-    public void setParent(WabitObject parent) {
+    public void setParent(SPObject parent) {
     	if (getParent() != parent) {
     		if (getParent() != null) {
-    			getParent().removeWabitListener(
+    			getParent().removeSPListener(
     					contentBoxResizingListener);
     		}
     		if (parent != null) {
-    			parent.addWabitListener(
+    			((WabitObject) parent).addSPListener(
     					contentBoxResizingListener);
     		}
     	}
@@ -293,7 +294,11 @@ public class ImageRenderer extends AbstractWabitObject implements
     }
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
 }

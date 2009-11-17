@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.springframework.security.GrantedAuthority;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -38,7 +39,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
     }
     
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (child instanceof Grant) {
             return removeGrant((Grant)child);
         } else if (child instanceof GroupMember) {
@@ -52,7 +53,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
     	int offset = 0;
         if (GroupMember.class.isAssignableFrom(childType)) {
         	return offset;
@@ -79,7 +80,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
         return Collections.emptyList();
     }
 
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         // no-op
     }
 
@@ -152,7 +153,7 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 	}
 	
 	@Override
-	protected void addChildImpl(WabitObject child, int index) {
+	protected void addChildImpl(SPObject child, int index) {
 		if (child instanceof GroupMember) {
 			addMember((GroupMember) child, index);
 		} else if (child instanceof Grant) {
@@ -160,5 +161,12 @@ public class Group extends AbstractWabitObject implements GrantedAuthority {
 		} else {
 			throw new IllegalArgumentException("Group does not accept this child: " + child);
 		}
+	}
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(GroupMember.class);
+		childTypes.add(Grant.class);
+		return childTypes;
 	}
 }

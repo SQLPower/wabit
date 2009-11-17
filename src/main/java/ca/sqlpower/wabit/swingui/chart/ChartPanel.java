@@ -64,11 +64,11 @@ import javax.swing.table.TableColumnModel;
 import org.apache.log4j.Logger;
 import org.jfree.chart.JFreeChart;
 
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
-import ca.sqlpower.wabit.AbstractWabitListener;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -262,7 +262,7 @@ public class ChartPanel implements WabitPanel {
      * {@link #chartDataListener}, which handles events strictly dealing with
      * the chart's current data (rather than its configuration).
      */
-    private final WabitListener chartListener = new AbstractWabitListener() {
+    private final SPListener chartListener = new AbstractSPListener() {
 
         /**
          * Set of properties that are ignored with regards to marking this chart
@@ -381,7 +381,7 @@ public class ChartPanel implements WabitPanel {
         
         buildUI();
 
-        chart.addWabitListener(chartListener);
+        chart.addSPListener(chartListener);
 
         boolean disableAutoExecute = isAutoExecuteDisabled();
 
@@ -759,7 +759,7 @@ public class ChartPanel implements WabitPanel {
     }
 
     private void cleanup() {
-        chart.removeWabitListener(chartListener);
+        chart.removeSPListener(chartListener);
         chart.removeChartDataListener(chartDataListener);
     }
     

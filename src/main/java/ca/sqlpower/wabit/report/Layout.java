@@ -27,6 +27,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
@@ -153,7 +155,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         varContext.getVars().put(name, value);
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         if (childType == Page.class) {
             return 0;
         } else {
@@ -166,13 +168,13 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     }
     
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         throw new IllegalStateException("Cannot currently remove the page from a layout. Need" +
         		" to implement multi-paging for this functionality.");
     }
     
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         throw new IllegalStateException("Cannot currently set the page from a layout. Need" +
                 " to implement multi-paging for this functionality.");
     }
@@ -288,12 +290,18 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         return Collections.emptyList();
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         page.removeDependency(dependency);
     }
 
     @Override
     public String toString() {
     	return getName();
+    }
+    
+    public List<Class<? extends SPObject>> allowedChildTypes() {
+    	List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+    	childTypes.add(Page.class);
+    	return childTypes;
     }
 }

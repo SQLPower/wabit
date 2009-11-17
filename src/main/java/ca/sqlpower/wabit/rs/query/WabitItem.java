@@ -24,17 +24,18 @@ import java.beans.PropertyChangeListener;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
  * This type of {@link Item} wraps any other type of item to let other classes
- * attach {@link WabitListener}s to the delegate.
+ * attach {@link SPListener}s to the delegate.
  */
 public abstract class WabitItem extends AbstractWabitObject {
 	
@@ -75,15 +76,19 @@ public abstract class WabitItem extends AbstractWabitObject {
 	}
 
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 		return false;
 	}
 
 	public boolean allowsChildren() {
 		return false;
 	}
+	
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
+	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		return 0;
 	}
 
@@ -95,7 +100,7 @@ public abstract class WabitItem extends AbstractWabitObject {
 		return Collections.emptyList();
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 		// do nothing
 	}
 	

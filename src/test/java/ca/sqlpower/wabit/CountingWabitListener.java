@@ -23,12 +23,14 @@ import java.beans.PropertyChangeEvent;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.util.TransactionEvent;
 
 /**
  * A listener implementation that's useful for building unit tests.
  */
-public class CountingWabitListener implements WabitListener {
+public class CountingWabitListener implements SPListener {
 	
 	private static final Logger logger = Logger.getLogger(CountingWabitListener.class);
 
@@ -39,14 +41,14 @@ public class CountingWabitListener implements WabitListener {
     private int transactionEndCount;
     private int transactionRollbackCount;
     
-    private WabitChildEvent lastEvent;
+    private SPChildEvent lastEvent;
     private PropertyChangeEvent lastPropertyEvent;
     private TransactionEvent lastTransactionEvent;
     
     /**
      * Counts this added event and keeps a reference to the event object.
      */
-    public void wabitChildAdded(WabitChildEvent e) {
+    public void childAdded(SPChildEvent e) {
         addedCount++;
         lastEvent = e;
     }
@@ -54,7 +56,7 @@ public class CountingWabitListener implements WabitListener {
     /**
      * Counts this removed event and keeps a reference to the event object.
      */
-    public void wabitChildRemoved(WabitChildEvent e) {
+    public void childRemoved(SPChildEvent e) {
         removedCount++;
         lastEvent = e;
     }
@@ -62,12 +64,12 @@ public class CountingWabitListener implements WabitListener {
     /**
      * Returns the most recent add or remove event received by this listener.
      */
-    public WabitChildEvent getLastEvent() {
+    public SPChildEvent getLastEvent() {
         return lastEvent;
     }
     
     /**
-     * Returns the number of times {@link #wabitChildAdded(WabitChildEvent)}
+     * Returns the number of times {@link #childAdded(WabitChildEvent)}
      * has been called on this listener.
      */
     public int getAddedCount() {
@@ -75,7 +77,7 @@ public class CountingWabitListener implements WabitListener {
     }
     
     /**
-     * Returns the number of times {@link #wabitChildRemoved(WabitChildEvent)}
+     * Returns the number of times {@link #childRemoved(WabitChildEvent)}
      * has been called on this listener.
      */
     public int getRemovedCount() {

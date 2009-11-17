@@ -33,15 +33,15 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
@@ -89,7 +89,7 @@ import com.google.common.collect.Multimap;
  * object this listener will convert the event into persist calls. The persist
  * calls will be made on the target persister.
  */
-public class WorkspacePersisterListener implements WabitListener {
+public class WorkspacePersisterListener implements SPListener {
 	
 	private final static Logger logger = Logger.getLogger(WorkspacePersisterListener.class);
 	
@@ -293,11 +293,11 @@ public class WorkspacePersisterListener implements WabitListener {
 		transactionCount++;
 	}
 
-	public void wabitChildAdded(WabitChildEvent e) {
+	public void childAdded(SPChildEvent e) {
 		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
 		logger.debug("wabitChildAdded " + e.getChildType() + " with UUID " + e.getChild().getUUID());
-		persistObject(e.getChild());
+		persistObject((WabitObject) e.getChild());
 	}
 	
 	/**
@@ -831,16 +831,16 @@ public class WorkspacePersisterListener implements WabitListener {
 
 	}
 
-	public void wabitChildRemoved(WabitChildEvent e) {
+	public void childRemoved(SPChildEvent e) {
 		logger.debug("wabitChildRemoved(" + e.getChildType() + ")");
-		e.getChild().removeWabitListener(this);
+		e.getChild().removeSPListener(this);
 		if (wouldEcho()) return;
 		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
 				"Start of transaction triggered by wabitChildRemoved event"));
 		this.objectsToRemove.add(
 			new RemovedObjectEntry(
 				e.getSource().getUUID(),
-				e.getChild(),
+				(WabitObject) e.getChild(),
 				e.getIndex()));
 		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}

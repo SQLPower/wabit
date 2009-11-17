@@ -44,6 +44,9 @@ import org.olap4j.query.Selection.Operator;
 import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
@@ -57,10 +60,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.ObjectDependentException;
-import ca.sqlpower.wabit.WabitChildEvent;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
@@ -313,15 +313,15 @@ public class WabitSessionPersister implements SPPersister {
 					.getParentUUID(), WabitObject.class);
 			WabitObject wo = loadWabitObject(pwo);
 			if (wo != null) {
-				WabitListener removeChildOnAddListener = new WabitListener() {
+				SPListener removeChildOnAddListener = new SPListener() {
 					public void propertyChange(PropertyChangeEvent arg0) {
 						//do nothing
 					}
-					public void wabitChildRemoved(WabitChildEvent e) {
+					public void childRemoved(SPChildEvent e) {
 						objectsToRemoveRollbackList.add(
-								new RemovedObjectEntry(e.getSource().getUUID(), e.getChild(), e.getIndex()));
+								new RemovedObjectEntry(e.getSource().getUUID(), (WabitObject) e.getChild(), e.getIndex()));
 					}
-					public void wabitChildAdded(WabitChildEvent e) {
+					public void childAdded(SPChildEvent e) {
 						//do nothing
 					}
 					public void transactionStarted(TransactionEvent e) {
@@ -334,10 +334,10 @@ public class WabitSessionPersister implements SPPersister {
 						//do nothing
 					}
 				};
-				parent.addWabitListener(removeChildOnAddListener);
+				parent.addSPListener(removeChildOnAddListener);
 				// FIXME Terrible hack, see bug 2326
 				parent.addChild(wo, Math.min(pwo.getIndex(), parent.getChildren(wo.getClass()).size()));
-				parent.removeWabitListener(removeChildOnAddListener);
+				parent.removeSPListener(removeChildOnAddListener);
 				this.persistedObjectsRollbackList.add(
 					new PersistedObjectEntry(
 						parent.getUUID(), 

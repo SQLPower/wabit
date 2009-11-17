@@ -19,36 +19,23 @@
 
 package ca.sqlpower.wabit;
 
-import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-
-import net.jcip.annotations.GuardedBy;
+import java.util.UUID;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitChildEvent.EventType;
+import ca.sqlpower.object.AbstractSPObject;
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPObject;
 
-public abstract class AbstractWabitObject implements WabitObject {
+public abstract class AbstractWabitObject extends AbstractSPObject implements WabitObject {
 
     private static final Logger logger = Logger.getLogger(AbstractWabitObject.class);
     
-    @GuardedBy("childListeners")
-    private final List<WabitListener> listeners = 
-        Collections.synchronizedList(new ArrayList<WabitListener>());
-    
-    private WabitObject parent;
-    private String name;
-    
-    /**
-     * This UUID is for saving and loading to allow saved files to be diff friendly.
-     */
-    private String uuid;
-    
     public AbstractWabitObject() {
-        generateNewUUID();
+    	super();
     }
 
 	/**
@@ -57,307 +44,19 @@ public abstract class AbstractWabitObject implements WabitObject {
 	 * automatically generated.
 	 */
     public AbstractWabitObject(String uuid) {
-    	if (uuid == null) {
-    	    generateNewUUID();
-    	} else {
-    		this.uuid = uuid;
-    	}
+    	super(uuid);
     }
-    
-    public void setUUID(String uuid) {
-        String oldUUID = this.uuid;
-        if (uuid == null){
-            generateNewUUID();
-        } else {
-            this.uuid = uuid;
-        }
-        firePropertyChange("UUID", oldUUID, uuid);
-    }
-    
+
+    @Override
     public void generateNewUUID() {
-        uuid = WabitUtils.randomWabitUUID();
-    }
-    
-    public void addWabitListener(WabitListener l) {
-    	if (l == null) {
-    		throw new NullPointerException("Cannot add child listeners that are null.");
-    	}
-    	synchronized (listeners) {
-    	    listeners.add(l);
-    	}
+    	uuid = "w" + UUID.randomUUID();
     }
 
-    public void removeWabitListener(WabitListener l) {
-        synchronized (listeners) {
-            listeners.remove(l);
-        }
-    }
-
-    /**
-     * Fires a child added event to all child listeners. The child should have
-     * been added by the calling code already. The event will be fired on the
-     * foreground thread defined by the session being used.
-     * 
-     * @param type
-     *            The canonical type of the child being added
-     * @param child
-     *            The child object that was added
-     * @param index
-     *            The index of the added child within its own child list (this
-     *            will be converted to the overall child position before the
-     *            event object is constructed).
-     * @return The child event that was fired or null if no event was fired, for
-     *         testing purposes.
-     */
-    protected WabitChildEvent fireChildAdded(Class<? extends WabitObject> type, WabitObject child, int index) {
-    	logger.debug("Child Added: " + type + " notifying " + listeners.size() + " listeners");
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for adding the child " + child.getName() + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized(listeners) {
-            if (listeners.isEmpty()) return null;
-        }
-        final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.ADDED);
-        synchronized(listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		final WabitListener listener = listeners.get(i);
-        		listener.wabitChildAdded(e);
-        	}
-        }
-        return e;
-    }
-
-    /**
-     * Fires a child removed event to all child listeners. The child should have
-     * been removed by the calling code. The event will be fired on the
-     * foreground thread defined by the session being used.
-     * 
-     * @param type
-     *            The canonical type of the child being removed
-     * @param child
-     *            The child object that was removed
-     * @param index
-     *            The index that the removed child was at within its own child
-     *            list (this will be converted to the overall child position
-     *            before the event object is constructed).
-     * @return The child event that was fired or null if no event was fired, for
-     *         testing purposes.
-     */
-    protected WabitChildEvent fireChildRemoved(Class<? extends WabitObject> type, WabitObject child, int index) {
-    	logger.debug("Child Removed: " + type + " notifying " + listeners.size() + " listeners: " + listeners);
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for removing the child " + child.getName() + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized(listeners) {
-            if (listeners.isEmpty()) return null;
-        }
-        final WabitChildEvent e = new WabitChildEvent(this, type, child, index, EventType.REMOVED);
-        synchronized(listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		final WabitListener listener = listeners.get(i);
-        		listener.wabitChildRemoved(e);
-        	}
-        }
-        return e;
-    }
-
-    /**
-     * Fires a property change on the foreground thread as defined by the
-     * current session being used.
-     * 
-     * @return The property change event that was fired or null if no event was
-     *         fired, for testing purposes.
-     */
-    protected PropertyChangeEvent firePropertyChange(final String propertyName, final boolean oldValue, 
-            final boolean newValue) {
-    	if (oldValue == newValue) return null;
-    	
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for property change " + propertyName + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized(listeners) {
-            if (listeners.size() == 0) return null;
-        }
-        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        synchronized(listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).propertyChange(evt);
-        	}
-        }
-        return evt;
-    }
-
-    /**
-     * Fires a property change on the foreground thread as defined by the
-     * current session being used.
-     * 
-     * @return The property change event that was fired or null if no event was
-     *         fired, for testing purposes.
-     */
-    protected PropertyChangeEvent firePropertyChange(final String propertyName, final int oldValue, 
-            final int newValue) {
-    	if (oldValue == newValue) return null;
-    	
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for property change " + propertyName + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized(listeners) {
-            if (listeners.size() == 0) return null;
-        }
-        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        synchronized(listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).propertyChange(evt);
-        	}
-        }
-        return evt;
-    }
-
-    /**
-     * Fires a property change on the foreground thread as defined by the
-     * current session being used.
-     * 
-     * @return The property change event that was fired or null if no event was
-     *         fired, for testing purposes.
-     */
-    protected PropertyChangeEvent firePropertyChange(final String propertyName, final Object oldValue, 
-            final Object newValue) {
-    	if ((oldValue == null && newValue == null)
-    			|| (oldValue != null && oldValue.equals(newValue))) return null; 
-    	
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for property change " + propertyName + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized(listeners) {
-            if (listeners.size() == 0) return null;
-            if (logger.isDebugEnabled()) {
-                logger.debug("Firing property change \"" + propertyName
-                        + "\" to " + listeners.size() + " listeners: "
-                        + listeners);
-            }
-        }
-        final PropertyChangeEvent evt = new PropertyChangeEvent(this, propertyName, oldValue, newValue);
-        synchronized(listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).propertyChange(evt);
-        	}
-        }
-        return evt;
-    }
-    
-    /**
-     * Fires a transaction started event with a message indicating the
-     * reason/type of the transaction.
-     * 
-     * @return The event that was fired or null if no event was fired, for
-     *         testing purposes.
-     */
-    protected TransactionEvent fireTransactionStarted(final String message) {
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for a transaction start" + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized (listeners) {
-            if (listeners.size() == 0) return null;            
-        }
-        final TransactionEvent evt = TransactionEvent.createStartTransactionEvent(this, message);
-        synchronized (listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).transactionStarted(evt);
-        	}
-        }
-        return evt;
-    }
-
-    /**
-     * Fires a transaction ended event.
-     * 
-     * @return The event that was fired or null if no event was fired, for
-     *         testing purposes.
-     */
-    protected TransactionEvent fireTransactionEnded() {
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for a transaction end" + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized (listeners) {
-            if (listeners.size() == 0) return null;            
-        }
-        final TransactionEvent evt = TransactionEvent.createEndTransactionEvent(this);
-        synchronized (listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).transactionEnded(evt);
-        	}
-        }
-        return evt;
-    }
-
-    /**
-     * Fires a transaction rollback event with a message indicating the
-     * reason/type of the rollback.
-     * 
-     * @return The event that was fired or null if no event was fired, for
-     *         testing purposes.
-     */
-    protected TransactionEvent fireTransactionRollback(final String message) {
-    	if (!isForegroundThread()) {
-    		throw new IllegalStateException("Event for a transaction rollback" + 
-    				" must fired on the foreground thread.");
-    	}
-        synchronized (listeners) {
-            if (listeners.size() == 0) return null;            
-        }
-        final TransactionEvent evt = TransactionEvent.createRollbackTransactionEvent(this, message);
-        synchronized (listeners) {
-        	for (int i = listeners.size() - 1; i >= 0; i--) {
-        		listeners.get(i).transactionRollback(evt);
-        	}
-        }
-        return evt;
-    }
-    
-    public <T extends WabitObject> List<T> getChildren(Class<T> type) {
-    	List<T> children = new ArrayList<T>();
-    	for (WabitObject child : getChildren()) {
-    		if (type.isAssignableFrom(child.getClass())) {
-    			children.add(type.cast(child));
-    		}
-    	}
-    	return children;
-    }
-    
 	public WabitObject getParent() {
-		return parent;
+		return (WabitObject) super.getParent();
 	}
 
-	public void setParent(WabitObject parent) {
-	    WabitObject oldParent = this.parent;
-		this.parent = parent;
-		if(parent != null) {
-			firePropertyChange("parent", oldParent, parent);
-		}
-	}
-	
-	public String getName() {
-	    return name;
-	}
-	
-	public void setName(String name) {
-	    String oldName = this.name;
-        this.name = name;
-        firePropertyChange("name", oldName, name);
-    }
-	
-	public String getUUID() {
-		return uuid;
-	}
-	
-	public final boolean removeChild(WabitObject child)
+	public final boolean removeChild(SPObject child)
 	        throws ObjectDependentException {
 	    if (!getChildren().contains(child)) 
 	        throw new IllegalArgumentException("Child object " + child.getName() + " of type " + child.getClass()
@@ -367,7 +66,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    while (topAncestor.getParent() != null) {
 	        topAncestor = topAncestor.getParent();
 	    }
-	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, child, true, true);
+	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, (WabitObject) child, true, true);
 	    for (WabitObject graphNode : graph.getNodes()) {
 	        List<WabitObject> ancestors = new ArrayList<WabitObject>();
 	        WabitObject ancestor = graphNode.getParent();
@@ -383,48 +82,13 @@ public abstract class AbstractWabitObject implements WabitObject {
 	    }
 	    
 	    
-	    boolean removed = removeChildImpl(child);
+	    boolean removed = removeChildImpl((WabitObject) child);
 	    if (removed) {
 	    	child.setParent(null);
 	    	return true;
 	    } else {
 	    	return false;
 	    }
-	}
-	
-    /**
-     * This is the object specific implementation of removeChild. There are
-     * checks in the removeChild method to ensure the child being removed has no
-     * dependencies and is a child of this object.
-     * 
-     * @see #removeChild(WabitObject)
-     */
-	protected abstract boolean removeChildImpl(WabitObject child);
-	
-	public final void addChild(WabitObject child, int index) throws IllegalArgumentException {
-	    //Throws an IllegalStateException if the child is not a valid child of this class.
-	    childPositionOffset(child.getClass());
-	    child.setParent(this); // TODO: check that the given child doesn't already have a parent
-	    addChildImpl(child, index);
-	}
-
-    /**
-     * This is the object specific implementation of
-     * {@link #addChild(WabitObject)}. There are checks in the
-     * {@link #addChild(WabitObject)} method to ensure that the object given
-     * here is a valid child type of this object.
-     * <p>
-     * This method should be overwritten if children are allowed.
-     * 
-     * @param child
-     *            The child to add to this object.
-     * @param index
-     *            The index to add the child at.
-     */
-	protected void addChildImpl(WabitObject child, int index) {
-		throw new UnsupportedOperationException("This WabitObject cannot have children. " +
-				"This class is " + getClass() + " and trying to add " + child.getName() + 
-				" of type " + child.getClass());
 	}
 	
 	/**
@@ -441,7 +105,7 @@ public abstract class AbstractWabitObject implements WabitObject {
      * ancestor is not a WabitWorkspace or the workspace is not attached to a
      * session this will throw a SessionNotFoundException.
      */
-	protected WabitSession getSession() {
+	public WabitSession getSession() {
 	    return WabitUtils.getSession(this);
 	}
 
@@ -499,10 +163,6 @@ public abstract class AbstractWabitObject implements WabitObject {
 		return false;
 	}
 	
-	public void begin(String message) {
-		fireTransactionStarted(message);
-	}
-	
 	public void commit() {
 		fireTransactionEnded();
 	}
@@ -510,7 +170,7 @@ public abstract class AbstractWabitObject implements WabitObject {
 	public void rollback(String message) {
 		fireTransactionRollback(message);
 	}
-	
+
 	@Override
 	public String toString() {
 		return super.toString() + ", " + getName() + ":" + getUUID();

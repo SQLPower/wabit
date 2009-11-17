@@ -66,6 +66,9 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -85,15 +88,12 @@ import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.AbstractWabitListener;
-import ca.sqlpower.wabit.WabitChildEvent;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
+import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -236,7 +236,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * for property changes, and handles them appropriately (usually by setting
      * the session's dirty flag).
      */
-	private class WorkspaceWatcher extends AbstractWabitListener {
+	private class WorkspaceWatcher extends AbstractSPListener {
 
 	    private final Set<String> ignorablePropertyNames = new HashSet<String>();
 	    {
@@ -251,13 +251,13 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
 	    
         @Override
-        public void wabitChildAddedImpl(WabitChildEvent e) {
+        public void childAddedImpl(SPChildEvent e) {
             WabitUtils.listenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
 
         @Override
-        public void wabitChildRemovedImpl(WabitChildEvent e) {
+        public void childRemovedImpl(SPChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
@@ -347,7 +347,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * update the current editor displayed when the object being edited changes
      * in the workspace.
      */
-    private final WabitListener workspaceEditorModelListener = new AbstractWabitListener() {
+    private final SPListener workspaceEditorModelListener = new AbstractSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (sessionContext.isLoading()) return;
             if (evt.getPropertyName().equals("editorPanelModel")) {
@@ -487,7 +487,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         if (getWorkspace().getEditorPanelModel() == null) {
         	getWorkspace().setEditorPanelModel(getWorkspace());
         }
-        getWorkspace().addWabitListener(workspaceEditorModelListener);
+        getWorkspace().addSPListener(workspaceEditorModelListener);
         getContext().addPropertyChangeListener(loadingContextListener);
         
         busyBadgeTimer = new Timer(100, new ActionListener() {
@@ -538,7 +538,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    if (!delegateSession.close()) {
 	        return false;
 	    }
-	    getWorkspace().removeWabitListener(workspaceEditorModelListener);
+	    getWorkspace().removeSPListener(workspaceEditorModelListener);
 	    getContext().removePropertyChangeListener(loadingContextListener);
 	    for (ActiveWorker worker : activeWorkers) {
 	        worker.getWorker().kill();
@@ -682,7 +682,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 */
 	public SPServerInfo getEnterpriseServerInfos() {
 		if (this.isEnterpriseServerSession()) {
-			return ((WabitServerSession)this.delegateSession).getWorkspaceLocation().getServiceInfo();
+			return ((WabitClientSession)this.delegateSession).getWorkspaceLocation().getServiceInfo();
 		}
 		return null;
 	}
@@ -693,10 +693,10 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     
     // XXX EVIL BADNESS
     public void refresh() {
-        if (delegateSession instanceof WabitServerSession) {
-            WabitServerSession wss = (WabitServerSession) delegateSession;
+        if (delegateSession instanceof WabitClientSession) {
+            WabitClientSession wss = (WabitClientSession) delegateSession;
             if (close()) {
-                WabitServerSession.openServerSession(
+                WabitClientSession.openServerSession(
                         getContext(),
                         wss.getWorkspaceLocation());
             }
@@ -708,8 +708,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     
     // XXX MORE EVIL BADNESS
     public void delete() throws ClientProtocolException, URISyntaxException, IOException {
-    	if (delegateSession instanceof WabitServerSession) {
-            WabitServerSession wss = (WabitServerSession) delegateSession;
+    	if (delegateSession instanceof WabitClientSession) {
+            WabitClientSession wss = (WabitClientSession) delegateSession;
             wss.deleteServerWorkspace();
             close();
         } else {

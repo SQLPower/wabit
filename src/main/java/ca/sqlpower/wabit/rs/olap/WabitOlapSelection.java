@@ -26,6 +26,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -89,7 +90,7 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 	}
 	
 	@Override
-	protected boolean removeChildImpl(WabitObject child) {
+	protected boolean removeChildImpl(SPObject child) {
 		return false;
 	}
 
@@ -97,7 +98,7 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		return false;
 	}
 
-	public int childPositionOffset(Class<? extends WabitObject> childType) {
+	public int childPositionOffset(Class<? extends SPObject> childType) {
 		return 0;
 	}
 
@@ -117,7 +118,7 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		return Collections.EMPTY_LIST;
 	}
 
-	public void removeDependency(WabitObject dependency) {
+	public void removeDependency(SPObject dependency) {
 		//no-op
 	}
 
@@ -159,6 +160,10 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 			throw new IllegalStateException("Olap Selection is not initialized");
 		}
 		return selection;
+	}
+	
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		return Collections.emptyList();
 	}
 
 }

@@ -44,16 +44,17 @@ import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowSetChangeEvent;
 import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
-import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
@@ -256,7 +257,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * should receive events when the query changes when it is listening to
 	 * the children of a result set renderer.
 	 */
-	private final WabitListener parentChangeListener = new AbstractWabitListener() {
+	private final SPListener parentChangeListener = new AbstractSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             clearResultSetLayout();
         }
@@ -279,7 +280,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * This listener will fire a change event when the query changes to signal that
 	 * the result set renderer needs to be repainted.
 	 */
-    private final WabitListener queryChangeListener = new AbstractWabitListener() {
+    private final SPListener queryChangeListener = new AbstractSPListener() {
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("name")) {
 				setName("Result Set: " + query.getName());
@@ -323,7 +324,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     public ResultSetRenderer(@Nonnull QueryCache query, @Nonnull List<ColumnInfo> columnInfoList) {
         this.query = query;
         query.addResultSetListener(resultSetHandler);
-		query.addWabitListener(queryChangeListener);
+		query.addSPListener(queryChangeListener);
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
 	}
@@ -350,7 +351,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			columnInfo.add(newColumnInfo);
     	}
     	
-    	query.addWabitListener(queryChangeListener);
+    	query.addSPListener(queryChangeListener);
     	query.addResultSetListener(resultSetHandler);
     	
     	if (resultSetRenderer.resultSetHandler.currentRowSet != null) {
@@ -372,7 +373,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     @Override
     public CleanupExceptions cleanup() {
         query.removeResultSetListener(resultSetHandler);
-    	query.removeWabitListener(queryChangeListener);
+    	query.removeSPListener(queryChangeListener);
     	resultSetHandler.cleanup();
     	return new CleanupExceptions();
     }
@@ -776,7 +777,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -919,21 +920,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         return dependencies;
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         ((ContentBox) getParent()).setContentRenderer(null);
     }
-    
-    @Override
-    public void setParent(WabitObject parent) {
-        if (getParent() != null) {
-            getParent().removeWabitListener(parentChangeListener);
-        }
-        super.setParent(parent);
-        if (getParent() != null) {
-            getParent().addWabitListener(parentChangeListener);
-        }
-    }
 
+    @Override
+    public void setParent(SPObject parent) {
+    	 if (getParent() != null) {
+             getParent().removeSPListener(parentChangeListener);
+         }
+         super.setParent(parent);
+         if (getParent() != null) {
+             getParent().addSPListener(parentChangeListener);
+         }
+    }
+    
     /**
      * This method should ONLY be needed for testing.
      */
@@ -983,7 +984,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * This method should only be used internally or in special cases such as
      * an undo manager or synchronizing with a server.
      */
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         if (columnInfo.contains(child)) {
             int index = columnInfo.indexOf(child);
             columnInfo.remove(child);
@@ -998,9 +999,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * This method should only be used internally or in special cases such as
      * an undo manager or synchronizing with a server.
      */
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
         columnInfo.add(index, (ColumnInfo) child);
         child.setParent(this);
         fireChildAdded(child.getClass(), child, index);
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(ColumnInfo.class);
+		return childTypes;
+	}
 }

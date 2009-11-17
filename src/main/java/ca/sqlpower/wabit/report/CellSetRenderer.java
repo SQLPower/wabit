@@ -48,14 +48,13 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
 
+import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.wabit.AbstractWabitListener;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.CleanupExceptions;
-import ca.sqlpower.wabit.WabitListener;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.OlapQueryEvent;
 import ca.sqlpower.wabit.rs.olap.OlapQueryListener;
@@ -132,7 +131,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * Updates the name of this renderer if the name of the query backing it
      * has changed.
      */
-    private WabitListener nameListener = new AbstractWabitListener() {
+    private SPListener nameListener = new AbstractSPListener() {
         
         @Override
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
@@ -180,7 +179,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 			throw new RuntimeException(e);
 		}
     	setName(cellSetRenderer.getName());
-    	this.olapQuery.addWabitListener(nameListener);
+    	this.olapQuery.addSPListener(nameListener);
     	this.headerFont = cellSetRenderer.headerFont;
     	this.bodyFont = cellSetRenderer.bodyFont;
     	this.bodyAlignment = cellSetRenderer.bodyAlignment;
@@ -194,7 +193,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         logger.debug("Initializing a new cellset renderer.");
         this.olapQuery = olapQuery;
         setName(olapQuery.getName());
-        olapQuery.addWabitListener(nameListener);
+        olapQuery.addSPListener(nameListener);
     }
     
     public void init() {
@@ -225,7 +224,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     	if (modifiedOlapQuery != null && !this.initDone) {
     		modifiedOlapQuery.removeOlapQueryListener(queryListener);
     	}
-        olapQuery.removeWabitListener(nameListener);
+        olapQuery.removeSPListener(nameListener);
         return new CleanupExceptions();
     }
 
@@ -553,7 +552,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return true;
     }
 
-    public int childPositionOffset(Class<? extends WabitObject> childType) {
+    public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }
 
@@ -566,7 +565,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
     @Override
-    protected void addChildImpl(WabitObject child, int index) {
+    protected void addChildImpl(SPObject child, int index) {
     	if (index != 0) throw new IllegalArgumentException("CellSetRenderers can only " +
     			"have 1 child and should have an index of 0 not " + index);
     	setModifiedOlapQuery((OlapQuery) child);
@@ -662,7 +661,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return new ArrayList<WabitObject>(Collections.singleton(getContent()));
     }
     
-    public void removeDependency(WabitObject dependency) {
+    public void removeDependency(SPObject dependency) {
         ((ContentBox) getParent()).setContentRenderer(null);
     }
 
@@ -709,8 +708,14 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	}
 
     @Override
-    protected boolean removeChildImpl(WabitObject child) {
+    protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+
+	public List<Class<? extends SPObject>> allowedChildTypes() {
+		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
+		childTypes.add(OlapQuery.class);
+		return childTypes;
+	}
 
 }
