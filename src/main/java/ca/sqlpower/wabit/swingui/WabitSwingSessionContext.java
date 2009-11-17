@@ -25,12 +25,11 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JSpinner;
 
-import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public interface WabitSwingSessionContext extends WabitSessionContext {
 
@@ -102,7 +101,7 @@ public interface WabitSwingSessionContext extends WabitSessionContext {
      * Creates a new server-based session for the given server. The new session
      * will belong to this context.
      */
-    WabitSwingSession createServerSession(WabitServerInfo serverInfo);
+    WabitSwingSession createServerSession(SPServerInfo serverInfo);
 
     /**
      * Creates a new local session that belongs to this context.

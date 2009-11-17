@@ -19,21 +19,21 @@
 
 package ca.sqlpower.wabit;
 
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 
 /**
  * This event notes which server was changed.
  */
 public class ServerListEvent {
 
-	private final WabitServerInfo serverInfo;
+	private final SPServerInfo serverInfo;
 
-	public ServerListEvent(WabitServerInfo serverInfo) {
+	public ServerListEvent(SPServerInfo serverInfo) {
 		this.serverInfo = serverInfo;
 		
 	}
 
-	public WabitServerInfo getServerInfo() {
+	public SPServerInfo getServerInfo() {
 		return serverInfo;
 	}
 }

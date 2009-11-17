@@ -39,11 +39,11 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.util.Version;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -69,16 +69,16 @@ public class ServerInfoPanel implements DataEntryPanel {
     private JButton testButton;
 
     
-    public ServerInfoPanel(Component dialogOwner, WabitServerInfo defaultSettings) {
+    public ServerInfoPanel(Component dialogOwner, SPServerInfo defaultSettings) {
         this.dialogOwner = dialogOwner;
         panel = buildUI(defaultSettings);
     }
 
     public ServerInfoPanel(JComponent dialogOwner) {
-        this(dialogOwner, new WabitServerInfo("", "", 8080, "/wabit-enterprise/", "", ""));
+        this(dialogOwner, new SPServerInfo("", "", 8080, "/wabit-enterprise/", "", ""));
     }
 
-    private JPanel buildUI(WabitServerInfo si) {
+    private JPanel buildUI(SPServerInfo si) {
         DefaultFormBuilder builder = new DefaultFormBuilder(new FormLayout("pref, 4dlu, max(100dlu; pref):grow"));
         
         builder.append("Display Name", name = new JTextField(si.getName()));
@@ -171,10 +171,10 @@ public class ServerInfoPanel implements DataEntryPanel {
      * Returns a new WabitServerInfo object which has been configured based on the
      * settings currently in this panel's fields.
      */
-    public WabitServerInfo getServerInfo() {
+    public SPServerInfo getServerInfo() {
     	lookupServerInfo(false);
         int port = Integer.parseInt(this.port.getText());
-        WabitServerInfo si = new WabitServerInfo(
+        SPServerInfo si = new SPServerInfo(
                 name.getText(), host.getText(), port, path.getText(), 
                 username.getText(), new String(password.getPassword()));
         return si;

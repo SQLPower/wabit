@@ -38,6 +38,7 @@ import org.apache.http.params.HttpParams;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.enterprise.client.ServerProperties;
 import ca.sqlpower.util.Version;
 
@@ -62,7 +63,7 @@ public abstract class ServerInfoProvider {
 		return version.get(generateServerKey(host, port, path, username, password));
 	}
 	
-	public static boolean isServerLicensed(WabitServerInfo infos) 
+	public static boolean isServerLicensed(SPServerInfo infos) 
 			throws MalformedURLException,IOException 
 	{
 		return isServerLicensed(
@@ -141,7 +142,7 @@ public abstract class ServerInfoProvider {
 		}
 	}
 	
-	public static String getWatermarkMessage(WabitServerInfo infos) 
+	public static String getWatermarkMessage(SPServerInfo infos) 
 			throws MalformedURLException,IOException 
 	{
 		return getWatermarkMessage(

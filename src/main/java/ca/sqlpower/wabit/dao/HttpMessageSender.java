@@ -24,8 +24,8 @@ import java.net.URISyntaxException;
 
 import org.apache.http.client.HttpClient;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * An abstract {@link MessageSender} implementation that specifically
@@ -41,10 +41,10 @@ public abstract class HttpMessageSender<T> implements MessageSender<T> {
 	private final HttpClient httpClient;
 	
 	/**
-	 * A {@link WabitServerInfo} instance containing information on a given
+	 * A {@link SPServerInfo} instance containing information on a given
 	 * server necessary to send HTTP requests to it
 	 */
-	private final WabitServerInfo serverInfo;
+	private final SPServerInfo serverInfo;
 
 	/**
 	 * The UUID of the {@link WabitWorkspace} that this MessagePasser will be
@@ -54,19 +54,19 @@ public abstract class HttpMessageSender<T> implements MessageSender<T> {
 
 	/**
 	 * Creates an HttpMessagePasser configured to send HTTP requests according
-	 * to the settings contained in the {@link WabitServerInfo} parameter. All
+	 * to the settings contained in the {@link SPServerInfo} parameter. All
 	 * HTTP requests will be made regarding the WabitWorkspace with the given
 	 * UUID.
 	 * 
 	 * @param serverInfo
-	 *            A {@link WabitServerInfo} instance containing the connection
+	 *            A {@link SPServerInfo} instance containing the connection
 	 *            information for the HTTP server that the HTTP requests will be
 	 *            sent to
 	 * @param wabitWorkspaceUUID
 	 *            The UUID that identifies the {@link WabitWorkspace} that the
 	 *            HTTP requests will be referring to
 	 */
-	public HttpMessageSender(HttpClient httpClient, WabitServerInfo serverInfo, String wabitWorkspaceUUID) {
+	public HttpMessageSender(HttpClient httpClient, SPServerInfo serverInfo, String wabitWorkspaceUUID) {
         this.httpClient = httpClient;
 		this.serverInfo = serverInfo;
 		workspaceUUID = wabitWorkspaceUUID;
@@ -86,10 +86,10 @@ public abstract class HttpMessageSender<T> implements MessageSender<T> {
 	}
 
 	/**
-	 * Returns a {@link WabitServerInfo} instance containing the connection
+	 * Returns a {@link SPServerInfo} instance containing the connection
 	 * information of the HTTP server that HTTP request will be sent to
 	 */
-	protected WabitServerInfo getServerInfo() {
+	protected SPServerInfo getServerInfo() {
 		return serverInfo;
 	}
 }

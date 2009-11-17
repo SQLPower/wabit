@@ -32,6 +32,7 @@ import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -41,7 +42,6 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSessionContext implements WabitSessionContext {
 	
@@ -85,18 +85,18 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		return null;
 	}
 
-    public void addServer(WabitServerInfo serverInfo) {
+    public void addServer(SPServerInfo serverInfo) {
         // TODO Auto-generated method stub
         
     }
 
-    public List<WabitServerInfo> getEnterpriseServers(
+    public List<SPServerInfo> getEnterpriseServers(
             boolean includeDiscoveredServers) {
         // TODO Auto-generated method stub
         return null;
     }
 
-    public void removeServer(WabitServerInfo si) {
+    public void removeServer(SPServerInfo si) {
         // TODO Auto-generated method stub
         
     }
@@ -114,7 +114,7 @@ public class StubWabitSessionContext implements WabitSessionContext {
         return null;
     }
 
-    public WabitSession createServerSession(WabitServerInfo serverInfo) {
+    public WabitSession createServerSession(SPServerInfo serverInfo) {
         // TODO Auto-generated method stub
         return null;
     }

@@ -65,6 +65,7 @@ import net.jcip.annotations.GuardedBy;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -92,7 +93,6 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
@@ -680,7 +680,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	 * Returns the server infos if this session's delegate is a server session.
 	 * Returns null otherwise.
 	 */
-	public WabitServerInfo getEnterpriseServerInfos() {
+	public SPServerInfo getEnterpriseServerInfos() {
 		if (this.isEnterpriseServerSession()) {
 			return ((WabitServerSession)this.delegateSession).getWorkspaceLocation().getServiceInfo();
 		}

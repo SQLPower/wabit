@@ -26,13 +26,13 @@ import java.util.prefs.Preferences;
 
 import javax.jmdns.JmDNS;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompterFactory;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * A WabitSessionContext provides the basic non-session-specific services that
@@ -99,7 +99,7 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      * the session with the context should be done immediately or shortly after creating
      * the session.
      */
-    WabitSession createServerSession(WabitServerInfo serverInfo);
+    WabitSession createServerSession(SPServerInfo serverInfo);
 	
 	/**
 	 * Returns the number of active sessions in the context.
@@ -127,7 +127,7 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      *            the explicitly configured servers will be listed.
      * @return contact information for the known enterprise servers
      */
-    List<WabitServerInfo> getEnterpriseServers(boolean includeDiscoveredServers);
+    List<SPServerInfo> getEnterpriseServers(boolean includeDiscoveredServers);
 
     /**
      * Adds a new user-configured server specification to this context. The
@@ -138,7 +138,7 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      * @param serverInfo
      *            The serverInfo object to add.
      */
-    void addServer(WabitServerInfo serverInfo);
+    void addServer(SPServerInfo serverInfo);
 
     /**
      * Removes a new user-configured server specification from this context. The
@@ -151,7 +151,7 @@ public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMap
      *            {@link #getEnterpriseServers(boolean)} with an argument of
      *            <code>true</code>), this method will have no effect.
      */
-    void removeServer(WabitServerInfo si);
+    void removeServer(SPServerInfo si);
     
     /**
      * Returns the preferences node used by this session context. This should

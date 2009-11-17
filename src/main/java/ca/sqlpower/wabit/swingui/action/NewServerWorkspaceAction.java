@@ -24,9 +24,9 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
@@ -34,13 +34,13 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 public class NewServerWorkspaceAction extends AbstractAction {
 
 	private final WabitSwingSessionContext context;
-	private final WabitServerInfo serviceInfo;
+	private final SPServerInfo serviceInfo;
 	private final Component dialogOwner;
 
 	public NewServerWorkspaceAction(
 			Component dialogOwner, 
 			WabitSwingSessionContext context,
-			WabitServerInfo server) {
+			SPServerInfo server) {
 		super(server.toString());
 		this.dialogOwner = dialogOwner;
 		this.context = context;

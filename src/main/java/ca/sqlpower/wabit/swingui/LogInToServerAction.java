@@ -24,10 +24,10 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 
 /**
@@ -35,11 +35,11 @@ import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
  */
 public class LogInToServerAction extends AbstractAction {
 
-    private final WabitServerInfo serviceInfo;
+    private final SPServerInfo serviceInfo;
     private final Component dialogOwner;
     private final WabitSessionContext context;
     
-    public LogInToServerAction(Component dialogOwner, WabitServerInfo si, WabitSessionContext context) {
+    public LogInToServerAction(Component dialogOwner, SPServerInfo si, WabitSessionContext context) {
         super(WabitUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;

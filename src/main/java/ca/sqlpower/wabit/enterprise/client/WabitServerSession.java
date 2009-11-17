@@ -58,6 +58,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
@@ -153,7 +154,7 @@ public class WabitServerSession extends WabitSessionImpl {
 		jsonPersister = new WabitJSONPersister(httpSender);
     }
 
-	public static HttpClient createHttpClient(WabitServerInfo serviceInfo) {
+	public static HttpClient createHttpClient(SPServerInfo serviceInfo) {
 		HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setConnectionTimeout(params, 2000);
         DefaultHttpClient httpClient = new DefaultHttpClient(params);
@@ -426,7 +427,7 @@ public class WabitServerSession extends WabitSessionImpl {
      * @throws URISyntaxException
      * @throws JSONException 
      */
-    public static List<WorkspaceLocation> getWorkspaceNames(WabitServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
+    public static List<WorkspaceLocation> getWorkspaceNames(SPServerInfo serviceInfo) throws IOException, URISyntaxException, JSONException {
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, "workspaces"));
@@ -453,7 +454,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	 * Wabit Workspace on that server.
 	 * 
 	 * @param serviceInfo
-	 *            A {@link WabitServerInfo} containing the connection
+	 *            A {@link SPServerInfo} containing the connection
 	 *            information for that server
 	 * @return The {@link WorkspaceLocation} of the newly created remote
 	 *         WabitWorkspace
@@ -462,7 +463,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	 * @throws IOException
 	 * @throws JSONException
 	 */
-    public static WorkspaceLocation createNewServerSession(WabitServerInfo serviceInfo) throws URISyntaxException, ClientProtocolException, IOException, JSONException {
+    public static WorkspaceLocation createNewServerSession(SPServerInfo serviceInfo) throws URISyntaxException, ClientProtocolException, IOException, JSONException {
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpPost(getServerURI(serviceInfo, "workspaces"));
@@ -479,7 +480,7 @@ public class WabitServerSession extends WabitSessionImpl {
     }
 
     public void deleteServerWorkspace() throws URISyntaxException, ClientProtocolException, IOException {
-    	WabitServerInfo serviceInfo = workspaceLocation.getServiceInfo();
+    	SPServerInfo serviceInfo = workspaceLocation.getServiceInfo();
     	HttpClient httpClient = createHttpClient(serviceInfo);
     	try {
     		HttpUriRequest request = new HttpDelete(getServerURI(serviceInfo, "workspaces/" + getWorkspace().getUUID()));
@@ -520,7 +521,7 @@ public class WabitServerSession extends WabitSessionImpl {
 	 * @throws URISyntaxException 
 	 * @throws IOException 
 	 */
-	public static List<WabitServerSession> openServerSessions(WabitSessionContext context, WabitServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
+	public static List<WabitServerSession> openServerSessions(WabitSessionContext context, SPServerInfo serverInfo) throws IOException, URISyntaxException, JSONException {
 		List<WabitServerSession> openedSessions = new ArrayList<WabitServerSession>();
 		for (WorkspaceLocation workspaceLoc : WabitServerSession.getWorkspaceNames(serverInfo)) {
 			openedSessions.add(openServerSession(context, workspaceLoc));
@@ -528,14 +529,14 @@ public class WabitServerSession extends WabitSessionImpl {
         return openedSessions;
     }
 
-    private static <T> T executeServerRequest(HttpClient httpClient, WabitServerInfo serviceInfo, 
+    private static <T> T executeServerRequest(HttpClient httpClient, SPServerInfo serviceInfo, 
             String contextRelativePath, ResponseHandler<T> responseHandler)
     throws IOException, URISyntaxException {
         HttpUriRequest request = new HttpGet(getServerURI(serviceInfo, contextRelativePath));
         return httpClient.execute(request, responseHandler);
     }
     
-    private static URI getServerURI(WabitServerInfo serviceInfo, String contextRelativePath) throws URISyntaxException {
+    private static URI getServerURI(SPServerInfo serviceInfo, String contextRelativePath) throws URISyntaxException {
         logger.debug("Getting server URI for: " + serviceInfo);
         String contextPath = serviceInfo.getPath();
         URI serverURI = new URI("http", null, serviceInfo.getServerAddress(), serviceInfo.getPort(),

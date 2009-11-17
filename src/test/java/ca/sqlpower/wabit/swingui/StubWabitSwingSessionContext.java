@@ -25,11 +25,10 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JSpinner;
 
-import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.RecentMenu;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.wabit.StubWabitSessionContext;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class StubWabitSwingSessionContext extends StubWabitSessionContext implements WabitSwingSessionContext {
 
@@ -39,7 +38,7 @@ public class StubWabitSwingSessionContext extends StubWabitSessionContext implem
     }
     
     @Override
-    public WabitSwingSession createServerSession(WabitServerInfo serverInfo) {
+    public WabitSwingSession createServerSession(SPServerInfo serverInfo) {
         return null;
     }
     

@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -53,7 +54,6 @@ import ca.sqlpower.util.DefaultUserPrompter;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
@@ -75,7 +75,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	public static final String PREFS_PL_INI_PATH = "PL_INI_PATH";
 	
     protected JmDNS jmdns;
-    private final List<WabitServerInfo> manuallyConfiguredServers = new ArrayList<WabitServerInfo>();
+    private final List<SPServerInfo> manuallyConfiguredServers = new ArrayList<SPServerInfo>();
     
 	private final DataSourceCollection<SPDataSource> dataSources;
 	protected final List<WabitSession> childSessions = new ArrayList<WabitSession>();
@@ -292,17 +292,17 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	    return jmdns;
 	}
 	
-	public List<WabitServerInfo> getEnterpriseServers(boolean includeDiscovered) {
-	    List<WabitServerInfo> servers = new ArrayList<WabitServerInfo>(manuallyConfiguredServers);
+	public List<SPServerInfo> getEnterpriseServers(boolean includeDiscovered) {
+	    List<SPServerInfo> servers = new ArrayList<SPServerInfo>(manuallyConfiguredServers);
 	    if (includeDiscovered && jmdns != null) {
 	        for (ServiceInfo si : jmdns.list(WABIT_ENTERPRISE_SERVER_MDNS_TYPE)) {
-	            servers.add(new WabitServerInfo(si));
+	            servers.add(new SPServerInfo(si));
 	        }
 	    }
 	    return servers;
 	}
 
-	public void addServer(WabitServerInfo serverInfo) {
+	public void addServer(SPServerInfo serverInfo) {
         manuallyConfiguredServers.add(serverInfo);
         Preferences servers = getServersPrefNode();
         Preferences thisServer = servers.node(serverInfo.getName());
@@ -317,7 +317,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         }
     }
 
-    public void removeServer(WabitServerInfo serverInfo) {
+    public void removeServer(SPServerInfo serverInfo) {
         manuallyConfiguredServers.remove(serverInfo);
         Preferences servers = getServersPrefNode();
         try {
@@ -340,13 +340,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     	serverListeners.remove(l);
     }
 
-    private List<WabitServerInfo> readServersFromPrefs() throws BackingStoreException {
+    private List<SPServerInfo> readServersFromPrefs() throws BackingStoreException {
         Preferences serversNode = getServersPrefNode();
-        List<WabitServerInfo> serverList = new ArrayList<WabitServerInfo>();
+        List<SPServerInfo> serverList = new ArrayList<SPServerInfo>();
         for (String nodeName : serversNode.childrenNames()) {
             Preferences serverNode = serversNode.node(nodeName);
             
-            serverList.add(new WabitServerInfo(
+            serverList.add(new SPServerInfo(
                     serverNode.get("name", null),
                     serverNode.get("serverAddress", null),
                     serverNode.getInt("port", 0),
@@ -474,7 +474,7 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         pcs.removePropertyChangeListener(l);
     }
 
-	public WabitSession createServerSession(WabitServerInfo serverInfo) {
+	public WabitSession createServerSession(SPServerInfo serverInfo) {
 		String newWorkspaceId = UUID.randomUUID().toString();
 		WorkspaceLocation workspaceLocation =
 			new WorkspaceLocation("Unnamed Workspace", newWorkspaceId, serverInfo);

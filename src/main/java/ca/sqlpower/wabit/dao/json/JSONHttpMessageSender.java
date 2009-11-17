@@ -35,8 +35,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import ca.sqlpower.dao.SPPersistenceException;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.wabit.dao.HttpMessageSender;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 /**
  * An {@link HttpMessageSender} implementation that specifically sends it's
@@ -47,7 +47,7 @@ public class JSONHttpMessageSender extends HttpMessageSender<JSONObject> {
 	
 	private JSONArray messageArray;
 	
-	public JSONHttpMessageSender(HttpClient httpClient, WabitServerInfo serverInfo,
+	public JSONHttpMessageSender(HttpClient httpClient, SPServerInfo serverInfo,
 			String wabitWorkspaceUUID) {
 		super(httpClient, serverInfo, wabitWorkspaceUUID);
 		messageArray = new JSONArray();

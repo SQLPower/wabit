@@ -19,32 +19,26 @@
 
 package ca.sqlpower.wabit.swingui;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.jmdns.ServiceEvent;
 import javax.jmdns.ServiceListener;
 import javax.swing.AbstractAction;
-import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import org.apache.log4j.Logger;
 
-import com.jgoodies.forms.factories.ButtonBarFactory;
-
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.ServerListEvent;
 import ca.sqlpower.wabit.ServerListListener;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.enterprise.ServerInfoManager;
 
 /**
@@ -75,7 +69,7 @@ public class ServerListMenu extends JMenu {
      */
     public static JPopupMenu createPopupInstance(final WabitSwingSessionContext context, final Component dialogOwner) {
         JPopupMenu popup = new JPopupMenu();
-        List<WabitServerInfo> servers = context.getEnterpriseServers(true);
+        List<SPServerInfo> servers = context.getEnterpriseServers(true);
         AbstractAction configureServersAction = makeServerManagerAction(context, dialogOwner);
         popup.add(configureServersAction);
         if (servers.isEmpty()) {
@@ -83,7 +77,7 @@ public class ServerListMenu extends JMenu {
             mi.setEnabled(false);
             popup.add(mi);
         } else {
-            for (WabitServerInfo si : servers) {
+            for (SPServerInfo si : servers) {
                 popup.add(new LogInToServerAction(dialogOwner, si, context));
             }
         }
@@ -154,7 +148,7 @@ public class ServerListMenu extends JMenu {
     
     private final Runnable refillMenu = new Runnable() {
         public void run() {
-            List<WabitServerInfo> servers = context.getEnterpriseServers(true);
+            List<SPServerInfo> servers = context.getEnterpriseServers(true);
             logger.debug("Refilling server menu. servers = " + servers);
             removeAll();
             add(serverManagerAction);
@@ -163,7 +157,7 @@ public class ServerListMenu extends JMenu {
                 mi.setEnabled(false);
                 add(mi);
             } else {
-                for (WabitServerInfo si : servers) {
+                for (SPServerInfo si : servers) {
                     add(itemFactory.createMenuEntry(si, dialogOwner));
                 }
             }

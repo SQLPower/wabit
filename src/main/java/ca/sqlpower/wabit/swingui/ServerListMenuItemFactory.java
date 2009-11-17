@@ -23,7 +23,7 @@ import java.awt.Component;
 
 import javax.swing.JMenuItem;
 
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 
 /**
  * A factory interface used by the {@link ServerListMenu}.
@@ -41,5 +41,5 @@ public interface ServerListMenuItemFactory {
      *            menu item's action is invoked.
      * @return A new menu or menu item
      */
-    JMenuItem createMenuEntry(WabitServerInfo si, Component dialogOwner);
+    JMenuItem createMenuEntry(SPServerInfo si, Component dialogOwner);
 }

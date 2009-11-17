@@ -28,12 +28,12 @@ import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 public class WabitUtils {
     
@@ -87,7 +87,7 @@ public class WabitUtils {
      * @return The Wabit's canonical human-readable representation of the given
      *         service info.
      */
-    public static String serviceInfoSummary(WabitServerInfo si) {
+    public static String serviceInfoSummary(SPServerInfo si) {
         return si.getName() + " (" + si.getServerAddress() + ":" + si.getPort() + ")";
     }
 

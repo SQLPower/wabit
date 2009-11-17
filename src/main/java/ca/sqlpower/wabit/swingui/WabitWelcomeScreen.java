@@ -40,9 +40,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 
 import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.FurryPanel;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.LogoLayout;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -142,7 +142,7 @@ public class WabitWelcomeScreen {
 			public void actionPerformed(ActionEvent evt) {
 				ServerListMenuItemFactory serverListMenuItemFactory = 
 					new ServerListMenuItemFactory() {
-		            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, 
+		            public JMenuItem createMenuEntry(SPServerInfo serviceInfo, 
 		            		Component dialogOwner) {
 		                return new JMenuItem(new LogInToServerAction(dialogOwner, 
 		                		serviceInfo, context));

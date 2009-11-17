@@ -41,9 +41,9 @@ import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -169,7 +169,7 @@ public class PDFAction extends AbstractAction {
             
             Watermarker watermarkerToApply = null;
             if (this.session.isEnterpriseServerSession()) {
-            	WabitServerInfo infos = 
+            	SPServerInfo infos = 
             		((WabitSwingSessionImpl)this.session).getEnterpriseServerInfos();
             	if (!ServerInfoProvider.isServerLicensed(infos)) {
             		watermarkerToApply = watermarker;

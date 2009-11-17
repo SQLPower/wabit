@@ -35,12 +35,12 @@ import javax.swing.WindowConstants;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -99,7 +99,7 @@ public class NewWorkspaceScreen {
 		buildUI();
 	}
 	
-	public NewWorkspaceScreen(WabitSwingSessionContext context, WabitServerInfo serverInfo) {
+	public NewWorkspaceScreen(WabitSwingSessionContext context, SPServerInfo serverInfo) {
 	    this.context = context;
         session = context.createServerSession(serverInfo);
         

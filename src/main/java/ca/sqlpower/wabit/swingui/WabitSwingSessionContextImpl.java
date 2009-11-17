@@ -120,6 +120,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.architect.ArchitectUtils;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -162,7 +163,6 @@ import ca.sqlpower.wabit.enterprise.client.Grant;
 import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.enterprise.client.User;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.enterprise.client.WabitServerSession;
 import ca.sqlpower.wabit.enterprise.client.security.CachingWabitAccessManager;
 import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager;
@@ -1311,7 +1311,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 		return wabitDatasources;
 	}
 	
-	public WabitSwingSession createServerSession(WabitServerInfo serverInfo) {
+	public WabitSwingSession createServerSession(SPServerInfo serverInfo) {
         final WabitSwingSessionImpl session = new WabitSwingSessionImpl(this, delegateContext.createServerSession(serverInfo));
         return session;
     }
@@ -1432,7 +1432,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         			JPopupMenu popupMenu = new JPopupMenu();
         			popupMenu.add(new NewWorkspaceAction(WabitSwingSessionContextImpl.this));
         			JMenu newWorkspaceServerSubMenu = createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
-        	            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+        	            public JMenuItem createMenuEntry(SPServerInfo serviceInfo, Component dialogOwner) {
         	                return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, WabitSwingSessionContextImpl.this, serviceInfo));
         	            }
         	        });
@@ -1604,7 +1604,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         menuBar.add(fileMenu);
         fileMenu.add(new NewWorkspaceAction(this));
 		JMenu newWorkspaceServerSubMenu = createServerListMenu(frame, "New Server Workspace", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+            public JMenuItem createMenuEntry(SPServerInfo serviceInfo, Component dialogOwner) {
                 return new JMenuItem(new NewServerWorkspaceAction(dialogOwner, WabitSwingSessionContextImpl.this, serviceInfo));
             }
         });
@@ -1615,7 +1615,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         fileMenu.addSeparator();
         
         fileMenu.add(createServerListMenu(frame, "Log In to Wabit Server", new ServerListMenuItemFactory() {
-            public JMenuItem createMenuEntry(WabitServerInfo serviceInfo, Component dialogOwner) {
+            public JMenuItem createMenuEntry(SPServerInfo serviceInfo, Component dialogOwner) {
                 return new JMenuItem(new LogInToServerAction(dialogOwner, serviceInfo, WabitSwingSessionContextImpl.this));
             }
         }));
@@ -1950,15 +1950,15 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.getDataSources();
     }
 
-    public List<WabitServerInfo> getEnterpriseServers(boolean includeDiscoveredServers) {
+    public List<SPServerInfo> getEnterpriseServers(boolean includeDiscoveredServers) {
         return delegateContext.getEnterpriseServers(includeDiscoveredServers);
     }
 
-    public void addServer(WabitServerInfo serverInfo) {
+    public void addServer(SPServerInfo serverInfo) {
         delegateContext.addServer(serverInfo);
     }
 
-    public void removeServer(WabitServerInfo si) {
+    public void removeServer(SPServerInfo si) {
         delegateContext.removeServer(si);
     }
 

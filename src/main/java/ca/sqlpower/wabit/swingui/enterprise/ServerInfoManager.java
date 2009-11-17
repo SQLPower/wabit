@@ -39,9 +39,9 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.swingui.LogInToServerAction;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
@@ -64,7 +64,7 @@ public class ServerInfoManager {
         public void actionPerformed(ActionEvent e) {
             Object[] selectedValues = serverInfos.getSelectedValues();
             for (Object o : selectedValues) {
-                WabitServerInfo si = (WabitServerInfo) o;
+                SPServerInfo si = (SPServerInfo) o;
                 context.removeServer(si);
             }
             
@@ -125,8 +125,8 @@ public class ServerInfoManager {
         this.connectButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) 
 			{
-				WabitServerInfo selectedItem = 
-					(WabitServerInfo) serverInfos.getSelectedValue();
+				SPServerInfo selectedItem = 
+					(SPServerInfo) serverInfos.getSelectedValue();
 				
 				Window dialogParent;
 		        if (dialogOwner instanceof Window) {
@@ -171,7 +171,7 @@ public class ServerInfoManager {
     private void refreshInfoList() {
         DefaultListModel model = (DefaultListModel) serverInfos.getModel();
         model.removeAllElements();
-        for (WabitServerInfo si : context.getEnterpriseServers(false)) {
+        for (SPServerInfo si : context.getEnterpriseServers(false)) {
             model.addElement(si);
         }
     }
@@ -187,7 +187,7 @@ public class ServerInfoManager {
      *            The server info to edit. If the intent is to add a new one,
      *            specify null.
      */
-    private void showAddOrEditDialog(final WabitServerInfo serverInfo) {
+    private void showAddOrEditDialog(final SPServerInfo serverInfo) {
         
         final ServerInfoPanel infoPanel;
         if (serverInfo == null) {
@@ -223,7 +223,7 @@ public class ServerInfoManager {
     }
     
 	private void editSelectedServer() {
-		WabitServerInfo selectedItem = (WabitServerInfo) serverInfos.getSelectedValue();
+		SPServerInfo selectedItem = (SPServerInfo) serverInfos.getSelectedValue();
 		if (selectedItem != null) {
 		    showAddOrEditDialog(selectedItem);
 		}

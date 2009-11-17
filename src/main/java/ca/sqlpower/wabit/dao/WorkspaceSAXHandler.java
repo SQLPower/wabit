@@ -54,6 +54,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -76,7 +77,6 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.enterprise.client.WabitServerInfo;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -289,7 +289,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 *            Describes a connection to a server. If this is not null, a
 	 *            server session will be created that is connected to a server.
 	 */
-	public WorkspaceSAXHandler(WabitSessionContext context, WabitServerInfo serverInfo) {
+	public WorkspaceSAXHandler(WabitSessionContext context, SPServerInfo serverInfo) {
 	    this.context = context;
         this.promptFactory = context;
 		oldToNewDSNames = new HashMap<String, String>();

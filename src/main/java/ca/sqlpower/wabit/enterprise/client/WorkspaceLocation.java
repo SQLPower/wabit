@@ -22,6 +22,8 @@ package ca.sqlpower.wabit.enterprise.client;
 import javax.annotation.Nonnull;
 import javax.annotation.concurrent.Immutable;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
+
 /**
  * Describes the location of a remote workspace.
  */
@@ -41,12 +43,12 @@ public class WorkspaceLocation {
 	/**
 	 * The server location of the workspace pointed to by this instance.
 	 */
-	private final WabitServerInfo serviceInfo;
+	private final SPServerInfo serviceInfo;
 
 	public WorkspaceLocation(
 			 @Nonnull String name,
 			 @Nonnull String uuid,
-			 @Nonnull WabitServerInfo serviceInfo) {
+			 @Nonnull SPServerInfo serviceInfo) {
 		if (name == null) throw new NullPointerException("Null name not permitted");
 		this.name = name;
 
@@ -65,7 +67,7 @@ public class WorkspaceLocation {
 		return uuid;
 	}
 
-	public @Nonnull WabitServerInfo getServiceInfo() {
+	public @Nonnull SPServerInfo getServiceInfo() {
 		return serviceInfo;
 	}
 	
