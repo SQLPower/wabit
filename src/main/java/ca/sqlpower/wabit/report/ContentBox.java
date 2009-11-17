@@ -92,9 +92,11 @@ public class ContentBox extends AbstractWabitObject {
 
         @Override
         public void propertyChangeImpl(PropertyChangeEvent evt) {
+        	WabitWorkspace workspace = WabitUtils.getWorkspace(ContentBox.this);
             if (evt.getPropertyName().equals("name") && evt.getNewValue() != null 
                     && ((String) evt.getNewValue()).length() > 0
-                    && evt.getSource() == contentRenderer) {
+                    && evt.getSource() == contentRenderer
+                    && (workspace == null || !workspace.isMagicDisabled())) {
                 setName("Content from " + (String) evt.getNewValue());
             }
             repaint();           
