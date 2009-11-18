@@ -398,7 +398,9 @@ public class WabitClientSession extends WabitSessionImpl {
                 }
                 PlDotIni plIni;
                 try {
-                    plIni = new PlDotIni(getServerURI(workspaceLocation.getServiceInfo(), "jdbc/"));
+                    plIni = new PlDotIni(
+                    		getServerURI(workspaceLocation.getServiceInfo(), "jdbc/"),
+                    		getServerURI(workspaceLocation.getServiceInfo(), "mondrian-schema/"));
                     plIni.read(response.getEntity().getContent());
                     logger.debug("Data source collection has URI " + plIni.getServerBaseURI());
                 } catch (URISyntaxException e) {

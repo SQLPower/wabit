@@ -126,7 +126,9 @@ public class OlapConnectionPool {
                 // Build a JDBC URL for Mondrian driver connection
                 StringBuilder url = new StringBuilder("jdbc:mondrian:");
                 url.append("DataSource='").append(uniqueName);
-                url.append("';Catalog=").append(dataSource.getMondrianSchema().toString());
+                String schemaURI = dataSource.getMondrianSchema().toString();
+                logger.debug("Mondrian schema location is " + schemaURI);
+                url.append("';Catalog=").append(schemaURI);
                 
                 Connection connection = DriverManager.getConnection(url.toString());
                 return ((OlapWrapper) connection).unwrap(OlapConnection.class);

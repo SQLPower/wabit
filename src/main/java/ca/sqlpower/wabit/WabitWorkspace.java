@@ -739,6 +739,12 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         // property in WabitWorkspaceTest and WorkspaceCMLDAOTest!
         throw new UnsupportedOperationException("We currently do not support this");
     }
+    
+    public URI getMondrianServerBaseURI() {
+    	// IMPORTANT: if you implement this, create the tests for this
+        // property in WabitWorkspaceTest!
+        throw new UnsupportedOperationException("We currently do not support this");
+    }
 
     public void setServerBaseURI(URI serverBaseURI) {
         // IMPORTANT: if you implement this, re-enable the tests for this
