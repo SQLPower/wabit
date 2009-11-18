@@ -25,7 +25,7 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.wabit.enterprise.client.User;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 

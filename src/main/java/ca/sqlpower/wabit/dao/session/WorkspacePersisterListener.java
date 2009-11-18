@@ -33,8 +33,12 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
+import ca.sqlpower.enterprise.client.Grant;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
@@ -52,10 +56,7 @@ import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.RemovedObjectEntry;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
-import ca.sqlpower.wabit.enterprise.client.Grant;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -297,7 +298,7 @@ public class WorkspacePersisterListener implements SPListener {
 		WabitUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
 		logger.debug("wabitChildAdded " + e.getChildType() + " with UUID " + e.getChild().getUUID());
-		persistObject((WabitObject) e.getChild());
+		persistObject(e.getChild());
 	}
 	
 	/**
@@ -310,7 +311,7 @@ public class WorkspacePersisterListener implements SPListener {
 	 *            The root of the tree of objects that will be persisted. This
 	 *            object and all of its children will be persisted.
 	 */
-	 public void persistObject(WabitObject wo) {
+	 public void persistObject(SPObject wo) {
 		 
 		if (wouldEcho()) return;
 
@@ -318,7 +319,7 @@ public class WorkspacePersisterListener implements SPListener {
 				"Creating transaction started event from persistObject."));
 		
 		int index = 0;
-		WabitObject parent = wo.getParent();
+		SPObject parent = wo.getParent();
 		if (parent != null) {
 			index = parent.getChildren().indexOf(wo) - parent.childPositionOffset(wo.getClass());
 			if (index < 0) {
@@ -328,7 +329,7 @@ public class WorkspacePersisterListener implements SPListener {
 		
 		persistChild(parent, wo, wo.getClass(), index);
 		
-		for (WabitObject child : wo.getChildren()) {
+		for (SPObject child : wo.getChildren()) {
 			persistObject(child);
 		}
 		
@@ -351,8 +352,8 @@ public class WorkspacePersisterListener implements SPListener {
 	 * @param indexOfChild
 	 *            The index of the child in the child list of the parent.
 	 */
-	 protected void persistChild(WabitObject parent, WabitObject child, 
-			Class<? extends WabitObject> childClassType, int indexOfChild) {
+	 protected void persistChild(SPObject parent, SPObject child, 
+			Class<? extends SPObject> childClassType, int indexOfChild) {
 		 
 		if (wouldEcho()) return;
 		
@@ -840,7 +841,7 @@ public class WorkspacePersisterListener implements SPListener {
 		this.objectsToRemove.add(
 			new RemovedObjectEntry(
 				e.getSource().getUUID(),
-				(WabitObject) e.getChild(),
+				e.getChild(),
 				e.getIndex()));
 		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}
@@ -852,7 +853,7 @@ public class WorkspacePersisterListener implements SPListener {
 		this.transactionStarted(TransactionEvent.createStartTransactionEvent(this, 
 				"Creating start transaction event from propertyChange on object " + evt.getSource().getClass().getSimpleName() + " and property name " + evt.getPropertyName()));
 		
-		WabitObject source = (WabitObject) evt.getSource();
+		SPObject source = (SPObject) evt.getSource();
 		String uuid = source.getUUID();
 		String propertyName = evt.getPropertyName();
 		Object oldValue = evt.getOldValue();

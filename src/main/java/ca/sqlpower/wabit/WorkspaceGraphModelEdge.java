@@ -1,5 +1,7 @@
 package ca.sqlpower.wabit;
 
+import ca.sqlpower.object.SPObject;
+
 
 /**
  * Each edge is made up of a parent {@link WabitObject} and a child
@@ -8,19 +10,19 @@ package ca.sqlpower.wabit;
  */
 public class WorkspaceGraphModelEdge {
     
-    private final WabitObject parent;
-    private final WabitObject child;
+    private final SPObject parent;
+    private final SPObject child;
 
-    public WorkspaceGraphModelEdge(WabitObject parent, WabitObject child) {
+    public WorkspaceGraphModelEdge(SPObject parent, SPObject child) {
         this.parent = parent;
         this.child = child;
     }
     
-    public WabitObject getParent() {
+    public SPObject getParent() {
         return parent;
     }
     
-    public WabitObject getChild() {
+    public SPObject getChild() {
         return child;
     }
     

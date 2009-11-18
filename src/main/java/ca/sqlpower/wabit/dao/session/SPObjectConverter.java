@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.dao.session;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 
@@ -30,24 +31,24 @@ import ca.sqlpower.wabit.WabitUtils;
  * converts these strings into {@link WabitObject}s that are contained in
  * the root.
  */
-public class WabitObjectConverter implements BidirectionalConverter<String, WabitObject> {
+public class SPObjectConverter implements BidirectionalConverter<String, SPObject> {
 	
 	/**
 	 * This is the root object of the tree of {@link WabitObject}s that
 	 * will be searched for the given object by unique id.
 	 */
-	private final WabitObject root;
+	private final SPObject root;
 
-	public WabitObjectConverter(WabitObject root) {
+	public SPObjectConverter(SPObject root) {
 		this.root = root;
 	}
 
-	public WabitObject convertToComplexType(String convertFrom)
+	public SPObject convertToComplexType(String convertFrom)
 			throws ConversionException {
-		return WabitUtils.findByUuid(root, convertFrom, WabitObject.class); 
+		return WabitUtils.findByUuid(root, convertFrom, SPObject.class); 
 	}
 
-	public String convertToSimpleType(WabitObject convertFrom, Object ... additionalValues) {
+	public String convertToSimpleType(SPObject convertFrom, Object ... additionalValues) {
 		return convertFrom.getUUID();
 	}
 

@@ -26,6 +26,7 @@ import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
 
@@ -67,7 +68,7 @@ public class WorkspaceGraphTreeModel implements TreeModel {
      */
     private WorkspaceGraphTreeNodeWrapper addNodeToTree(
             WorkspaceGraphTreeNodeWrapper parent, 
-            WabitObject nodeToAdd, WorkspaceGraphModel graph) {
+            SPObject nodeToAdd, WorkspaceGraphModel graph) {
         
         //if it exists in its parent chain continue
         WorkspaceGraphTreeNodeWrapper ancestor = parent;
@@ -82,7 +83,7 @@ public class WorkspaceGraphTreeModel implements TreeModel {
         if (parent != null) {
             parent.addChild(newTreeNode);
         }
-        for (WabitObject child : graph.getAdjacentNodes(nodeToAdd)) {
+        for (SPObject child : graph.getAdjacentNodes(nodeToAdd)) {
             addNodeToTree(newTreeNode, child, graph);
         }
         

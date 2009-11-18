@@ -33,6 +33,8 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -42,9 +44,7 @@ import ca.sqlpower.swingui.table.Arrow;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;

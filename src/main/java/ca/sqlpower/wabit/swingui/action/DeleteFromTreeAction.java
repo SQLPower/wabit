@@ -41,6 +41,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
@@ -70,7 +71,7 @@ public class DeleteFromTreeAction extends AbstractAction {
      */
     private static final int TREE_BORDER_BUFFER_WIDTH = 5;
     
-    private WabitObject item ;
+    private SPObject item ;
     private final WabitWorkspace workspace;
     
     /**
@@ -99,7 +100,7 @@ public class DeleteFromTreeAction extends AbstractAction {
      * @param upf
      *            A user prompter to display useful messages to the user.
      */
-    public DeleteFromTreeAction(WabitWorkspace workspace, WabitObject node, 
+    public DeleteFromTreeAction(WabitWorkspace workspace, SPObject node, 
             Component parent, UserPrompterFactory upf) {
         super("Delete");
         this.workspace = workspace;
@@ -112,7 +113,7 @@ public class DeleteFromTreeAction extends AbstractAction {
 
         final WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace, item, true, true);
         
-        List<WabitObject> dependentList = new ArrayList<WabitObject>(graph.getNodes());
+        List<SPObject> dependentList = new ArrayList<SPObject>(graph.getNodes());
         dependentList.remove(item);
         
         if (dependentList.isEmpty()) {
@@ -183,7 +184,7 @@ public class DeleteFromTreeAction extends AbstractAction {
             if (!deleteConfirmed) return;
         }
         
-        WabitObject startNode = graph.getGraphStartNode();
+        SPObject startNode = graph.getGraphStartNode();
         
         try {
             boolean nodeRemoved = removeNode(startNode, graph);
@@ -233,9 +234,9 @@ public class DeleteFromTreeAction extends AbstractAction {
      *             parent. This suggests there is something wrong with the
      *             parent/child relationships in the workspace.
      */
-    boolean removeNode(WabitObject nodeToRemove, WorkspaceGraphModel graph) throws IllegalArgumentException, ObjectDependentException  {
+    boolean removeNode(SPObject nodeToRemove, WorkspaceGraphModel graph) throws IllegalArgumentException, ObjectDependentException  {
         boolean successfullyRemoved = true;
-        for (WabitObject dependent : graph.getAdjacentNodes(nodeToRemove)) {
+        for (SPObject dependent : graph.getAdjacentNodes(nodeToRemove)) {
             
             //Check if the dependency exists to prevent infinite recursion if there is
             //a cycle in the graph.

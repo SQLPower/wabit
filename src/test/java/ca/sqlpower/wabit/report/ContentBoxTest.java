@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.util.Set;
 
 import ca.sqlpower.dao.SPPersister;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.StubWabitSession;
@@ -124,8 +125,8 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
 			}
 			
 			@Override
-			public void persistChild(WabitObject parent, WabitObject child,
-					Class<? extends WabitObject> childClassType,
+			public void persistChild(SPObject parent, SPObject child,
+					Class<? extends SPObject> childClassType,
 					int indexOfChild) {
 				super.persistChild(parent, child, childClassType, indexOfChild);
 			}

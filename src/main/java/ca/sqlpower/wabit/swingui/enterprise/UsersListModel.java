@@ -29,13 +29,13 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
-import ca.sqlpower.wabit.enterprise.client.User;
 
 public class UsersListModel implements ListModel, SPListener {
 
@@ -58,12 +58,12 @@ public class UsersListModel implements ListModel, SPListener {
 	private void updateList() {
 		items.clear();
 		if (currentMode) { // Means we want the current users in this list
-			for (GroupMember membership : group.getMembers()) {
+			for (GroupMember membership : group.getChildren(GroupMember.class)) {
 				items.add(membership.getUser());
 			}
 		} else {
 			List<User> tmpList = new ArrayList<User>();
-			for (GroupMember membership : group.getMembers()) {
+			for (GroupMember membership : group.getChildren(GroupMember.class)) {
 				tmpList.add(membership.getUser());
 			}
 			items.addAll(workspace.getUsers());

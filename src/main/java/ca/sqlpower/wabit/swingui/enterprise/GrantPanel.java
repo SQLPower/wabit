@@ -49,7 +49,12 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.enterprise.client.Grant;
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
@@ -57,11 +62,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Grant;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
@@ -336,7 +337,7 @@ public class GrantPanel implements DataEntryPanel {
 		for (int i = 0; i < this.list.getModel().getSize(); i++) {
 			if (this.list.getModel().getElementAt(i) instanceof Group) {
 				Group group = (Group)this.list.getModel().getElementAt(i);
-				for (Grant grant : group.getGrants()) {
+				for (Grant grant : group.getChildren(Grant.class)) {
 					if (this.systemMode && grant.getType().equals(this.objectType)) {
 						this.grants.put(group.getUUID(), grant);
 					} else if (!this.systemMode && this.objectUuid.equals(grant.getSubject())) {
@@ -417,11 +418,11 @@ public class GrantPanel implements DataEntryPanel {
 				}
 				// Third pass, remove deleted grants
 				for (Grant grant : this.grantsToDelete) {
-					WabitObject persistedGrant = systemWorkspace.findByUuid(
+					Grant persistedGrant = systemWorkspace.findByUuid(
 										grant.getUUID(), 
 										Grant.class);
 					if (persistedGrant!=null) {
-						WabitObject parent = persistedGrant.getParent();
+						SPObject parent = persistedGrant.getParent();
 						if (parent.getChildren(Grant.class).contains(grant)) {
 							parent.removeChild(grant);
 						}

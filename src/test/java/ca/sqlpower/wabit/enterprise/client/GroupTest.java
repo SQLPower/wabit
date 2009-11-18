@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.enterprise.client;
 
 import java.util.Set;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -65,7 +67,7 @@ public class GroupTest extends AbstractWabitObjectTest {
 	}
 
 	@Override
-	public WabitObject getObjectUnderTest() {
+	public SPObject getObjectUnderTest() {
 		return group;
 	}
 

@@ -32,25 +32,25 @@ import javax.swing.ListModel;
 import javax.swing.event.ListDataEvent;
 import javax.swing.event.ListDataListener;
 
+import ca.sqlpower.enterprise.client.Grant;
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.TransactionEvent;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Grant;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.User;
 
 public class UsersAndGroupsListModel implements ListModel, SPListener {
 
-	private final List<WabitObject> items;
+	private final List<SPObject> items;
 	private final WabitWorkspace workspace;
 	private final Set<ListDataListener> listeners = new HashSet<ListDataListener>();
 	private final GrantPanel grantPanel;
 	
 	public UsersAndGroupsListModel(WabitWorkspace workspace, GrantPanel grantPanel) {
 		this.grantPanel = grantPanel;
-		items = new ArrayList<WabitObject>();
+		items = new ArrayList<SPObject>();
 		this.workspace = workspace;
 		updateList();
 		this.workspace.addSPListener(this);

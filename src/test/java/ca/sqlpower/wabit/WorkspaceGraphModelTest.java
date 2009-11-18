@@ -22,6 +22,7 @@ package ca.sqlpower.wabit;
 import java.util.Collection;
 
 import junit.framework.TestCase;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
@@ -56,7 +57,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         workspace.addReport(report);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, workspace, false, false);
-        Collection<WabitObject> nodes = graphModel.getNodes();
+        Collection<SPObject> nodes = graphModel.getNodes();
         assertEquals(15, nodes.size());
         assertTrue(nodes.contains(workspace));
         assertTrue(nodes.contains(cache));
@@ -84,7 +85,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         chart.setQuery(cache);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, false, false);
-        Collection<WabitObject> nodes = graphModel.getNodes();
+        Collection<SPObject> nodes = graphModel.getNodes();
         assertEquals(7, nodes.size());
         assertTrue(nodes.contains(cache));
         assertTrue(nodes.contains(chart));
@@ -175,7 +176,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         report.getPage().addContentBox(box);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, report, true, false);
-        Collection<WabitObject> nodes = graphModel.getNodes();
+        Collection<SPObject> nodes = graphModel.getNodes();
         assertEquals(2, nodes.size());
         assertTrue(nodes.contains(report));
         assertTrue(nodes.contains(chart));
@@ -210,7 +211,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         report.getPage().addContentBox(box);
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, true, true);
-        Collection<WabitObject> nodes = graphModel.getNodes();
+        Collection<SPObject> nodes = graphModel.getNodes();
         assertEquals(2, nodes.size());
         assertTrue(nodes.contains(chartRenderer));
         assertTrue(nodes.contains(chart));

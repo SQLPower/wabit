@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.springframework.security.GrantedAuthority;
 
+import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -70,7 +72,7 @@ public class UserTest extends AbstractWabitObjectTest {
 	}
 	
 	@Override
-	public WabitObject getObjectUnderTest() {
+	public SPObject getObjectUnderTest() {
 		return user;
 	}
 	

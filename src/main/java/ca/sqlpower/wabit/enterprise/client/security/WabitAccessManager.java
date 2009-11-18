@@ -30,14 +30,15 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import ca.sqlpower.enterprise.client.Grant;
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
-import ca.sqlpower.wabit.enterprise.client.Grant;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
-import ca.sqlpower.wabit.enterprise.client.User;
 
 
 public class WabitAccessManager {
@@ -84,9 +85,9 @@ public class WabitAccessManager {
 		synchronized (workspace) {
 			List<Group> groups = workspace.getGroups();
 			for (Group group : groups) {
-				for (GroupMember member : group.getMembers()) {
+				for (GroupMember member : group.getChildren(GroupMember.class)) {
 					if (member.getUser().equals(user)) {
-						grants.addAll(group.getGrants());
+						grants.addAll(group.getChildren(Grant.class));
 						break;
 					}
 				}
@@ -98,7 +99,7 @@ public class WabitAccessManager {
 	/**
 	 * Returns all objects that depend on the object represented by rootUuid
 	 */
-	private Collection<WabitObject> aggregateDependantObjects(String rootUuid) {
+	private Collection<SPObject> aggregateDependantObjects(String rootUuid) {
 		if (getCurrentSession() == null) {
 			return Collections.emptyList();
 		}
@@ -109,8 +110,8 @@ public class WabitAccessManager {
 			// Must find all dependent objects, but not ancestors
 			WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace,
 					root, true, true);
-			List<WabitObject> parents = new LinkedList<WabitObject>();
-			for (WabitObject wo : graph.getNodes()) {
+			List<SPObject> parents = new LinkedList<SPObject>();
+			for (SPObject wo : graph.getNodes()) {
 				if (wo instanceof WabitWorkspace) {
 					parents.add(wo);
 					continue;
@@ -146,9 +147,9 @@ public class WabitAccessManager {
 			return false;
 		}
 
-		Collection<WabitObject> dependantObjects = aggregateDependantObjects(subject);
+		Collection<SPObject> dependantObjects = aggregateDependantObjects(subject);
 		Set<String> dependants = new HashSet<String>();
-		for (WabitObject wo : dependantObjects) {
+		for (SPObject wo : dependantObjects) {
 			dependants.add(wo.getUUID());
 		}
 
@@ -207,7 +208,7 @@ public class WabitAccessManager {
 	public boolean isGranted(String type, Set<Permission> permissions) {
 		synchronized (getSystemSession().getWorkspace()) {
 			List<Grant> grants = aggregateGrants(getCurrentUser());
-			Set<WabitObject> empty = Collections.emptySet();
+			Set<SPObject> empty = Collections.emptySet();
 			return doSystemGrantsPermit(type, grants, empty, permissions);
 		}
 	}
@@ -228,7 +229,7 @@ public class WabitAccessManager {
 		}
 
 		if (isReadOnly(permissions)) {
-			for (WabitObject wo : currentWorkspace.getChildren()) {
+			for (SPObject wo : currentWorkspace.getChildren()) {
 				if (isGranted(wo.getUUID(), wo.getClass().getSimpleName(), EnumSet.copyOf(permissions))) {
 					return true;
 				}
@@ -238,13 +239,13 @@ public class WabitAccessManager {
 	}
 	
 	public boolean doSystemGrantsPermit(@Nullable String type,
-			List<Grant> grants, Collection<WabitObject> dependantObjects, Set<Permission> permissions) {
+			List<Grant> grants, Collection<SPObject> dependantObjects, Set<Permission> permissions) {
 		if (type == null) {
 			return false;
 		}
 		
 		Set<String> dependantTypes = new HashSet<String>();
-		for (WabitObject wo : dependantObjects) {
+		for (SPObject wo : dependantObjects) {
 			dependantTypes.add(wo.getClass().getSimpleName());
 		}
 		

@@ -56,15 +56,15 @@ import net.miginfocom.swing.MigLayout;
 import org.apache.commons.codec.binary.Hex;
 import org.olap4j.impl.ArrayMap;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
@@ -279,7 +279,7 @@ public class UserPanel implements WabitPanel {
 					workspace.begin("Remove user from groups");
 					Map<Group,GroupMember> toRemove = new ArrayMap<Group, GroupMember>();
 					for (Object object : selection) {
-						for (GroupMember membership : ((Group)object).getMembers()) {
+						for (GroupMember membership : ((Group) object).getChildren(GroupMember.class)) {
 							if (membership.getUser().getUUID().equals(user.getUUID())) {
 								toRemove.put((Group)object, membership);
 							}

@@ -32,6 +32,7 @@ import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContextImpl;
 import ca.sqlpower.wabit.WabitSessionImpl;
@@ -127,7 +128,7 @@ public class WabitSwingSessionContextImplTest extends TestCase {
         report.setName("report");
         dummyWorkspace.addReport(report);
         
-        context.importIntoActiveSession(dummyWorkspace.getChildren());
+        context.importIntoActiveSession(dummyWorkspace.getChildren(WabitObject.class));
         assertTrue(inactiveSession.getWorkspace().getChildren().isEmpty());
         WabitWorkspace activeWorkspace = session.getWorkspace();
         assertEquals(1, activeWorkspace.getQueries().size());

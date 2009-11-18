@@ -19,8 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.util.List;
-
 import ca.sqlpower.object.SPObject;
 
 public interface WabitObject extends SPObject {
@@ -35,23 +33,5 @@ public interface WabitObject extends SPObject {
      * @return The parent of this object.
      */
     WabitObject getParent();
-
-    /**
-     * Returns an unmodifiable list of the children in this WabitObject. If there
-     * are no children in this WabitObject an empty list should be returned.
-     */
-    List<? extends WabitObject> getChildren();
-    
-    /**
-     * Returns a list of all {@link WabitObject}s that this Wabit object is
-     * dependent on. Children of a WabitObject are not dependencies and will not
-     * be returned in this list. If there are no objects this Wabit object is
-     * dependent on an empty list should be returned. These are only the
-     * immediate dependencies of this object. If you want to find the
-     * dependencies of this object's dependencies as well it may be useful to
-     * look at {@link WorkspaceGraphModel} to make a full graph of all of the
-     * dependencies.
-     */
-    List<WabitObject> getDependencies();
 
 }

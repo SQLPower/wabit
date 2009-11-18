@@ -13,6 +13,7 @@ import java.util.Set;
 
 import ca.sqlpower.graph.BreadthFirstSearch;
 import ca.sqlpower.graph.GraphModel;
+import ca.sqlpower.object.SPObject;
 
 /**
  * This graph takes a {@link WabitObject} for its root and makes a graph
@@ -95,30 +96,30 @@ import ca.sqlpower.graph.GraphModel;
  *         CR1
  * </pre>
  */
-public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGraphModelEdge> {
+public class WorkspaceGraphModel implements GraphModel<SPObject, WorkspaceGraphModelEdge> {
     
     /**
      * This list will contain all of the nodes in the entire graph.
      */
-    private final Set<WabitObject> nodes = new HashSet<WabitObject>();
+    private final Set<SPObject> nodes = new HashSet<SPObject>();
     
     /**
      * This list will map each node to a list of inbound edges on the node.
      */
-    private final Map<WabitObject, Set<WorkspaceGraphModelEdge>> inboundEdges = 
-        new HashMap<WabitObject, Set<WorkspaceGraphModelEdge>>();
+    private final Map<SPObject, Set<WorkspaceGraphModelEdge>> inboundEdges = 
+        new HashMap<SPObject, Set<WorkspaceGraphModelEdge>>();
     
     /**
      * This list will map each node to a list of outbound edges on the node.
      */
-    private final Map<WabitObject, Set<WorkspaceGraphModelEdge>> outboundEdges =
-        new HashMap<WabitObject, Set<WorkspaceGraphModelEdge>>();
+    private final Map<SPObject, Set<WorkspaceGraphModelEdge>> outboundEdges =
+        new HashMap<SPObject, Set<WorkspaceGraphModelEdge>>();
 
     /**
      * This node is the starting point when creating the graph.
      * @see #WorkspaceGraphModel(WabitObject, WabitObject, boolean, boolean)
      */
-    private final WabitObject graphStartNode;
+    private final SPObject graphStartNode;
 
     /**
      * @param root
@@ -153,7 +154,7 @@ public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGra
      *            will have an edge pointing to their parent and objects being
      *            depended on will point to the objects that depend on them.
      */
-    public WorkspaceGraphModel(WabitObject root, WabitObject graphStartNode, 
+    public WorkspaceGraphModel(SPObject root, SPObject graphStartNode, 
             boolean showOnlyDependencies, boolean reversePolarity) {
         
         //The graph made by this constructor is done in two steps:
@@ -163,33 +164,33 @@ public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGra
         //   stay in the graph, ie connected, and remove the rest.
         
         this.graphStartNode = graphStartNode;
-        Queue<WabitObject> adjacentNodes = new LinkedList<WabitObject>();
-        Map<WabitObject, WabitObject> childParentMap = new HashMap<WabitObject, WabitObject>();
+        Queue<SPObject> adjacentNodes = new LinkedList<SPObject>();
+        Map<SPObject, SPObject> childParentMap = new HashMap<SPObject, SPObject>();
         adjacentNodes.add(root);
         
         while (!adjacentNodes.isEmpty()) {
-            WabitObject node = adjacentNodes.remove();
+            SPObject node = adjacentNodes.remove();
             if (nodes.contains(node)) continue;
             
             if (node != root) {
-                for (WabitObject child : node.getChildren()) {
+                for (SPObject child : node.getChildren()) {
                     childParentMap.put(child, node);
                 }
             }
             
-            List<WabitObject> edgeChildren = new ArrayList<WabitObject>();
+            List<SPObject> edgeChildren = new ArrayList<SPObject>();
             edgeChildren.addAll(node.getDependencies());
             edgeChildren.addAll(node.getChildren());
-            for (WabitObject child : edgeChildren) {
+            for (SPObject child : edgeChildren) {
                 adjacentNodes.add(child);
 
                 if (showOnlyDependencies && child.getParent() != null && 
                         child.getParent().equals(node)) continue;
                 
-                WabitObject childNode = child;
-                WabitObject parentNode = node;
+                SPObject childNode = child;
+                SPObject parentNode = node;
                 if (reversePolarity) {
-                    WabitObject temp = parentNode;
+                    SPObject temp = parentNode;
                     parentNode = childNode;
                     childNode = temp;
                 }
@@ -226,18 +227,18 @@ public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGra
             }
         }
 
-        BreadthFirstSearch<WabitObject, WorkspaceGraphModelEdge> bfs = 
-            new BreadthFirstSearch<WabitObject, WorkspaceGraphModelEdge>();
-        List<WabitObject> connectedObjects = bfs.performSearch(this, graphStartNode);
+        BreadthFirstSearch<SPObject, WorkspaceGraphModelEdge> bfs = 
+            new BreadthFirstSearch<SPObject, WorkspaceGraphModelEdge>();
+        List<SPObject> connectedObjects = bfs.performSearch(this, graphStartNode);
 
-        List<WabitObject> removedObjects = new ArrayList<WabitObject>();
-        for (WabitObject node : nodes) {
+        List<SPObject> removedObjects = new ArrayList<SPObject>();
+        for (SPObject node : nodes) {
             if (!connectedObjects.contains(node)) {
                 removedObjects.add(node);
             }
         }
         nodes.removeAll(removedObjects);
-        for (WabitObject removedNode : removedObjects) {
+        for (SPObject removedNode : removedObjects) {
             inboundEdges.remove(removedNode);
             if (outboundEdges.get(removedNode) != null) {
                 for (WorkspaceGraphModelEdge edge : outboundEdges.get(removedNode)) {
@@ -251,8 +252,8 @@ public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGra
         
     }
 
-    public Collection<WabitObject> getAdjacentNodes(WabitObject node) {
-        Collection<WabitObject> adjacentNodes = new HashSet<WabitObject>();
+    public Collection<SPObject> getAdjacentNodes(SPObject node) {
+        Collection<SPObject> adjacentNodes = new HashSet<SPObject>();
         Set<WorkspaceGraphModelEdge> edges = outboundEdges.get(node);
         if (edges == null) return Collections.emptySet();
         for (WorkspaceGraphModelEdge edge : edges) {
@@ -274,24 +275,24 @@ public class WorkspaceGraphModel implements GraphModel<WabitObject, WorkspaceGra
     }
 
     public Collection<WorkspaceGraphModelEdge> getInboundEdges(
-            WabitObject node) {
+            SPObject node) {
         Set<WorkspaceGraphModelEdge> edges = inboundEdges.get(node);
         if (edges == null) return Collections.emptyList();
         return edges;
     }
 
-    public Collection<WabitObject> getNodes() {
+    public Collection<SPObject> getNodes() {
         return nodes;
     }
 
     public Collection<WorkspaceGraphModelEdge> getOutboundEdges(
-            WabitObject node) {
+            SPObject node) {
         Set<WorkspaceGraphModelEdge> edges = outboundEdges.get(node);
         if (edges == null) return Collections.emptyList();
         return edges;
     }
 
-    public WabitObject getGraphStartNode() {
+    public SPObject getGraphStartNode() {
         return graphStartNode;
     }
     

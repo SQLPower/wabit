@@ -66,10 +66,10 @@ public abstract class AbstractWabitObject extends AbstractSPObject implements Wa
 	    while (topAncestor.getParent() != null) {
 	        topAncestor = topAncestor.getParent();
 	    }
-	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, (WabitObject) child, true, true);
-	    for (WabitObject graphNode : graph.getNodes()) {
-	        List<WabitObject> ancestors = new ArrayList<WabitObject>();
-	        WabitObject ancestor = graphNode.getParent();
+	    WorkspaceGraphModel graph = new WorkspaceGraphModel(topAncestor, child, true, true);
+	    for (SPObject graphNode : graph.getNodes()) {
+	        List<SPObject> ancestors = new ArrayList<SPObject>();
+	        SPObject ancestor = graphNode.getParent();
 	        while (ancestor != null) {
 	            ancestors.add(ancestor);
 	            ancestor = ancestor.getParent();
@@ -82,7 +82,7 @@ public abstract class AbstractWabitObject extends AbstractSPObject implements Wa
 	    }
 	    
 	    
-	    boolean removed = removeChildImpl((WabitObject) child);
+	    boolean removed = removeChildImpl(child);
 	    if (removed) {
 	    	child.setParent(null);
 	    	return true;

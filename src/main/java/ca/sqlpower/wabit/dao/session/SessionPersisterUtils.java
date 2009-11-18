@@ -22,7 +22,7 @@ package ca.sqlpower.wabit.dao.session;
 import java.awt.Image;
 
 import ca.sqlpower.dao.SPPersister.DataType;
-import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.object.SPObject;
 
 /**
  * Utilities that are specific to the session persisters.
@@ -79,7 +79,7 @@ public class SessionPersisterUtils {
     		return DataType.STRING;
     	} else if (Image.class.isAssignableFrom(classForDataType)) {
     		return DataType.PNG_IMG;
-    	} else if (WabitObject.class.isAssignableFrom(classForDataType)) {
+    	} else if (SPObject.class.isAssignableFrom(classForDataType)) {
     		return DataType.REFERENCE;
     	} else if (Void.class.isAssignableFrom(classForDataType)) {
     		return DataType.NULL;

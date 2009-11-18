@@ -39,8 +39,11 @@ import javax.swing.tree.TreePath;
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -56,9 +59,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
@@ -140,7 +141,7 @@ public class WorkspaceTreeModel implements TreeModel {
      * @param o The object to test
      * @return True if o should appear; false if it should not.
      */
-    private boolean appearsInTree(WabitObject o) {
+    private boolean appearsInTree(SPObject o) {
     	if (o instanceof WabitWorkspace) return true;
     	if (o instanceof FolderNode) return true;
     	
@@ -346,7 +347,7 @@ public class WorkspaceTreeModel implements TreeModel {
     	    return 0;
     	} else if (parent instanceof WabitObject) {
 	        WabitObject wo = (WabitObject) parent;
-	        List<? extends WabitObject> children = wo.getChildren();
+	        List<? extends SPObject> children = wo.getChildren();
 	        return children.indexOf(child);
     	} else if (parent instanceof Olap4jTreeObject){
     		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
@@ -662,7 +663,7 @@ public class WorkspaceTreeModel implements TreeModel {
      * @param obj The WabitObject to calculate a tree path for
      * @return The tree path to the given object, or null.
      */
-    public TreePath createTreePathForObject(WabitObject obj) {
+    public TreePath createTreePathForObject(SPObject obj) {
         if (!appearsInTree(obj)) {
             return null;
         }

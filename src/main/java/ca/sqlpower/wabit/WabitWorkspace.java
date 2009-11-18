@@ -33,6 +33,8 @@ import javax.swing.event.UndoableEditListener;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -40,9 +42,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
@@ -138,7 +138,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      * This is the current editor panel's model that is being being edited.
      * This allows the workspace to know what panel to load when it is loaded. 
      */
-    private WabitObject editorPanelModel;
+    private SPObject editorPanelModel;
 
     /**
      * The session this workspace belongs to. Sessions and workspaces have a 1:1
@@ -177,13 +177,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 		USER(User.class),
 		GROUP(Group.class);
 		
-		private final Class<? extends WabitObject> clazz;
+		private final Class<? extends SPObject> clazz;
 		
-		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
+		private WabitObjectOrder(Class<? extends SPObject> clazz) {
 			this.clazz = clazz;
 		}
 		
-		public Class<? extends WabitObject> getChildClass() {
+		public Class<? extends SPObject> getChildClass() {
 			return clazz;
 		}
 		
@@ -208,8 +208,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 		setName(DEFAULT_NAME);
     }
     
-    public List<WabitObject> getChildren() {
-    	List<WabitObject> allChildren = new ArrayList<WabitObject>();
+    public List<SPObject> getChildren() {
+    	List<SPObject> allChildren = new ArrayList<SPObject>();
     	if (isSystemWorkspace()) {
     		allChildren.addAll(users);
     		allChildren.addAll(groups);
@@ -781,13 +781,13 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 		dsCollectionUndoListeners.remove(l);
 	}
 
-	public void setEditorPanelModel(WabitObject editorPanelModel) {
-		WabitObject oldEditorPanelModel = this.editorPanelModel;
+	public void setEditorPanelModel(SPObject editorPanelModel) {
+		SPObject oldEditorPanelModel = this.editorPanelModel;
 		this.editorPanelModel = editorPanelModel;
 		firePropertyChange("editorPanelModel", oldEditorPanelModel, editorPanelModel);
 	}
 
-	public WabitObject getEditorPanelModel() {
+	public SPObject getEditorPanelModel() {
 		return editorPanelModel;
 	}
 
@@ -847,7 +847,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      * @return The item, or null if no item with the given UUID exists in this
      *         workspace.
      */
-    public <T extends WabitObject> T findByUuid(String uuid, Class<T> expectedType) {
+    public <T extends SPObject> T findByUuid(String uuid, Class<T> expectedType) {
         return WabitUtils.findByUuid(this, uuid, expectedType);
     }
 
@@ -919,7 +919,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     public int mergeIntoWorkspace(WabitWorkspace workspace) {
         int importObjectCount = 0;
-        for (WabitObject importObject : getChildren()) {
+        for (SPObject importObject : getChildren()) {
             generateNewUUIDsForMerge(importObject);
             if (importObject instanceof WabitDataSource) {
                 if (!workspace.dsAlreadyAdded(((WabitDataSource) importObject).getSPDataSource())) {
@@ -967,9 +967,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      * The given object and all of it's descendants will have its UUID changed
      * to a new UUID. 
      */
-    private void generateNewUUIDsForMerge(WabitObject importObject) {
+    private void generateNewUUIDsForMerge(SPObject importObject) {
         importObject.generateNewUUID();
-        for (WabitObject child : importObject.getChildren()) {
+        for (SPObject child : importObject.getChildren()) {
             generateNewUUIDsForMerge(child);
         }
     }
@@ -1005,10 +1005,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	//this may need to be defined more explicitly.
     	//TODO When we add the method that returns a list of child types the object
     	//supports make this list of children explicit and in the correct order.
-    	List<WabitObject> children = new ArrayList<WabitObject>(getChildren());
+    	List<SPObject> children = new ArrayList<SPObject>(getChildren());
     	Collections.reverse(children);
     	
-    	for (WabitObject child : children) {
+    	for (SPObject child : children) {
     		try {
 				removeChild(child);
 			} catch (ObjectDependentException e) {

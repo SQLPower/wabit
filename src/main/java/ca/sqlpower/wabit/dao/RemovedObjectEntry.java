@@ -19,14 +19,14 @@
 
 package ca.sqlpower.wabit.dao;
 
-import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.object.SPObject;
 
 public class RemovedObjectEntry {
 	private final String parentUUID;
-	private final WabitObject removedChild;
+	private final SPObject removedChild;
 	private final int index;
 
-	public RemovedObjectEntry(String parentUUID, WabitObject removedChildren, int index) {
+	public RemovedObjectEntry(String parentUUID, SPObject removedChildren, int index) {
 		this.parentUUID = parentUUID;
 		this.removedChild = removedChildren;
 		this.index = index;
@@ -36,7 +36,7 @@ public class RemovedObjectEntry {
 		return parentUUID;
 	}
 
-	public WabitObject getRemovedChild() {
+	public SPObject getRemovedChild() {
 		return removedChild;
 	}
 

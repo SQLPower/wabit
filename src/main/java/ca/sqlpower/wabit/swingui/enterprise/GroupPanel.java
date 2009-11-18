@@ -47,15 +47,15 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.GroupMember;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Group;
-import ca.sqlpower.wabit.enterprise.client.GroupMember;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Page;
@@ -183,7 +183,7 @@ public class GroupPanel implements WabitPanel {
 				}
 				List<GroupMember> toRemove = new ArrayList<GroupMember>();
 				for (Object object : selection) {
-					for (GroupMember membership : group.getMembers()) {
+					for (GroupMember membership : group.getChildren(GroupMember.class)) {
 						if (membership.getUser().getUUID().equals(((User)object).getUUID())) {
 							toRemove.add(membership);
 						}

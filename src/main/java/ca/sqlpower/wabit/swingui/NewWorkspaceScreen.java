@@ -36,9 +36,9 @@ import javax.swing.WindowConstants;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 
@@ -116,7 +116,7 @@ public class NewWorkspaceScreen {
 	        @Override
 	        public void windowClosed(WindowEvent e) {
 	            if (databaseAdded) {
-	                WabitObject currentEditor = session.getWorkspace().getEditorPanelModel();
+	                SPObject currentEditor = session.getWorkspace().getEditorPanelModel();
 	                try {
 	                    final URI resource = WabitSwingSessionContextImpl.class.getResource(
 	                            WabitSessionContext.NEW_WORKSPACE_URL).toURI();

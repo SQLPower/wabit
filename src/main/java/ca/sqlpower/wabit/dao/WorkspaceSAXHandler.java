@@ -55,6 +55,7 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -1386,8 +1387,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	if (isCancelled()) return;
     	
     	if (name.equals("project")) {
-    	    WabitObject initialView = session.getWorkspace();
-    		for (WabitObject obj : session.getWorkspace().getChildren()) {
+    	    SPObject initialView = session.getWorkspace();
+    		for (SPObject obj : session.getWorkspace().getChildren()) {
     			if (obj.getUUID().equals(currentEditorPanelModel)) {
     				initialView = obj;
     				break;

@@ -22,12 +22,13 @@ package ca.sqlpower.wabit.swingui.tree;
 import java.util.ArrayList;
 import java.util.List;
 
+import ca.sqlpower.enterprise.client.Group;
+import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
@@ -54,7 +55,7 @@ public class FolderNode {
     	GROUPS
     }
     
-    public static FolderType getProperFolderParent(WabitObject object) {
+    public static FolderType getProperFolderParent(SPObject object) {
     	if (object instanceof WabitDataSource) {
     		return FolderType.CONNECTIONS;
     	} else if (object instanceof QueryCache || object instanceof OlapQuery) {
@@ -108,8 +109,8 @@ public class FolderNode {
 	}
 
 
-	public List<? extends WabitObject> getChildren() {
-		List<WabitObject> childList = new ArrayList<WabitObject>();
+	public List<? extends SPObject> getChildren() {
+		List<SPObject> childList = new ArrayList<SPObject>();
 		switch (folderType) {
 		case CONNECTIONS:
 			childList.addAll(parent.getDataSources());

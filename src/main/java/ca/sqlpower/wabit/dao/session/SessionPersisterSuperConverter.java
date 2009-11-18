@@ -29,6 +29,7 @@ import java.text.Format;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
@@ -49,7 +50,7 @@ public class SessionPersisterSuperConverter {
 	
 	private final CubeConverter cubeConverter;
 	
-	private final WabitObjectConverter wabitObjectConverter;
+	private final SPObjectConverter spObjectConverter;
 	
 	private static final FontConverter fontConverter = new FontConverter();
 	
@@ -83,7 +84,7 @@ public class SessionPersisterSuperConverter {
 	 *            workspace.
 	 */
 	public SessionPersisterSuperConverter(WabitSession session, WabitObject root) {
-		wabitObjectConverter = new WabitObjectConverter(root);
+		spObjectConverter = new SPObjectConverter(root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
 		containerConverter = new ContainerConverter(session);
 		sqlJoinConverter = new SQLJoinConverter(root);
@@ -114,9 +115,9 @@ public class SessionPersisterSuperConverter {
 	public Object convertToBasicType(Object convertFrom, Object ... additionalInfo) {
 		if (convertFrom == null) {
 			return null;
-		} else if (convertFrom instanceof WabitObject) {
-			WabitObject wo = (WabitObject) convertFrom;
-			return wabitObjectConverter.convertToSimpleType(wo);
+		} else if (convertFrom instanceof SPObject) {
+			SPObject wo = (SPObject) convertFrom;
+			return spObjectConverter.convertToSimpleType(wo);
 			
 		} else if (convertFrom instanceof Color) {
 			Color c = (Color) convertFrom;
@@ -188,8 +189,8 @@ public class SessionPersisterSuperConverter {
 		if (o == null) {
 			return null;
 			
-		} else if (WabitObject.class.isAssignableFrom(type)) {
-			return wabitObjectConverter.convertToComplexType((String) o);
+		} else if (SPObject.class.isAssignableFrom(type)) {
+			return spObjectConverter.convertToComplexType((String) o);
 			
 		} else if (Color.class.isAssignableFrom(type)) {
 			return colorConverter.convertToComplexType((String) o);

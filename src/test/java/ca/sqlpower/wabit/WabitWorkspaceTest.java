@@ -28,6 +28,7 @@ import javax.naming.NamingException;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -306,7 +307,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         
         WorkspaceGraphModel graph = new WorkspaceGraphModel(startingWorkspace, 
                 startingWorkspace, false, false);
-        for (WabitObject o : graph.getNodes()) {
+        for (SPObject o : graph.getNodes()) {
             System.out.println("Adding object of type " + o.getClass() + " with UUID " + o.getUUID());
             uniqueUUIDs.add(o.getUUID());
         }
@@ -331,7 +332,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         
         WorkspaceGraphModel endGraph = new WorkspaceGraphModel(finishingWorkspace, 
                 finishingWorkspace, false, false);
-        for (WabitObject o : endGraph.getNodes()) {
+        for (SPObject o : endGraph.getNodes()) {
             uniqueUUIDs.add(o.getUUID());
         }
         

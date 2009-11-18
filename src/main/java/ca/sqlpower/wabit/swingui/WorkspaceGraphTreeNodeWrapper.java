@@ -22,9 +22,10 @@ package ca.sqlpower.wabit.swingui;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.rc.retroweaver.runtime.Collections;
-
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitObject;
+
+import com.rc.retroweaver.runtime.Collections;
 
 /**
  * Wraps a WabitObject that is a node in a WorkspaceGraphModel so it can
@@ -33,7 +34,7 @@ import ca.sqlpower.wabit.WabitObject;
  */
 public class WorkspaceGraphTreeNodeWrapper {
 
-    private final WabitObject wrappedObject;
+    private final SPObject wrappedObject;
     
     /**
      * A list of children of this node.
@@ -47,11 +48,11 @@ public class WorkspaceGraphTreeNodeWrapper {
      */
     private WorkspaceGraphTreeNodeWrapper parent;
 
-    public WorkspaceGraphTreeNodeWrapper(WabitObject wrappedObject) {
+    public WorkspaceGraphTreeNodeWrapper(SPObject wrappedObject) {
         this.wrappedObject = wrappedObject;
     }
 
-    public WabitObject getWrappedObject() {
+    public SPObject getWrappedObject() {
         return wrappedObject;
     }
 
@@ -92,7 +93,7 @@ public class WorkspaceGraphTreeNodeWrapper {
     
     public String getName() {
         StringBuffer buffer = new StringBuffer();
-        WabitObject ancestor = wrappedObject.getParent();
+        SPObject ancestor = wrappedObject.getParent();
         while (ancestor != null) {
             if (buffer.length() > 0) {
                 buffer.insert(0, "/");

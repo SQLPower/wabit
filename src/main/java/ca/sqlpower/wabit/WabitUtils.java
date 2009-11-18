@@ -131,10 +131,10 @@ public class WabitUtils {
      * @return A collection of exceptions and errors that occurred during
      *         cleanup if any occurred.
      */
-    public static CleanupExceptions cleanupWabitObject(WabitObject o) {
+    public static CleanupExceptions cleanupWabitObject(SPObject o) {
         CleanupExceptions exceptions = new CleanupExceptions();
         exceptions.add(o.cleanup());
-        for (WabitObject child : o.getChildren()) {
+        for (SPObject child : o.getChildren()) {
             exceptions.add(cleanupWabitObject(child));
         }
         return exceptions;
@@ -238,7 +238,7 @@ public class WabitUtils {
 	 * @return The item, or null if no item with the given UUID exists in the
 	 *         descendent tree rooted at the given root object.
 	 */
-    public static <T extends WabitObject> T findByUuid(WabitObject root, String uuid, Class<T> expectedType) {
+    public static <T extends SPObject> T findByUuid(SPObject root, String uuid, Class<T> expectedType) {
         return expectedType.cast(findRecursively(root, uuid));
     }
     
@@ -255,15 +255,15 @@ public class WabitUtils {
      *         traversal of startWith and its descendants. Returns null if no
      *         such WabitObject exists.
      */
-    private static WabitObject findRecursively(WabitObject startWith, String uuid) {
+    private static SPObject findRecursively(SPObject startWith, String uuid) {
     	if (startWith == null) {
     		throw new IllegalArgumentException("Cannot search a null object for children with the uuid " + uuid);
     	}
         if (uuid.equals(startWith.getUUID())) {
             return startWith;
         }
-        for (WabitObject child : startWith.getChildren()) {
-            WabitObject found = findRecursively(child, uuid);
+        for (SPObject child : startWith.getChildren()) {
+            SPObject found = findRecursively(child, uuid);
             if (found != null) {
                 return found;
             }
@@ -271,21 +271,6 @@ public class WabitUtils {
         return null;
     }
     
-    /**
-     * This inserts a child into it's parent and does that for all the hierarchy recursively.
-     * Wraps everything in a transaction.
-     * @param parent
-     * @param child
-     */
-    public static void addRecursivelyWithTransaction(WabitObject parent, WabitObject child) {
-    	parent.begin(null);
-    	parent.addChild(child, parent.getChildren().size());
-    	for (WabitObject grandChild : child.getChildren()) {
-    		addRecursivelyWithTransaction(parent, grandChild);
-    	}
-    	parent.commit();
-    }
-
 	/**
 	 * Generates a new UUID in the format suitable for use with any
 	 * WabitObject's UUID property.
@@ -318,11 +303,11 @@ public class WabitUtils {
 	 *            The amount of indent to print before printing the object
 	 *            information
 	 */
-	private static void printSubtree(PrintWriter out, WabitObject startWith, int indentDepth) {
+	private static void printSubtree(PrintWriter out, SPObject startWith, int indentDepth) {
 		out.printf("%s%s \"%s\" (%s)\n",
 				spaces(indentDepth * 2), startWith.getClass().getSimpleName(),
 				startWith.getName(), startWith.getUUID());
-		for (WabitObject child : startWith.getChildren()) {
+		for (SPObject child : startWith.getChildren()) {
 			printSubtree(out, child, indentDepth + 1);
 		}
 	}

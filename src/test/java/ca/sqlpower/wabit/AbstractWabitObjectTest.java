@@ -44,6 +44,7 @@ import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.StubSPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPChildEvent.EventType;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -66,7 +67,9 @@ import ca.sqlpower.wabit.rs.olap.OlapQuery;
 /**
  * A baseline test that all tests for WabitObject implementations should pass.
  * The intention is that those test classes will extend this class, thereby
- * inheriting the baseline tests.
+ * inheriting the baseline tests. While this test can be run with any SPObject,
+ * it is only intended to be run by those that can be handled by the
+ * {@link WabitSessionPersister}.
  */
 public abstract class AbstractWabitObjectTest extends TestCase {
 	
@@ -101,7 +104,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * created by the subclass's setUp method. The object returned
      * by this method must be in the workspace returned by {@link #getWorkspace()}.
      */
-    public abstract WabitObject getObjectUnderTest();
+    public abstract SPObject getObjectUnderTest();
     
     /**
      * A session that is hooked up to a pl.ini that is used for regression testing.
@@ -215,7 +218,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     public void testSettingPropertiesFiresEvents() throws Exception {
         
         CountingWabitListener listener = new CountingWabitListener();
-        WabitObject wo = getObjectUnderTest();
+        SPObject wo = getObjectUnderTest();
         wo.addSPListener(listener);
 
         List<PropertyDescriptor> settableProperties;
@@ -274,7 +277,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(
     			new StubWabitSession(new StubWabitSessionContext()), countingPersister);
     	
-        WabitObject wo = getObjectUnderTest();
+        SPObject wo = getObjectUnderTest();
         wo.addSPListener(listener);
 
         SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
@@ -374,7 +377,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * This returns {@link WabitObject} which works for most cases but some specific
      * instances have a tighter parent type.
      */
-    public Class<? extends WabitObject> getParentClass() {
+    public Class<? extends SPObject> getParentClass() {
     	return WabitObject.class;
     }
 
@@ -385,7 +388,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 */
     public void testPersisterUpdatesProperties() throws Exception {
     	
-    	WabitObject wo = getObjectUnderTest();
+    	SPObject wo = getObjectUnderTest();
     	
     	WabitSessionPersister persister = new WabitSessionPersister("secondary test persister", session, getWorkspace());
 		
@@ -497,7 +500,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 */
     public void testPersisterAddsNewObject() throws Exception {
     	
-    	WabitObject wo = getObjectUnderTest();
+    	SPObject wo = getObjectUnderTest();
     	
     	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, session.getWorkspace());
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
@@ -537,7 +540,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             }
         }
         
-        WabitObject parent = wo.getParent();
+        SPObject parent = wo.getParent();
         int oldChildCount = parent.getChildren().size();
   
         listener.transactionStarted(null);
@@ -552,7 +555,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         
         //the object must now be added to the super parent
         assertEquals(oldChildCount, parent.getChildren().size());
-        WabitObject persistedObject = parent.getChildren().get(parent.childPositionOffset(wo.getClass()));
+        SPObject persistedObject = parent.getChildren().get(parent.childPositionOffset(wo.getClass()));
         
         //check all the properties are what we expect on the new object
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
@@ -604,7 +607,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	CountingWabitPersister persister = new CountingWabitPersister();
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(
     			new StubWabitSession(new StubWabitSessionContext()), persister);
-    	WabitObject wo = getObjectUnderTest();
+    	SPObject wo = getObjectUnderTest();
     	if (wo.getParent() == null) {
     		wo.setParent(parent);
     	}
@@ -688,7 +691,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * WabitChildEvent when the child is added and removed.
      */
     public void testAddChildren() throws Exception {
-        WabitObject wo = getObjectUnderTest();
+        SPObject wo = getObjectUnderTest();
 
         CountingWabitListener listener = new CountingWabitListener();
         wo.addSPListener(listener);
@@ -733,7 +736,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      */
     public void testPersisterCommitCanRollbackProperties() throws Exception {
     	
-    	WabitObject wo = getObjectUnderTest();
+    	SPObject wo = getObjectUnderTest();
     	
 		WabitSessionPersister persister = 
 			new WabitSessionPersister("test persister", session, getWorkspace());
@@ -849,8 +852,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 * will be removed from the parent when rolled back.
 	 */
     public void testPersisterCommitCanRollbackNewChild() throws Exception {
-    	WabitObject wo = getObjectUnderTest();
-		WabitObject parent = wo.getParent();
+    	SPObject wo = getObjectUnderTest();
+		SPObject parent = wo.getParent();
 		
 		//Removing the object under test from the parent but setting the object's parent
 		//back to have an object that we can add to the parent through the persister but
@@ -881,8 +884,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 			}
 			
 			@Override
-			public void persistChild(WabitObject parent, WabitObject child,
-					Class<? extends WabitObject> childClassType,
+			public void persistChild(SPObject parent, SPObject child,
+					Class<? extends SPObject> childClassType,
 					int indexOfChild) {
 				super.persistChild(parent, child, childClassType, indexOfChild);
 			}
@@ -916,8 +919,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 	 * will be added to the parent when rolled back.
 	 */
     public void testPersisterCommitCanRollbackRemovedChild() throws Exception {
-    	WabitObject wo = getObjectUnderTest();
-		WabitObject parent = wo.getParent();
+    	SPObject wo = getObjectUnderTest();
+		SPObject parent = wo.getParent();
 		
 		WabitSessionPersister persister = 
 			new WabitSessionPersister("test persister", session, getWorkspace());

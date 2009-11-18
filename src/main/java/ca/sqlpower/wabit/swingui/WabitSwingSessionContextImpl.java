@@ -120,9 +120,13 @@ import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.architect.ArchitectUtils;
+import ca.sqlpower.enterprise.client.Grant;
+import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -159,10 +163,7 @@ import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
-import ca.sqlpower.wabit.enterprise.client.Grant;
-import ca.sqlpower.wabit.enterprise.client.Group;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
-import ca.sqlpower.wabit.enterprise.client.User;
 import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.enterprise.client.security.CachingWabitAccessManager;
 import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager;
@@ -1297,11 +1298,11 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	
 	/**
 	 * This is a recursive function which returns a \n delimited string of all of the
-	 * {@link WabitDataSource}s that the given {@link WabitObject} is dependant on. 
+	 * {@link WabitDataSource}s that the given {@link SPObject} is dependant on. 
 	 */
-	private String getDatasourceDependencies(WabitObject wo) {
+	private String getDatasourceDependencies(SPObject wo) {
 		String wabitDatasources = "";
-		for (WabitObject dependency : wo.getDependencies()) {
+		for (SPObject dependency : wo.getDependencies()) {
 			if (dependency instanceof WabitDataSource) {
 				wabitDatasources += (((WabitDataSource) dependency).getName() + "\n");
 			} else {
@@ -1751,7 +1752,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         // JSplitPane.setRightComponent() will remove the right component magically
         
-        WabitObject entryPanelModel = null;
+        SPObject entryPanelModel = null;
         if (getActiveSession() != null) {
             entryPanelModel = getActiveSession().getWorkspace().getEditorPanelModel();
         }
@@ -1769,7 +1770,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * This is a helper method for {@link #setEditorPanel()} that will create
      * the panel to edit the model object given.
      */
-    private WabitPanel createEditorPanel(WabitObject entryPanelModel) {
+    private WabitPanel createEditorPanel(SPObject entryPanelModel) {
         logger.debug("createEditorPanel() starting");
         if (getActiveSession() == null) {
             currentEditorPanel = welcomeScreen.getPanel();
@@ -1792,9 +1793,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         } else if (entryPanelModel instanceof WabitWorkspace) {
             currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
         } else {
-            if (entryPanelModel instanceof WabitObject 
-                    && ((WabitObject) entryPanelModel).getParent() != null) {
-                currentEditorPanel = createEditorPanel(((WabitObject) entryPanelModel).getParent()); 
+            if (entryPanelModel.getParent() != null) {
+                currentEditorPanel = createEditorPanel(entryPanelModel.getParent()); 
             } else {
                 throw new IllegalStateException("Unknown model for the defined types of entry panels. " +
                         "The type is " + entryPanelModel.getClass());

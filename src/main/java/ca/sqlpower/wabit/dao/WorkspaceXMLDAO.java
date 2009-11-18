@@ -44,6 +44,7 @@ import org.olap4j.Axis;
 
 import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.graph.DepthFirstSearch;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -214,12 +215,12 @@ public class WorkspaceXMLDAO {
 		        workspaceToDependencies.put((WabitWorkspace) parentWorkspace, workspaceDependencies);
 		    }
 		    
-		    DepthFirstSearch<WabitObject, WorkspaceGraphModelEdge> dfs = new DepthFirstSearch<WabitObject, WorkspaceGraphModelEdge>();
+		    DepthFirstSearch<SPObject, WorkspaceGraphModelEdge> dfs = new DepthFirstSearch<SPObject, WorkspaceGraphModelEdge>();
 		    dfs.performSearch(new WorkspaceGraphModel(parentWorkspace, savingObject, false, false));
-		    List<WabitObject> dependenciesToSave = dfs.getFinishOrder();
-		    for (WabitObject object : dependenciesToSave) {
+		    List<SPObject> dependenciesToSave = dfs.getFinishOrder();
+		    for (SPObject object : dependenciesToSave) {
 		        if (!workspaceDependencies.contains(object)) {
-		            workspaceDependencies.add(object);
+		            workspaceDependencies.add((WabitObject) object);
 		        }
 		    }
 		}
