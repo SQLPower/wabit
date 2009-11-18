@@ -868,7 +868,7 @@ public class QueryPanel implements WabitPanel {
 						//or else it will set its text to the empty string before changing
 						//its text when we come back to the query side and it will get
 						//the query in a state where it thinks the user changed the query twice.
-						queryUIComponents.getQueryArea().setText("");
+						queryUIComponents.getQueryArea().setText(null);
 						
 						queryCache.removeUserModifications();
 						queryPen.getGlobalWhereText().setVisible(true);
