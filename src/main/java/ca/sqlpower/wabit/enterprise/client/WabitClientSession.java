@@ -380,7 +380,7 @@ public class WabitClientSession extends WabitSessionImpl {
                 
                 HttpDelete request = new HttpDelete(dataSourceURI(removedDS));
                 
-                httpClient.execute(request, new ResponseHandler<Void>() {
+                final ResponseHandler<Void> responseHandler = new ResponseHandler<Void>() {
                     public Void handleResponse(HttpResponse response)
                             throws ClientProtocolException, IOException {
                         
@@ -394,7 +394,16 @@ public class WabitClientSession extends WabitSessionImpl {
                         }
                         
                     }
-                });
+                };
+				httpClient.execute(request, responseHandler);
+				
+				if (removedDS instanceof Olap4jDataSource
+						&& ((Olap4jDataSource) removedDS).getMondrianSchema() != null) {
+					URI serverURI = ((Olap4jDataSource) removedDS).getMondrianSchema();
+					logger.debug("Server URI for deletion is " + serverURI);
+					HttpDelete schemaRequest = new HttpDelete(serverURI);
+					httpClient.execute(schemaRequest, responseHandler);
+				}
                 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
