@@ -24,13 +24,13 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.util.EventObject;
 
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultTreeCellEditor;
 import javax.swing.tree.DefaultTreeCellRenderer;
 
+import ca.sqlpower.object.AbstractSPObject;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.Page;
@@ -81,7 +81,7 @@ public class WorkspaceTreeCellEditor extends DefaultTreeCellEditor {
 	 * This is the wabit object being currently edited by this editor. If this
 	 * is null then no wabit object is being edited.
 	 */
-	private AbstractWabitObject currentlyEditingObject;
+	private AbstractSPObject currentlyEditingObject;
 
 	/**
 	 * This JTextField allows editing of the name of WabitObjects.
@@ -93,9 +93,9 @@ public class WorkspaceTreeCellEditor extends DefaultTreeCellEditor {
 			boolean isSelected, boolean expanded, boolean leaf, int row) {
 		Component component = super.getTreeCellEditorComponent(tree, value, isSelected, expanded,
 				leaf, row);
-		if (value instanceof AbstractWabitObject) {
-			currentlyEditingObject = (AbstractWabitObject) value;
-			textField = new JTextField(((AbstractWabitObject) value).getName());
+		if (value instanceof AbstractSPObject) {
+			currentlyEditingObject = (AbstractSPObject) value;
+			textField = new JTextField(((AbstractSPObject) value).getName());
 			textField.addFocusListener(focusListener);
 			textField.addKeyListener(keyListener);
 			return textField;

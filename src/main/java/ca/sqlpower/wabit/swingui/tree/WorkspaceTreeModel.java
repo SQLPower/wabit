@@ -207,8 +207,8 @@ public class WorkspaceTreeModel implements TreeModel {
 			newTreeNode.setParent(parentTreeNode);
 			return newTreeNode;
     	} else {
-			WabitObject wabitObject = (WabitObject) parentObject;
-			return wabitObject.getChildren().get(index);
+			SPObject spObject = (SPObject) parentObject;
+			return spObject.getChildren().get(index);
     	}
     }
     
@@ -244,7 +244,7 @@ public class WorkspaceTreeModel implements TreeModel {
     		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
     		return model.getChildCount(treeNode.getOlapObject());
     	} else {
-    		return ((WabitObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
+    		return ((SPObject) parent).getChildren().size(); // XXX would be more efficient if we could ask for a child count
     	}
     }
 
@@ -345,9 +345,9 @@ public class WorkspaceTreeModel implements TreeModel {
 			}
     	} else if (parent instanceof QueryCache) {
     	    return 0;
-    	} else if (parent instanceof WabitObject) {
-	        WabitObject wo = (WabitObject) parent;
-	        List<? extends SPObject> children = wo.getChildren();
+    	} else if (parent instanceof SPObject) {
+	        SPObject spo = (SPObject) parent;
+	        List<? extends SPObject> children = spo.getChildren();
 	        return children.indexOf(child);
     	} else if (parent instanceof Olap4jTreeObject){
     		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
@@ -372,8 +372,8 @@ public class WorkspaceTreeModel implements TreeModel {
     		retval = false;
     	} else if (node instanceof SQLObject) {
     		retval = !((SQLObject) node).allowsChildren();
-    	} else if (node instanceof WabitObject) {
-    		retval = !((WabitObject) node).allowsChildren();
+    	} else if (node instanceof SPObject) {
+    		retval = !((SPObject) node).allowsChildren();
     	} else {
     		Olap4jTreeObject treeNode = (Olap4jTreeObject) node;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
@@ -498,7 +498,7 @@ public class WorkspaceTreeModel implements TreeModel {
     private class WabitTreeModelEventAdapter implements SPListener {
         
 		public void propertyChange(PropertyChangeEvent evt) {
-			WabitObject node = (WabitObject) evt.getSource();
+			SPObject node = (SPObject) evt.getSource();
 			if (!appearsInTree(node)) {
 			    return;
 			}
@@ -551,10 +551,10 @@ public class WorkspaceTreeModel implements TreeModel {
 
 		public void childAdded(SPChildEvent e) {
 		    WabitUtils.listenToHierarchy(e.getChild(), this);
-		    if (!appearsInTree((WabitObject) e.getChild())) {
+		    if (!appearsInTree(e.getChild())) {
 		        return;
 		    }
-		    TreePath treePath = createTreePathForObject((WabitObject) e.getChild());
+		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 			int index;
 			if (e.getChild() instanceof OlapQuery) {
@@ -571,10 +571,10 @@ public class WorkspaceTreeModel implements TreeModel {
 
 		public void childRemoved(SPChildEvent e) {
             WabitUtils.unlistenToHierarchy(e.getChild(), this);
-            if (!appearsInTree((WabitObject) e.getChild())) {
+            if (!appearsInTree(e.getChild())) {
                 return;
             }
-		    TreePath treePath = createTreePathForObject((WabitObject) e.getChild());
+		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
 		    int index;
 			if (e.getChild() instanceof OlapQuery) {

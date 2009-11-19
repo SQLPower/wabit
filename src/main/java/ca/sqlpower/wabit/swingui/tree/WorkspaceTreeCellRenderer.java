@@ -35,6 +35,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -151,13 +152,13 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     	    value = ((WorkspaceGraphTreeNodeWrapper) value).getWrappedObject();
     	}
     	
-        if (value instanceof WabitObject) {
-            WabitObject wo = (WabitObject) value;
+        if (value instanceof SPObject) {
+            SPObject spo = (SPObject) value;
             
-            r.setText(wo.getName());
+            r.setText(spo.getName());
 
-            if (wo instanceof WabitDataSource) {
-                SPDataSource ds = ((WabitDataSource) wo).getSPDataSource();
+            if (spo instanceof WabitDataSource) {
+                SPDataSource ds = ((WabitDataSource) spo).getSPDataSource();
                 if (ds instanceof JDBCDataSource) {
                     r.setIcon(DB_ICON);
                 } else if (ds instanceof Olap4jDataSource) {
@@ -165,31 +166,31 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 } else {
                     r.setIcon(DBTreeCellRenderer.DB_ICON);
                 }
-            } else if (wo instanceof Page) {
-                Page page = (Page) wo;
+            } else if (spo instanceof Page) {
+                Page page = (Page) spo;
                 r.setIcon(PAGE_ICON);
                 r.setText(page.getName() + " (" + page.getWidth() + "x" + page.getHeight() + ")");
-            } else if (wo instanceof Report) {
+            } else if (spo instanceof Report) {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
-            } else if (wo instanceof ReportTask) {
+            } else if (spo instanceof ReportTask) {
                 r.setIcon(WabitIcons.REPORT_ICON_16);
-            } else if (wo instanceof Template) {
+            } else if (spo instanceof Template) {
             	r.setIcon(WabitIcons.TEMPLATE_ICON_16);
-            } else if (wo instanceof Group) {
+            } else if (spo instanceof Group) {
             	r.setIcon(WabitIcons.GROUP_ICON_16);
-            } else if (wo instanceof User) {
+            } else if (spo instanceof User) {
             	r.setIcon(WabitIcons.USER_ICON_16);
-            } else if (wo instanceof ContentBox || wo instanceof ReportContentRenderer) {
+            } else if (spo instanceof ContentBox || spo instanceof ReportContentRenderer) {
                 final ReportContentRenderer cbChild;
-                if (wo instanceof ContentBox) {
-                    ContentBox cb = (ContentBox) wo;
+                if (spo instanceof ContentBox) {
+                    ContentBox cb = (ContentBox) spo;
                     if (cb.getChildren().size() > 0) {
                         cbChild = (ReportContentRenderer) cb.getChildren().get(0);
                     } else {
                         cbChild = null;
                     }
-                } else if (wo instanceof ReportContentRenderer) {
-                    cbChild = (ReportContentRenderer) wo;
+                } else if (spo instanceof ReportContentRenderer) {
+                    cbChild = (ReportContentRenderer) spo;
                 } else {
                     throw new IllegalStateException("Cannot render this object.");
                 }
@@ -214,25 +215,25 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 	r.setIcon(BOX_ICON); 
 	                r.setText(cbChild.getName());
                 }
-            } else if (wo instanceof Guide) {
-            	Guide g = (Guide) wo;
+            } else if (spo instanceof Guide) {
+            	Guide g = (Guide) spo;
             	r.setText(g.getName() + " @" + g.getOffset());
-            } else if (wo instanceof QueryCache) {
-            	setupForQueryCache((WorkspaceTreeCellRenderer) r, wo);
-            } else if (wo instanceof OlapQuery) {
+            } else if (spo instanceof QueryCache) {
+            	setupForQueryCache((WorkspaceTreeCellRenderer) r, (QueryCache) spo);
+            } else if (spo instanceof OlapQuery) {
                 r.setIcon(OLAP_QUERY_ICON);
-            } else if (wo instanceof Chart) {
-                setupForChart(r, (Chart) wo);
-            } else if (wo instanceof ChartColumn) {
-                ChartColumn cc = (ChartColumn) wo;
+            } else if (spo instanceof Chart) {
+                setupForChart(r, (Chart) spo);
+            } else if (spo instanceof ChartColumn) {
+                ChartColumn cc = (ChartColumn) spo;
                 r.setText(cc.toString());
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
-            } else if (wo instanceof WabitImage) {
-                setupForWabitImage((WorkspaceTreeCellRenderer) r, wo);
+            } else if (spo instanceof WabitImage) {
+                setupForWabitImage((WorkspaceTreeCellRenderer) r, (WabitImage) spo);
             }
 
-            if (wo instanceof WabitBackgroundWorker) {
-                if (((WabitBackgroundWorker) wo).isRunning()) {
+            if (spo instanceof WabitBackgroundWorker) {
+                if (((WabitBackgroundWorker) spo).isRunning()) {
                     r.setIcon(makeBusy(r.getIcon()));
                 }
             }

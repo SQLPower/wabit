@@ -105,8 +105,8 @@ public class WabitAccessManager {
 		}
 		final WabitWorkspace workspace = getCurrentSession().getWorkspace();
 		synchronized (workspace) {
-			WabitObject root = workspace
-					.findByUuid(rootUuid, WabitObject.class);
+			SPObject root = workspace
+					.findByUuid(rootUuid, SPObject.class);
 			// Must find all dependent objects, but not ancestors
 			WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace,
 					root, true, true);

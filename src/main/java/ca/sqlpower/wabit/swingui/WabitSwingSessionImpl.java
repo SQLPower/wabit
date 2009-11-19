@@ -69,6 +69,7 @@ import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -358,9 +359,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                 }
                 if (evt.getNewValue() != null) {
                     final TreePath createTreePathForObject = 
-                        getWorkspaceTreeModel().createTreePathForObject((WabitObject) evt.getNewValue());
+                        getWorkspaceTreeModel().createTreePathForObject((SPObject) evt.getNewValue());
                     logger.debug("Tree path being set to " + createTreePathForObject 
-                            + " as editor panel being set to " + ((WabitObject) evt.getNewValue()).getName());
+                            + " as editor panel being set to " + ((SPObject) evt.getNewValue()).getName());
                     getTree().setSelectionPath(createTreePathForObject);
                 }
             }

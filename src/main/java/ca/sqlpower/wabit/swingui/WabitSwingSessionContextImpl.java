@@ -917,8 +917,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 				if (pathToSelection == null) return;
 				DefaultMutableTreeNode node = (DefaultMutableTreeNode) pathToSelection.getLastPathComponent();
 				Object userObject = node.getUserObject();
-				if (userObject instanceof WabitObject) {
-					WabitObject wo = (WabitObject) userObject;
+				if (userObject instanceof SPObject) {
+					SPObject wo = (SPObject) userObject;
 					while (wo.getParent() != null) {
 						wo = wo.getParent();
 					}

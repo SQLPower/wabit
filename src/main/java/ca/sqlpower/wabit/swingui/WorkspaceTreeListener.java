@@ -39,6 +39,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.enterprise.client.Grant;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -126,8 +127,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		}
 		if (lastPathComponent != null) {
 			if (e.getButton() == MouseEvent.BUTTON1  && e.getClickCount() == 2) {
-				if (lastPathComponent instanceof WabitObject) {
-					session.getWorkspace().setEditorPanelModel((WabitObject) lastPathComponent);
+				if (lastPathComponent instanceof SPObject) {
+					session.getWorkspace().setEditorPanelModel((SPObject) lastPathComponent);
 				} else if (lastPathComponent instanceof FolderNode) {
 					JTree tree = session.getTree();
 					if (tree.isExpanded(tree.getSelectionRows()[0])) {

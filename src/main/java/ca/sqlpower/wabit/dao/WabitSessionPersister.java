@@ -320,7 +320,7 @@ public class WabitSessionPersister implements SPPersister {
 					}
 					public void childRemoved(SPChildEvent e) {
 						objectsToRemoveRollbackList.add(
-								new RemovedObjectEntry(e.getSource().getUUID(), (WabitObject) e.getChild(), e.getIndex()));
+								new RemovedObjectEntry(e.getSource().getUUID(), e.getChild(), e.getIndex()));
 					}
 					public void childAdded(SPChildEvent e) {
 						//do nothing
@@ -1027,7 +1027,7 @@ public class WabitSessionPersister implements SPPersister {
 				this.rollback();
 				throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
 			}
-			WabitObject objectToPersist = WabitUtils.findByUuid(root, uuid, WabitObject.class);
+			SPObject objectToPersist = WabitUtils.findByUuid(root, uuid, SPObject.class);
 			boolean isWorkspace= objectToPersist instanceof WabitWorkspace;
 			if (objectToPersist != null && isWorkspace) {
 				//reset now or the next object persisted will fail a few lines down.

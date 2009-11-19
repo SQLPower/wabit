@@ -240,7 +240,7 @@ public class ImageRenderer extends AbstractWabitObject implements
     					contentBoxResizingListener);
     		}
     		if (parent != null) {
-    			((WabitObject) parent).addSPListener(
+    			parent.addSPListener(
     					contentBoxResizingListener);
     		}
     	}

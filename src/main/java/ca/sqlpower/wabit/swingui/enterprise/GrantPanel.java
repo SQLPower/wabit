@@ -60,7 +60,6 @@ import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitDataSource;
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -164,7 +163,7 @@ public class GrantPanel implements DataEntryPanel {
 		this.createCheckBox = new JCheckBox("Create"+suffix);
 		this.createCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
+				String uuid = ((SPObject)list.getSelectedValue()).getUUID();
 				Grant oldGrant = grants.get(uuid);
 				if (oldGrant!=null) {
 					Grant newGrant = new Grant(
@@ -194,7 +193,7 @@ public class GrantPanel implements DataEntryPanel {
 		this.modifyCheckBox = new JCheckBox("Modify"+suffix);
 		this.modifyCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
+				String uuid = ((SPObject)list.getSelectedValue()).getUUID();
 				Grant oldGrant = grants.get(uuid);
 				if (oldGrant!=null) {
 					Grant newGrant = new Grant(
@@ -224,7 +223,7 @@ public class GrantPanel implements DataEntryPanel {
 		this.deleteCheckBox = new JCheckBox("Delete"+suffix);
 		this.deleteCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
+				String uuid = ((SPObject)list.getSelectedValue()).getUUID();
 				Grant oldGrant = grants.get(uuid);
 				if (oldGrant!=null) {
 					Grant newGrant = new Grant(
@@ -254,7 +253,7 @@ public class GrantPanel implements DataEntryPanel {
 		this.executeCheckBox = new JCheckBox("Execute"+suffix);
 		this.executeCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
+				String uuid = ((SPObject)list.getSelectedValue()).getUUID();
 				Grant oldGrant = grants.get(uuid);
 				if (oldGrant!=null) {
 					Grant newGrant = new Grant(
@@ -284,7 +283,7 @@ public class GrantPanel implements DataEntryPanel {
 		this.grantCheckBox = new JCheckBox("Grant"+suffix);
 		this.grantCheckBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				String uuid = ((WabitObject)list.getSelectedValue()).getUUID();
+				String uuid = ((SPObject)list.getSelectedValue()).getUUID();
 				Grant oldGrant = grants.get(uuid);
 				if (oldGrant!=null) {
 					Grant newGrant = new Grant(
@@ -359,7 +358,7 @@ public class GrantPanel implements DataEntryPanel {
 	
 	void updateGrantSettings() {
 		
-		WabitObject currentSelection = (WabitObject)this.list.getSelectedValue();
+		SPObject currentSelection = (SPObject)this.list.getSelectedValue();
 		if (currentSelection!=null) {
 			Grant grant = this.grants.get(currentSelection.getUUID());
 			
@@ -367,7 +366,7 @@ public class GrantPanel implements DataEntryPanel {
 			if(grant == null && systemMode) {
 				grant = new Grant(null, this.objectType, false,false,false,false,false);
 			} else if(grant == null && !systemMode) {
-				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, WabitObject.class).getClass().getSimpleName(), false,false,false,false,false);
+				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, SPObject.class).getClass().getSimpleName(), false,false,false,false,false);
 			}
 			
 			this.createCheckBox.setSelected(grant.isCreatePrivilege());
@@ -413,7 +412,7 @@ public class GrantPanel implements DataEntryPanel {
 					Grant persistedGrant = systemWorkspace.findByUuid(grant.getUUID(), Grant.class);
 					if (persistedGrant==null) {
 						// Find the person / group to add the grant to
-						systemWorkspace.findByUuid(entry.getKey(), WabitObject.class).addChild(grant,0);
+						systemWorkspace.findByUuid(entry.getKey(), SPObject.class).addChild(grant,0);
 					}
 				}
 				// Third pass, remove deleted grants
