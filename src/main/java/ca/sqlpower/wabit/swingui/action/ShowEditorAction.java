@@ -23,7 +23,7 @@ import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
 
-import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 
 /**
@@ -31,10 +31,10 @@ import ca.sqlpower.wabit.WabitWorkspace;
  */
 public class ShowEditorAction extends AbstractAction {
 
-    private final WabitObject objectToEdit;
+    private final SPObject objectToEdit;
     private final WabitWorkspace workspace;
 
-    public ShowEditorAction(WabitWorkspace workspace, WabitObject objectToEdit) {
+    public ShowEditorAction(WabitWorkspace workspace, SPObject objectToEdit) {
         super("Edit");
         this.workspace = workspace;
         this.objectToEdit = objectToEdit;

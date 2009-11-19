@@ -276,16 +276,16 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					securityMenu(menu,Group.class.getSimpleName(),null);
 				}
 			} else {
-			    if (lastPathComponent instanceof WabitObject) {
-			        JMenuItem menuItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
-			                (WabitObject) lastPathComponent));
+			    if (lastPathComponent instanceof SPObject) {
+			        JMenuItem editItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
+			                (SPObject) lastPathComponent));
 			        objectsMenu(
 							menu,
 							lastPathComponent.getClass().getSimpleName(),  
-							((WabitObject)lastPathComponent).getUUID(),
-							menuItem,
-							WabitAccessManager.Permission.CREATE);
-			        securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(WabitObject) lastPathComponent);
+							((SPObject)lastPathComponent).getUUID(),
+							editItem,
+							WabitAccessManager.Permission.MODIFY);
+			        securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
 			    }
 			    
 				if (lastPathComponent instanceof WabitDataSource) {
@@ -472,7 +472,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					//TODO Copy charts action
 				}
 				
-				if (lastPathComponent instanceof WabitObject &&
+				if (lastPathComponent instanceof SPObject &&
 				        !(lastPathComponent instanceof ContentBox)) {
 					
 					objectsMenu(
@@ -487,7 +487,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							lastPathComponent.getClass().getSimpleName(),  
 							null,
 							new JMenuItem(new DeleteFromTreeAction(session.getWorkspace(), 
-							        (WabitObject) lastPathComponent, context.getFrame(), context)),
+							        (SPObject) lastPathComponent, context.getFrame(), context)),
 							WabitAccessManager.Permission.DELETE);
 					
 				}
@@ -743,7 +743,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
     	return currentUser;
 	}
 
-	private void securityMenu(JPopupMenu menu, String simpleName, WabitObject object) {
+	private void securityMenu(JPopupMenu menu, String simpleName, SPObject object) {
     	
     	WabitWorkspace systemWorkspace = this.session.getSystemWorkspace();
     	
