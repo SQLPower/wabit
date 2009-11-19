@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.enterprise.client;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -44,6 +45,7 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -90,6 +92,11 @@ import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 public class WabitClientSession extends WabitSessionImpl {
     
     private static final Logger logger = Logger.getLogger(WabitClientSession.class);
+    
+    /**
+     * The relative path to the Mondrian schemas from the server's base URI.
+     */
+    private static final String MONDRIAN_SCHEMA_REL_PATH = "mondrian-schema/";
     
     private final Updater updater;
 
@@ -205,6 +212,14 @@ public class WabitClientSession extends WabitSessionImpl {
      * source collections it was monitoring when the Wabit session is closed.
      */
     private class DataSourceCollectionUpdater implements DatabaseListChangeListener, PropertyChangeListener {
+    	
+    	/**
+    	 * If true this updater is currently posting properties to the server. If
+    	 * properties are being posted to the server and an event comes in because
+    	 * of a change during posting the updater should not try to repost the message
+    	 * it is currently trying to post.
+    	 */
+    	private boolean postingProperties = false;
 
         public void attach(DataSourceCollection<SPDataSource> dsCollection) {
             dsCollection.addDatabaseListChangeListener(this);
@@ -282,27 +297,69 @@ public class WabitClientSession extends WabitSessionImpl {
          */
         private void postPropertiesToServer(SPDataSource ds,
                 List<NameValuePair> properties) {
+        	if (postingProperties) return;
+        	
             HttpClient httpClient = createHttpClient(workspaceLocation.getServiceInfo());
             try {
+            	final ResponseHandler<Void> responseHandler = new ResponseHandler<Void>() {
+            		public Void handleResponse(HttpResponse response)
+            		throws ClientProtocolException, IOException {
+            			
+            			if (response.getStatusLine().getStatusCode() != 200) {
+            				throw new ClientProtocolException(
+            						"Failed to create/update data source on server. Reason:\n" +
+            						EntityUtils.toString(response.getEntity()));
+            			} else {
+            				// success!
+            				return null;
+            			}
+            			
+            		}
+            	};
+            	
+            	logger.error(((Olap4jDataSource) ds).getMondrianSchema().getScheme());
+            	if (ds instanceof Olap4jDataSource 
+            			&& ((Olap4jDataSource) ds).getMondrianSchema() != null
+            			&& ((Olap4jDataSource) ds).getMondrianSchema().getScheme().equals("file")) {
+            		//Pushing the mondrian schema to the server and updating the schema location to a server schema
+            		Olap4jDataSource olapDS = ((Olap4jDataSource) ds);
+            		File schemaFile = new File(olapDS.getMondrianSchema());
+            		
+            		if (!schemaFile.exists()) 
+            			logger.error("Schema file " + schemaFile.getAbsolutePath() + 
+            					" does not exist for data source " + ds.getName());
+            		
+            		HttpPost request = new HttpPost(
+            				getServerURI(workspaceLocation.getServiceInfo(), 
+            						MONDRIAN_SCHEMA_REL_PATH + schemaFile.getName()));
+            		
+            		request.setEntity(new FileEntity(schemaFile, "text/xml"));
+            		httpClient.execute(request, responseHandler);
+            		
+            		//updating new data source to point to the server's schema.
+            		for (int i = properties.size() - 1; i >= 0; i--) {
+            			NameValuePair pair = properties.get(i);
+            			if (pair.getName().equals(Olap4jDataSource.MONDRIAN_SCHEMA)) {
+            				properties.add(new BasicNameValuePair(
+            						Olap4jDataSource.MONDRIAN_SCHEMA, 
+            						SPDataSource.SERVER + schemaFile.getName()));
+            				properties.remove(pair);
+            				break;
+            			}
+            		}
+            		
+            		try {
+            			postingProperties = true;
+            			olapDS.setMondrianSchema(new URI(SPDataSource.SERVER + schemaFile.getName()));
+            		} finally {
+            			postingProperties = false;
+            		}
+            	}
                 
                 HttpPost request = new HttpPost(dataSourceURI(ds));
                 
                 request.setEntity(new UrlEncodedFormEntity(properties));
-                httpClient.execute(request, new ResponseHandler<Void>() {
-                    public Void handleResponse(HttpResponse response)
-                            throws ClientProtocolException, IOException {
-                        
-                        if (response.getStatusLine().getStatusCode() != 200) {
-                            throw new ClientProtocolException(
-                                    "Failed to create/update data source on server. Reason:\n" +
-                                    EntityUtils.toString(response.getEntity()));
-                        } else {
-                            // success!
-                            return null;
-                        }
-                        
-                    }
-                });
+				httpClient.execute(request, responseHandler);
                 
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
@@ -398,9 +455,9 @@ public class WabitClientSession extends WabitSessionImpl {
                 }
                 PlDotIni plIni;
                 try {
-                    plIni = new PlDotIni(
+					plIni = new PlDotIni(
                     		getServerURI(workspaceLocation.getServiceInfo(), "jdbc/"),
-                    		getServerURI(workspaceLocation.getServiceInfo(), "mondrian-schema/"));
+                    		getServerURI(workspaceLocation.getServiceInfo(), MONDRIAN_SCHEMA_REL_PATH));
                     plIni.read(response.getEntity().getContent());
                     logger.debug("Data source collection has URI " + plIni.getServerBaseURI());
                 } catch (URISyntaxException e) {
