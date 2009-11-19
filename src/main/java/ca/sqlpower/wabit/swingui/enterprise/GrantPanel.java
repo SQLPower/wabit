@@ -337,7 +337,7 @@ public class GrantPanel implements DataEntryPanel {
 			if (this.list.getModel().getElementAt(i) instanceof Group) {
 				Group group = (Group)this.list.getModel().getElementAt(i);
 				for (Grant grant : group.getChildren(Grant.class)) {
-					if (this.systemMode && grant.getType().equals(this.objectType)) {
+					if (this.systemMode && grant.getSubject() == null && grant.getType().equals(this.objectType)) {
 						this.grants.put(group.getUUID(), grant);
 					} else if (!this.systemMode && this.objectUuid.equals(grant.getSubject())) {
 						this.grants.put(group.getUUID(), grant);
@@ -346,7 +346,7 @@ public class GrantPanel implements DataEntryPanel {
 			} else {
 				User user = (User)this.list.getModel().getElementAt(i);
 				for (Grant grant : user.getGrants()) {
-					if (this.systemMode && grant.getType().equals(this.objectType)) {
+					if (this.systemMode && grant.getSubject() == null && grant.getType().equals(this.objectType)) {
 						this.grants.put(user.getUUID(), grant);
 					} else if (!this.systemMode && this.objectUuid.equals(grant.getSubject())) {
 						this.grants.put(user.getUUID(), grant);
