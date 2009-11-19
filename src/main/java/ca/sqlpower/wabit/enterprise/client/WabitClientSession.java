@@ -317,7 +317,6 @@ public class WabitClientSession extends WabitSessionImpl {
             		}
             	};
             	
-            	logger.error(((Olap4jDataSource) ds).getMondrianSchema().getScheme());
             	if (ds instanceof Olap4jDataSource 
             			&& ((Olap4jDataSource) ds).getMondrianSchema() != null
             			&& ((Olap4jDataSource) ds).getMondrianSchema().getScheme().equals("file")) {
