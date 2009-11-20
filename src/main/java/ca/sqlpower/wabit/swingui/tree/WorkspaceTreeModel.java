@@ -53,11 +53,11 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -114,7 +114,7 @@ public class WorkspaceTreeModel implements TreeModel {
         generateFolderList();
         
         listener = new WabitTreeModelEventAdapter();
-        WabitUtils.listenToHierarchy(workspace, listener);
+        SQLPowerUtils.listenToHierarchy(workspace, listener);
     }
     
     public void generateFolderList() {
@@ -550,7 +550,7 @@ public class WorkspaceTreeModel implements TreeModel {
 		}
 
 		public void childAdded(SPChildEvent e) {
-		    WabitUtils.listenToHierarchy(e.getChild(), this);
+			SQLPowerUtils.listenToHierarchy(e.getChild(), this);
 		    if (!appearsInTree(e.getChild())) {
 		        return;
 		    }
@@ -570,7 +570,7 @@ public class WorkspaceTreeModel implements TreeModel {
 		}
 
 		public void childRemoved(SPChildEvent e) {
-            WabitUtils.unlistenToHierarchy(e.getChild(), this);
+			SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
             if (!appearsInTree(e.getChild())) {
                 return;
             }

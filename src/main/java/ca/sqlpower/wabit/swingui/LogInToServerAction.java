@@ -26,8 +26,8 @@ import javax.swing.AbstractAction;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 
 /**
@@ -40,7 +40,7 @@ public class LogInToServerAction extends AbstractAction {
     private final WabitSessionContext context;
     
     public LogInToServerAction(Component dialogOwner, SPServerInfo si, WabitSessionContext context) {
-        super(WabitUtils.serviceInfoSummary(si));
+        super(SQLPowerUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;
         this.context = context;
@@ -52,7 +52,7 @@ public class LogInToServerAction extends AbstractAction {
 		} catch (Exception ex) {
 			SPSUtils.showExceptionDialogNoReport(dialogOwner,
 					"Log in to server "
-							+ WabitUtils.serviceInfoSummary(serviceInfo)
+							+ SQLPowerUtils.serviceInfoSummary(serviceInfo)
 							+ "failed.", ex);
 		}
 	}

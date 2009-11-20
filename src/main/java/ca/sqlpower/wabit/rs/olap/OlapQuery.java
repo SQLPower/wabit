@@ -70,12 +70,12 @@ import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.rs.ResultSetAndUpdateCountCollection;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
@@ -266,12 +266,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		
 		public void childAdded(SPChildEvent e) {
 			logger.debug("Listening to child " + e.getChild().getName());
-			WabitUtils.listenToHierarchy(e.getChild(), this);
+			SQLPowerUtils.listenToHierarchy(e.getChild(), this);
 		}
 
 		public void childRemoved(SPChildEvent e) {
 			logger.debug("Removing child " + e.getChild().getName());
-			WabitUtils.unlistenToHierarchy(e.getChild(), this);
+			SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
 		}
 
 		public void propertyChange(PropertyChangeEvent evt) {
@@ -816,7 +816,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		wasLoadedFromDao = true;
 		axes.add(axis);
 		axis.setParent(this);
-		WabitUtils.listenToHierarchy(axis, childListener);
+		SQLPowerUtils.listenToHierarchy(axis, childListener);
 		fireChildAdded(WabitOlapAxis.class, axis, axes.size() - 1);
 	}
 	
@@ -1343,7 +1343,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	    if (axes.contains(child)) {
 	        int index = axes.indexOf(child);
 	        axes.remove(child);
-	        WabitUtils.unlistenToHierarchy((WabitObject) child, childListener);
+	        SQLPowerUtils.unlistenToHierarchy((WabitObject) child, childListener);
 	        fireChildRemoved(child.getClass(), child, index);
 	    }
 	    return false;
@@ -1365,7 +1365,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	    }
 	    
 	    axes.add(index, axis);
-	    WabitUtils.listenToHierarchy(axis, childListener);
+	    SQLPowerUtils.listenToHierarchy(axis, childListener);
 	    axis.setParent(this);
 	    wasLoadedFromDao = true;
 	    fireChildAdded(child.getClass(), child, index);

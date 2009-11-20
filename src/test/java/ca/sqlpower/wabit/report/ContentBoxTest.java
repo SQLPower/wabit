@@ -23,13 +23,13 @@ import java.util.Set;
 
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.CountingWabitListener;
 import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 
@@ -114,7 +114,7 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
 		
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
-		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		SQLPowerUtils.listenToHierarchy(getWorkspace(), listener);
 		cb.addSPListener(countingListener);
 		
 		persister.begin();

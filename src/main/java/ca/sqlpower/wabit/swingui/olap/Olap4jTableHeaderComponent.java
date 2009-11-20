@@ -34,7 +34,7 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.util.SQLPowerUtils;
 
 import com.jgoodies.forms.layout.CellConstraints;
 
@@ -145,7 +145,7 @@ public class Olap4jTableHeaderComponent extends JComponent {
             for (HierarchyLabelGrid lg : labelGrids) {
                 for (String positionText : lg.getLabelsForPosition(position)) {
                     String labelText = null;
-                    if (!WabitUtils.nullSafeEquals(positionText, previousValue[column])) {
+                    if (!SQLPowerUtils.areEqual(positionText, previousValue[column])) {
                         labelText = positionText;
                     }
                     JLabel label = new JLabel(labelText);

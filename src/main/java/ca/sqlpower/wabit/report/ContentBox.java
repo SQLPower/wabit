@@ -33,6 +33,7 @@ import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -82,12 +83,12 @@ public class ContentBox extends AbstractWabitObject {
         
         @Override
 		public void childRemovedImpl(SPChildEvent e) {
-		    WabitUtils.unlistenToHierarchy(e.getChild(), childListener);
+        	SQLPowerUtils.unlistenToHierarchy(e.getChild(), childListener);
 		}
 		
         @Override
 		public void childAddedImpl(SPChildEvent e) {
-		    WabitUtils.listenToHierarchy(e.getChild(), childListener);
+        	SQLPowerUtils.listenToHierarchy(e.getChild(), childListener);
 		}
 
         @Override
@@ -167,9 +168,9 @@ public class ContentBox extends AbstractWabitObject {
     	
         ReportContentRenderer oldContentRenderer = this.contentRenderer;
         if (oldContentRenderer != null) {
-        	CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(oldContentRenderer);
-        	WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
-            WabitUtils.unlistenToHierarchy(oldContentRenderer, childListener);
+        	CleanupExceptions cleanupObject = SQLPowerUtils.cleanupSPObject(oldContentRenderer);
+        	SQLPowerUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
+        	SQLPowerUtils.unlistenToHierarchy(oldContentRenderer, childListener);
             oldContentRenderer.setParent(null);
             fireChildRemoved(ReportContentRenderer.class, oldContentRenderer, 0);
         }
@@ -185,7 +186,7 @@ public class ContentBox extends AbstractWabitObject {
         		}
         	}
             contentRenderer.setParent(this);
-            WabitUtils.listenToHierarchy(contentRenderer, childListener);
+            SQLPowerUtils.listenToHierarchy(contentRenderer, childListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
         	if (workspace == null || !workspace.isMagicDisabled()) {

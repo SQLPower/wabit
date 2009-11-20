@@ -54,6 +54,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.NewValueMaker;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.WabitObjectProperty;
@@ -747,7 +748,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
-		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		SQLPowerUtils.listenToHierarchy(getWorkspace(), listener);
 		wo.addSPListener(countingListener);
 		
 		List<PropertyDescriptor> settableProperties;
@@ -871,7 +872,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
-		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		SQLPowerUtils.listenToHierarchy(getWorkspace(), listener);
 		parent.addSPListener(countingListener);
 		
 		int childrenBefore = parent.getChildren().size();
@@ -931,7 +932,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
 		
 		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
 		
-		WabitUtils.listenToHierarchy(getWorkspace(), listener);
+		SQLPowerUtils.listenToHierarchy(getWorkspace(), listener);
 		parent.addSPListener(countingListener);
 		
 		int childrenBefore = parent.getChildren().size();

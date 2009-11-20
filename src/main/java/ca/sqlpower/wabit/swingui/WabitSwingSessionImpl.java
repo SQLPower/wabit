@@ -91,7 +91,6 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
@@ -248,18 +247,18 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    }
 	    
         public WorkspaceWatcher(WabitWorkspace workspace) {
-            WabitUtils.listenToHierarchy(workspace, this);
+        	SQLPowerUtils.listenToHierarchy(workspace, this);
         }
 	    
         @Override
         public void childAddedImpl(SPChildEvent e) {
-            WabitUtils.listenToHierarchy(e.getChild(), this);
+        	SQLPowerUtils.listenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
 
         @Override
         public void childRemovedImpl(SPChildEvent e) {
-            WabitUtils.unlistenToHierarchy(e.getChild(), this);
+        	SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
         }
 

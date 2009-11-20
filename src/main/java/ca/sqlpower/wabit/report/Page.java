@@ -30,6 +30,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -365,8 +366,8 @@ public class Page extends AbstractWabitObject {
         if (removeme.getParent() != this) {
             throw new IllegalStateException("That's not my content box!");
         }
-        CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(removeme);
-        WabitUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
+        CleanupExceptions cleanupObject = SQLPowerUtils.cleanupSPObject(removeme);
+        SQLPowerUtils.displayCleanupErrors(cleanupObject, getSession().getContext());
         int index = contentBoxes.indexOf(removeme);
         if (index != -1) {
         	contentBoxes.remove(removeme);

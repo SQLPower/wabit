@@ -24,6 +24,7 @@ import java.util.List;
 
 import junit.framework.TestCase;
 import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.util.SQLPowerUtils;
 
 import com.rc.retroweaver.runtime.Collections;
 
@@ -84,7 +85,7 @@ public class WabitUtilsTest extends TestCase {
         grandchild.setName("grandchild");
         child.addChild(grandchild);
         
-        CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(parent);
+        CleanupExceptions cleanupObject = SQLPowerUtils.cleanupSPObject(parent);
         
         assertFalse(cleanupObject.isCleanupSuccessful());
         assertEquals(3, cleanupObject.getErrorMessages().size());

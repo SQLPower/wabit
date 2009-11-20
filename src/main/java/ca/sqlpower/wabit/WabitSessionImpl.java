@@ -30,6 +30,7 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -63,8 +64,8 @@ public class WabitSessionImpl implements WabitSession {
 	}
 
 	public boolean close() {
-	    CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(workspace);
-	    WabitUtils.displayCleanupErrors(cleanupObject, sessionContext);
+	    CleanupExceptions cleanupObject = SQLPowerUtils.cleanupSPObject(workspace);
+	    SQLPowerUtils.displayCleanupErrors(cleanupObject, sessionContext);
 	    
     	SessionLifecycleEvent<WabitSession> lifecycleEvent =
     		new SessionLifecycleEvent<WabitSession>(this);

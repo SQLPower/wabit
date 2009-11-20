@@ -44,11 +44,11 @@ import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.PersistedObjectEntry;
 import ca.sqlpower.wabit.dao.PersistedPropertiesEntry;
@@ -187,12 +187,12 @@ public class WorkspacePersisterListener implements SPListener {
 			final WabitSession session, SPPersister targetPersister, WabitSessionPersister eventSource) {
 		final WorkspacePersisterListener listener = 
 			new WorkspacePersisterListener(session, targetPersister, eventSource);
-		WabitUtils.listenToHierarchy(session.getWorkspace(), listener);
+		SQLPowerUtils.listenToHierarchy(session.getWorkspace(), listener);
 		
 		session.addSessionLifecycleListener(new SessionLifecycleListener<WabitSession>() {
 			
 			public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
-				WabitUtils.unlistenToHierarchy(session.getWorkspace(), listener);
+				SQLPowerUtils.unlistenToHierarchy(session.getWorkspace(), listener);
 			}
 		});
 		return listener;
@@ -295,7 +295,7 @@ public class WorkspacePersisterListener implements SPListener {
 	}
 
 	public void childAdded(SPChildEvent e) {
-		WabitUtils.listenToHierarchy(e.getChild(), this);
+		SQLPowerUtils.listenToHierarchy(e.getChild(), this);
 		if (wouldEcho()) return;
 		logger.debug("wabitChildAdded " + e.getChildType() + " with UUID " + e.getChild().getUUID());
 		persistObject(e.getChild());

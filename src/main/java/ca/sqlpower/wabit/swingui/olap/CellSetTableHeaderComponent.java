@@ -87,9 +87,9 @@ import org.olap4j.query.SortOrder;
 
 import ca.sqlpower.swingui.ColoredIcon;
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
@@ -1124,7 +1124,7 @@ public class CellSetTableHeaderComponent extends JComponent {
             List<LayoutItem> layoutItems = getLayoutItems();
             for (int i = 0 ; i < layoutItems.size() ; i++) {
             	LayoutItem li = layoutItems.get(i);
-            	if (previousLabel == null || !WabitUtils.nullSafeEquals(previousLabel.text, li.text) || 
+            	if (previousLabel == null || !SQLPowerUtils.areEqual(previousLabel.text, li.text) || 
             			!previousLabel.member.getLevel().equals(li.member.getLevel())) {
             		if (li.member == selectedMember) {
             			g2.setColor(Color.BLUE);

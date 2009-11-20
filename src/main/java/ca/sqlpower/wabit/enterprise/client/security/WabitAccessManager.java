@@ -39,8 +39,8 @@ import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.SPSession;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
 
@@ -146,7 +146,7 @@ public class WabitAccessManager {
 		}
 		final SPObject workspace = getCurrentSession().getWorkspace();
 		synchronized (workspace) {
-			SPObject root = WabitUtils.findByUuid(workspace, rootUuid, SPObject.class);
+			SPObject root = SQLPowerUtils.findByUuid(workspace, rootUuid, SPObject.class);
 			// Must find all dependent objects, but not ancestors
 			WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace,
 					root, true, true);

@@ -45,9 +45,9 @@ import ca.sqlpower.object.SPObject;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
 import ca.sqlpower.wabit.swingui.WorkspaceGraphTreeModel;
@@ -248,8 +248,8 @@ public class DeleteFromTreeAction extends AbstractAction {
             	logger.debug("Could not remove " + dependent.getName());
             }
         }
-        CleanupExceptions cleanupObject = WabitUtils.cleanupWabitObject(nodeToRemove);
-        WabitUtils.displayCleanupErrors(cleanupObject, upf);
+        CleanupExceptions cleanupObject = SQLPowerUtils.cleanupSPObject(nodeToRemove);
+        SQLPowerUtils.displayCleanupErrors(cleanupObject, upf);
         if (nodeToRemove.getParent() != null) {
             successfullyRemoved = successfullyRemoved && 
                 nodeToRemove.getParent().removeChild(nodeToRemove);
