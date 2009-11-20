@@ -49,7 +49,7 @@ public abstract class AbstractWabitObject extends AbstractSPObject implements Wa
 
     @Override
     public void generateNewUUID() {
-    	uuid = "w" + UUID.randomUUID();
+    	uuid = WabitUtils.randomWabitUUID();
     }
 
 	public WabitObject getParent() {
