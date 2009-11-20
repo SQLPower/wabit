@@ -226,6 +226,23 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	return allChildren;
     }
     
+    @SuppressWarnings("unchecked")
+	@Override
+    public <T extends SPObject> List<T> getChildren(Class<T> type) {
+    	List<T> children = new ArrayList<T>();
+    	if (type.isAssignableFrom(WabitDataSource.class)) children.addAll((List<T>) getDataSources());
+    	if (type.isAssignableFrom(QueryCache.class)) children.addAll((List<T>) getQueries());
+    	if (type.isAssignableFrom(OlapQuery.class)) children.addAll((List<T>) getOlapQueries());
+    	if (type.isAssignableFrom(Chart.class)) children.addAll((List<T>) getCharts());
+    	if (type.isAssignableFrom(WabitImage.class)) children.addAll((List<T>) getImages());
+    	if (type.isAssignableFrom(Template.class)) children.addAll((List<T>) getTemplates());
+    	if (type.isAssignableFrom(Report.class)) children.addAll((List<T>) getReports());
+    	if (type.isAssignableFrom(ReportTask.class)) children.addAll((List<T>) getReportTasks());
+    	if (type.isAssignableFrom(User.class)) children.addAll((List<T>) getUsers());
+    	if (type.isAssignableFrom(Group.class)) children.addAll((List<T>) getGroups());
+    	return children;
+    }
+    
     /**
      * Sets the session which this workspace belongs to. This should normally
      * only be called by that workspace. It's exposed as a publicly settable
