@@ -10,7 +10,7 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager.Permission;
+import ca.sqlpower.enterprise.client.security.SPAccessManager.Permission;
 
 /**
  * Profiling has shown that most of the time spent reading a workspace is spent

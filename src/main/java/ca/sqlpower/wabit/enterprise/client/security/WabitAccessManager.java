@@ -37,6 +37,7 @@ import ca.sqlpower.enterprise.client.Grant;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.enterprise.client.security.SPAccessManager;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.SPSession;
 import ca.sqlpower.util.SQLPowerUtils;
@@ -45,21 +46,8 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.WorkspaceGraphModel;
 
 
-public class WabitAccessManager {
+public class WabitAccessManager implements SPAccessManager{
 
-	public enum Permission {
-		CREATE(),
-		MODIFY(),
-		DELETE(),
-		EXECUTE(),
-		GRANT(),
-		REMOVE_PROPERTY();
-		
-		private Permission() {
-			//no state beyond enum constant
-		}
-	}
-	
 	private static final Logger logger = Logger
 			.getLogger(WabitAccessManager.class);
 	
