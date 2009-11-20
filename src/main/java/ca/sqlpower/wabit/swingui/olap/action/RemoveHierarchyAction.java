@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.olap.action;
 
 import org.olap4j.Axis;
-import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
 
 import ca.sqlpower.wabit.rs.olap.OlapQuery;

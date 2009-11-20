@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit;
 
-import java.beans.PropertyChangeListener;
 
 /**
  * A Wabit Background Worker is a Wabit Object that encapsulates some sort
