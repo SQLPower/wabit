@@ -10,7 +10,6 @@ import javax.annotation.concurrent.ThreadSafe;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.enterprise.client.security.WabitAccessManager.Permission;
 
 /**

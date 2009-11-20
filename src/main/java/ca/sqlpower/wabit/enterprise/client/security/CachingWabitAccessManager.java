@@ -21,10 +21,6 @@ package ca.sqlpower.wabit.enterprise.client.security;
 
 import java.util.Set;
 
-import ca.sqlpower.enterprise.client.User;
-import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitSession;
-
 
 public class CachingWabitAccessManager extends WabitAccessManager {
 
