@@ -31,6 +31,7 @@ import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -38,7 +39,6 @@ import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 
@@ -108,7 +108,7 @@ public class WabitSessionPersisterTest extends TestCase {
 	    workspace.addUser(user);
 	    user.setEmail(null);
 	    
-	    assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
+	    assertNotNull(SQLPowerUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
 	    
         wsp.begin();
         wsp.persistProperty(
@@ -125,7 +125,7 @@ public class WabitSessionPersisterTest extends TestCase {
         workspace.addUser(user);
         user.setEmail("not@null");
 
-        assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
+        assertNotNull(SQLPowerUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
 
         wsp.begin();
         wsp.persistProperty(
@@ -142,7 +142,7 @@ public class WabitSessionPersisterTest extends TestCase {
         workspace.addUser(user);
         user.setEmail(null);
 
-        assertNotNull(WabitUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
+        assertNotNull(SQLPowerUtils.findByUuid(workspace, user.getUUID(), SPObject.class));
 
         wsp.begin();
         wsp.persistProperty(

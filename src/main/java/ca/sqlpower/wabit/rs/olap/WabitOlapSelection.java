@@ -162,8 +162,4 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		return selection;
 	}
 	
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();
-	}
-
 }

@@ -110,10 +110,6 @@ public class AbstractSPListenerTest extends TestCase {
             //do nothing
         }
 
-		public List<Class<? extends SPObject>> allowedChildTypes() {
-			return Collections.emptyList();
-		}
-
     };
 
     /**

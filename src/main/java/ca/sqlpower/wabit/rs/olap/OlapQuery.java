@@ -1402,13 +1402,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 			return cubeName;
 		}
 	}
-	
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(WabitOlapAxis.class);
-		return childTypes;
-	}
-
 
 	// -------------- WabitBackgroundWorker interface --------------
 	

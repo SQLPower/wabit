@@ -121,6 +121,39 @@ public class Page extends AbstractWabitObject {
      * points for the layout.
      */
     private final List<Guide> guides = new ArrayList<Guide>();
+    
+	/**
+	 * FIXME This enum defines the {@link WabitObject} child classes a
+	 * {@link Page} takes as well as the ordinal order of these child
+	 * classes such that the class going before does not depend on the class
+	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
+	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
+	 */
+	public enum WabitObjectOrder {
+		CONTENT_BOX(ContentBox.class),
+		GUIDE(Guide.class);
+		
+		private final Class<? extends WabitObject> clazz;
+		
+		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
+			this.clazz = clazz;
+		}
+		
+		public Class<? extends WabitObject> getChildClass() {
+			return clazz;
+		}
+		
+		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
+			for (WabitObjectOrder order : values()) {
+				if (order.clazz.getSimpleName().equals(name)) {
+					return order;
+				}
+			}
+			throw new IllegalArgumentException("The WabitObject class \"" + name + 
+					"\" does not exist or is not a child type of WabitWorkspace.");
+		}
+		
+	}
 
 	/**
 	 * Creates a page with the given custom width and height, and 1-inch
@@ -625,11 +658,4 @@ public class Page extends AbstractWabitObject {
                     " of type " + getClass());
         }
     }
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(ContentBox.class);
-		childTypes.add(Guide.class);
-		return childTypes;
-	}
 }

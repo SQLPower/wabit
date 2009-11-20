@@ -26,8 +26,8 @@ import org.apache.commons.beanutils.ConversionException;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin> {
@@ -50,7 +50,7 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 		String leftItemID = pieces[2];
 		String rightTableID = pieces[3];
 		String rightItemID = pieces[4];
-		QueryCache query = WabitUtils.findByUuid(root, queryID, QueryCache.class);
+		QueryCache query = SQLPowerUtils.findByUuid(root, queryID, QueryCache.class);
 		
 		List<Container> fromTables = query.getFromTableList();
 		Container leftContainer = null;

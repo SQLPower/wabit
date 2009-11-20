@@ -627,14 +627,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean allowsChildren() {
         return true;
     }
-    
-    public List<Class<? extends SPObject>> allowedChildTypes() {
-    	List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-    	childTypes.add(WabitConstantsContainer.class);
-    	childTypes.add(WabitTableContainer.class);
-    	childTypes.add(WabitJoin.class);
-    	return childTypes;
-    }
 
     public int childPositionOffset(Class<? extends SPObject> childType) {
         int offset = 0;

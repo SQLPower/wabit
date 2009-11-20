@@ -160,10 +160,6 @@ public class WabitDataSource extends AbstractWabitObject {
         return false;
     }
 
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();
-	}
-
 	public void removeDependency(SPObject dependency) {
 		//no-op
 	}

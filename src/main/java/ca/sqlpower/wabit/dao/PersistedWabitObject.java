@@ -88,8 +88,9 @@ public class PersistedWabitObject {
 
 	@Override
 	public String toString() {
-		return "PersistedWabitObject: uuid " + uuid + ", parent uuid "
-				+ parentUUID + ", type " + type + ", index " + index + "\n";
+		return "PersistedWabitObject: uuid " + uuid + ", parent uuid " + 
+				parentUUID + ", type " + type + ", index " + index + 
+				", loaded " + loaded + "\n";
 	}
 
 	public void setLoaded(boolean loaded) {

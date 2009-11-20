@@ -30,12 +30,14 @@ import java.io.InputStream;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.Format;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
@@ -64,11 +66,11 @@ import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
@@ -163,19 +165,140 @@ public class WabitSessionPersister implements SPPersister {
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
 	 * passed into the persistedObject call in the order of insertion
 	 */
-	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
+	protected List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
 
 	/**
 	 * This will be the list we use to rollback persisted objects.
 	 * It contains UUIDs of objects that were created.
 	 */
 	private List<PersistedObjectEntry> persistedObjectsRollbackList = new LinkedList<PersistedObjectEntry>();
+
+	/**
+	 * This comparator sorts buffered removeObject calls by each
+	 * {@link SPObject} UUID. The UUIDs being compared must matchup with an
+	 * existing SPObject in the {@link #root}. If it does not exist, it means
+	 * that the SPObject has just been removed and this comparator is
+	 * reshuffling the map.
+	 * TODO We need a generic way of comparing
+	 * {@link SPObject}s. Instead of using the WabitObjectOrder enums which
+	 * currently exist in {@link WabitWorkspace}, {@link QueryCache},
+	 * {@link WabitOlapDimension} and {@link Page}, we need to somehow make use
+	 * of the {@link WabitObjectComparator} instead.
+	 */
+	protected final Comparator<String> removedObjectComparator = new Comparator<String>() {
+		public int compare(String uuid1, String uuid2) {
+			SPObject spo1 = SQLPowerUtils.findByUuid(root, uuid1, SPObject.class);
+			SPObject spo2 = SQLPowerUtils.findByUuid(root, uuid2, SPObject.class);
+			
+			if (uuid1.equals(uuid2)) {
+				return 0;
+			} else if (spo1 == null && spo2 == null) {
+				return uuid2.compareTo(uuid1);
+			} else if (spo1 == null) {
+				return -1;
+			} else if (spo2 == null) {
+				return 1;
+			} else if (spo1.getParent() == null && spo2.getParent() == null) {
+				return 0;
+			} else if (spo1.getParent() == null) {
+				return 1;
+			} else if (spo2.getParent() == null) {
+				return -1;
+			} else if (spo1.equals(spo2)) {
+				return 0;
+			} else if (spo1.getParent().equals(spo2.getParent())) {
+				List<? extends SPObject> siblings = spo1.getParent().getChildren();
+				return Integer.signum(siblings.indexOf(spo2) - siblings.indexOf(spo1));
+			}
+				
+			List<SPObject> ancestorList1 = SQLPowerUtils.getAncestorList(spo1);
+			List<SPObject> ancestorList2 = SQLPowerUtils.getAncestorList(spo2);
+
+			SPObject previousAncestor = null;
+			SPObject ancestor1 = spo1;
+			SPObject ancestor2 = spo2;
+			boolean compareWithAncestor = false;
+
+			for (int i = 0, j = 0; i < ancestorList1.size() && j < ancestorList2.size(); i++, j++) {
+				ancestor1 = ancestorList1.get(i);
+				ancestor2 = ancestorList2.get(j);
+
+				if (previousAncestor != null && !ancestor1.equals(ancestor2)) {
+					compareWithAncestor = true;
+					break;
+				}
+
+				previousAncestor = ancestor1;
+
+			}
+
+			if (!compareWithAncestor) {
+				if (ancestorList1.size() < ancestorList2.size()) {
+					ancestor1 = spo1;
+					ancestor2 = ancestorList2.get(ancestorList1.size());
+				} else if (ancestorList1.size() > ancestorList2.size()) {
+					ancestor1 = ancestorList1.get(ancestorList2.size());
+					ancestor2 = spo2;
+				} else {
+					ancestor1 = spo1;
+					ancestor2 = spo2;
+				}
+			}
+
+			String simpleName1 = ancestor1.getClass().getSimpleName();
+			String simpleName2 = ancestor2.getClass().getSimpleName();
+			int c;
+
+			if (ancestor1.equals(ancestor2)) {
+				c = ancestorList2.size() - ancestorList1.size();
+
+			} else if (ancestor1.getClass() == ancestor2.getClass()) {
+				List<? extends SPObject> siblings = previousAncestor.getChildren();
+				int index1 =  siblings.indexOf(ancestor1);
+				int index2 = siblings.indexOf(ancestor2);
+
+				c = index2 - index1;
+
+			} else if (previousAncestor.equals(WabitWorkspace.class.getSimpleName())) {
+				WabitWorkspace.WabitObjectOrder order1 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
+				WabitWorkspace.WabitObjectOrder order2 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+
+				c = order2.compareTo(order1);
+
+			} else if (previousAncestor.equals(QueryCache.class.getSimpleName())) {
+				QueryCache.WabitObjectOrder order1 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
+				QueryCache.WabitObjectOrder order2 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+
+				c = order2.compareTo(order1);
+
+			} else if (previousAncestor.equals(WabitOlapDimension.class.getSimpleName())) {
+				WabitOlapDimension.WabitObjectOrder order1 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
+				WabitOlapDimension.WabitObjectOrder order2 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+
+				c = order2.compareTo(order1);
+
+			} else if (previousAncestor.equals(Page.class.getSimpleName())) {
+				Page.WabitObjectOrder order1 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
+				Page.WabitObjectOrder order2 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+
+				c = order2.compareTo(order1);
+
+			} else {
+				// XXX The comparator should really never reach
+				// this else block. However in the case that it does, compare by UUID.
+
+				c = uuid2.compareTo(uuid1);
+			}
+
+			return Integer.signum(c);
+		}
+	};
 	
 	/**
 	 * {@link WabitObject} removal buffer, mapping of {@link WabitObject} UUIDs
 	 * to their parents
 	 */
-	private Map<String, String> objectsToRemove = new LinkedHashMap<String, String>();
+	protected Map<String, String> objectsToRemove = new TreeMap<String, String>(removedObjectComparator);
 	
 	/**
 	 * This is the list we use to rollback object removal
@@ -291,7 +414,7 @@ public class WabitSessionPersister implements SPPersister {
 						transactionCount--;
 					}
 				} catch (Throwable t) {
-					logger.error("WabitSesisonPersister caught an exception while performing a commit operation. Will try to rollback...", t);
+					logger.error("WabitSessionPersister caught an exception while performing a commit operation. Will try to rollback...", t);
 					this.rollback();
 					throw new SPPersistenceException(null, t);
 				} finally {
@@ -302,18 +425,176 @@ public class WabitSessionPersister implements SPPersister {
 	}
 
 	/**
+	 * Returns an ancestor list of {@link PersistedWabitObject}s from a given
+	 * child PersistedWabitObject.
+	 */
+	private List<PersistedWabitObject> getAncestorListFromPersistedObjects(PersistedWabitObject child) {
+		List<PersistedWabitObject> resultList = new ArrayList<PersistedWabitObject>();
+
+		// Iterate through list of persisted WabitObjects to build an ancestor
+		// list from objects that do not exist in the workspace yet.
+		String uuid = child.getParentUUID();
+		PersistedWabitObject pwo;
+		while ((pwo = findPersistedObjectByUUID(uuid)) != null) {
+			resultList.add(0, pwo);
+			uuid = pwo.getParentUUID();
+		}
+
+		// Iterate through list of existing WabitObjects in the workspace and
+		// build the rest of the ancestor list.
+		SPObject spo = SQLPowerUtils.findByUuid(root, uuid, SPObject.class);
+		if (spo != null) {
+			resultList.add(0, createPersistedObjectFromSPObject(spo));
+			List<SPObject> ancestorList = SQLPowerUtils.getAncestorList(spo);
+
+			for (SPObject ancestor : ancestorList) {
+				resultList.add(0, createPersistedObjectFromSPObject(ancestor));
+			}
+		}
+		
+		return resultList;
+	}
+	
+	/**
+	 * Returns a new {@link PersistedWabitObject} based on a given {@link SPObject}.
+	 */
+	private PersistedWabitObject createPersistedObjectFromSPObject(SPObject spo) {
+		String parentUUID = null;
+		int index = 0;
+		
+		if (spo.getParent() != null) {
+			parentUUID = spo.getParent().getUUID();
+			index = spo.getParent().getChildren(spo.getClass()).indexOf(spo);
+		}
+		
+		return new PersistedWabitObject(parentUUID, spo.getClass().getSimpleName(), 
+				spo.getUUID(), index);
+	}
+
+	/**
+	 * Returns an existing {@link PersistedWabitObject} in the
+	 * {@link #persistedObjects} list given by the UUID. If it does not exist,
+	 * null is returned.
+	 */
+	private PersistedWabitObject findPersistedObjectByUUID(String uuid) {
+		if (uuid != null) {
+			for (PersistedWabitObject pwo : persistedObjects) {
+				if (uuid.equals(pwo.getUUID())) {
+					return pwo;
+				}
+			}
+		}
+		return null;
+	}
+	
+	protected final Comparator<PersistedWabitObject> persistedObjectComparator = new Comparator<PersistedWabitObject>() {
+
+		// If the two objects being compared are of the same type and are children of the same parent, the one with the lower index should go first.
+		// Otherwise, the one with the smaller ancestor tree should go first (e.g. Report should go before Page).
+		public int compare(PersistedWabitObject o1, PersistedWabitObject o2) {
+			
+			if (o1.getParentUUID() == null && o2.getParentUUID() == null) {
+				return 0;
+			} else if (o1.getParentUUID() == null) {
+				return -1;
+			} else if (o2.getParentUUID() == null) {
+				return 1;
+			} else if (o1.getParentUUID().equals(o2.getParentUUID()) && o1.getType().equals(o2.getType())) {
+				return Integer.signum(o1.getIndex() - o2.getIndex());
+			}
+			
+			List<PersistedWabitObject> ancestorList1 = getAncestorListFromPersistedObjects(o1);
+			List<PersistedWabitObject> ancestorList2 = getAncestorListFromPersistedObjects(o2);
+			
+			PersistedWabitObject previousAncestor = null;
+			PersistedWabitObject ancestor1 = null;
+			PersistedWabitObject ancestor2 = null;
+			boolean compareWithAncestor = false;
+			
+			for (int i = 0, j = 0; i < ancestorList1.size() && j < ancestorList2.size(); i++, j++) {
+				ancestor1 = ancestorList1.get(i);
+				ancestor2 = ancestorList2.get(j);
+				
+				if (previousAncestor != null && !ancestor1.equals(ancestor2)) {
+					compareWithAncestor = true;
+					break;
+				}
+				
+				previousAncestor = ancestor1;
+			}
+			
+			if (!compareWithAncestor) {
+				if (ancestorList1.size() < ancestorList2.size()) {
+					ancestor1 = o1;
+					ancestor2 = ancestorList2.get(ancestorList1.size());
+				} else if (ancestorList1.size() > ancestorList2.size()) {
+					ancestor1 = ancestorList1.get(ancestorList2.size());
+					ancestor2 = o2;
+				} else {
+					ancestor1 = o1;
+					ancestor2 = o2;
+				}
+			}
+			
+			int c;
+			
+			if (ancestor1.equals(ancestor2)) {
+				c = ancestorList1.size() - ancestorList2.size();
+				
+			} else if (ancestor1.getType().equals(ancestor2.getType())) {
+				c = ancestor1.getIndex() - ancestor2.getIndex();
+				
+			} else if (previousAncestor.getType().equals(WabitWorkspace.class.getSimpleName())) {
+				WabitWorkspace.WabitObjectOrder order1 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				WabitWorkspace.WabitObjectOrder order2 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
+			} else if (previousAncestor.getType().equals(QueryCache.class.getSimpleName())) {
+				QueryCache.WabitObjectOrder order1 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				QueryCache.WabitObjectOrder order2 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
+			} else if (previousAncestor.getType().equals(WabitOlapDimension.class.getSimpleName())) {
+				WabitOlapDimension.WabitObjectOrder order1 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				WabitOlapDimension.WabitObjectOrder order2 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
+			} else if (previousAncestor.getType().equals(Page.class.getSimpleName())) {
+				Page.WabitObjectOrder order1 = Page.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				Page.WabitObjectOrder order2 = Page.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
+			} else {
+				// XXX The comparator should really never reach
+				// this else block. However in the case that it does, compare by UUID.
+				
+				c = ancestor1.getUUID().compareTo(ancestor2.getUUID());
+				
+			}
+			
+			return Integer.signum(c);
+		}
+	};
+
+	/**
 	 * Commits the persisted {@link WabitObject}s
 	 * 
 	 * @throws SPPersistenceException
 	 */
 	private void commitObjects() throws SPPersistenceException {
+		Collections.sort(persistedObjects, persistedObjectComparator);
+		
 		for (PersistedWabitObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
-			SPObject parent = WabitUtils.findByUuid(root, pwo
+			SPObject parent = SQLPowerUtils.findByUuid(root, pwo
 					.getParentUUID(), SPObject.class);
-			SPObject wo = loadWabitObject(pwo);
-			if (wo != null) {
+			SPObject spo = loadWabitObject(pwo);
+			if (spo != null) {
 				SPListener removeChildOnAddListener = new SPListener() {
 					public void propertyChange(PropertyChangeEvent arg0) {
 						//do nothing
@@ -337,12 +618,12 @@ public class WabitSessionPersister implements SPPersister {
 				};
 				parent.addSPListener(removeChildOnAddListener);
 				// FIXME Terrible hack, see bug 2326
-				parent.addChild(wo, Math.min(pwo.getIndex(), parent.getChildren(wo.getClass()).size()));
+				parent.addChild(spo, Math.min(pwo.getIndex(), parent.getChildren(spo.getClass()).size()));
 				parent.removeSPListener(removeChildOnAddListener);
 				this.persistedObjectsRollbackList.add(
 					new PersistedObjectEntry(
 						parent.getUUID(), 
-						wo.getUUID()));
+						spo.getUUID()));
 			}
 		}
 		persistedObjects.clear();
@@ -752,7 +1033,7 @@ public class WabitSessionPersister implements SPPersister {
 					return true;
 				}
 			}
-			if (WabitUtils.findByUuid(root, uuid, SPObject.class) != null) {
+			if (SQLPowerUtils.findByUuid(root, uuid, SPObject.class) != null) {
 				return true;
 			}
 		}
@@ -786,13 +1067,13 @@ public class WabitSessionPersister implements SPPersister {
 	 *             storage. This theoretically should not occur.
 	 */
 	private void commitProperties() throws SPPersistenceException {
-		SPObject wo;
+		SPObject spo;
 		String propertyName;
 		Object newValue;
 
 		for (String uuid : persistedProperties.keySet()) {
-			wo = WabitUtils.findByUuid(root, uuid, SPObject.class);
-			if (wo == null) {
+			spo = SQLPowerUtils.findByUuid(root, uuid, SPObject.class);
+			if (spo == null) {
 				throw new IllegalStateException("Couldn't locate object "
 						+ uuid + " in session");
 			}
@@ -802,11 +1083,11 @@ public class WabitSessionPersister implements SPPersister {
 				propertyName = wop.getPropertyName();
 				newValue = wop.getNewValue();
 
-				applyProperty(wo, propertyName, newValue);
+				applyProperty(spo, propertyName, newValue);
 				
 				this.persistedPropertiesRollbackList.add(
 					new PersistedPropertiesEntry(
-						wo.getUUID(), //The uuid can be changed so using the currently set one.
+						spo.getUUID(), //The uuid can be changed so using the currently set one.
 						wop.getPropertyName(), 
 						wop.getDataType(), 
 						wop.getOldValue()));
@@ -815,93 +1096,93 @@ public class WabitSessionPersister implements SPPersister {
 		persistedProperties.clear();
 	}
 
-	private void applyProperty(SPObject wo, String propertyName, Object newValue) throws SPPersistenceException {
-		logger.debug("Applying property " + propertyName + " to " + wo.getClass().getSimpleName() + " at " + wo.getUUID());
+	private void applyProperty(SPObject spo, String propertyName, Object newValue) throws SPPersistenceException {
+		logger.debug("Applying property " + propertyName + " to " + spo.getClass().getSimpleName() + " at " + spo.getUUID());
 		if (isCommonProperty(propertyName)) {
-			commitCommonProperty(wo, propertyName, newValue);
-		} else if (wo instanceof CellSetRenderer) {
-			commitCellSetRendererProperty((CellSetRenderer) wo,
+			commitCommonProperty(spo, propertyName, newValue);
+		} else if (spo instanceof CellSetRenderer) {
+			commitCellSetRendererProperty((CellSetRenderer) spo,
 					propertyName, newValue);
-		} else if (wo instanceof Chart) {
-			commitChartProperty((Chart) wo, propertyName, newValue);
-		} else if (wo instanceof ChartColumn) {
-			commitChartColumnProperty((ChartColumn) wo, propertyName,
+		} else if (spo instanceof Chart) {
+			commitChartProperty((Chart) spo, propertyName, newValue);
+		} else if (spo instanceof ChartColumn) {
+			commitChartColumnProperty((ChartColumn) spo, propertyName,
 					newValue);
-		} else if (wo instanceof ChartRenderer) {
-			commitChartRendererProperty((ChartRenderer) wo,
+		} else if (spo instanceof ChartRenderer) {
+			commitChartRendererProperty((ChartRenderer) spo,
 					propertyName, newValue);
-		} else if (wo instanceof ColumnInfo) {
-			commitColumnInfoProperty((ColumnInfo) wo, propertyName,
+		} else if (spo instanceof ColumnInfo) {
+			commitColumnInfoProperty((ColumnInfo) spo, propertyName,
 					newValue);
-		} else if (wo instanceof ContentBox) {
-			commitContentBoxProperty((ContentBox) wo, propertyName,
+		} else if (spo instanceof ContentBox) {
+			commitContentBoxProperty((ContentBox) spo, propertyName,
 					newValue);
-		} else if (wo instanceof Grant) {
-			commitGrantProperty((Grant) wo, propertyName, newValue);
-		} else if (wo instanceof Group) {
-			commitGroupProperty((Group) wo, propertyName, newValue);
-		} else if (wo instanceof GroupMember) {
-			commitGroupMemberProperty((GroupMember) wo, propertyName,
+		} else if (spo instanceof Grant) {
+			commitGrantProperty((Grant) spo, propertyName, newValue);
+		} else if (spo instanceof Group) {
+			commitGroupProperty((Group) spo, propertyName, newValue);
+		} else if (spo instanceof GroupMember) {
+			commitGroupMemberProperty((GroupMember) spo, propertyName,
 					newValue);
-		} else if (wo instanceof Guide) {
-			commitGuideProperty((Guide) wo, propertyName, newValue);
-		} else if (wo instanceof ImageRenderer) {
-			commitImageRendererProperty((ImageRenderer) wo,
+		} else if (spo instanceof Guide) {
+			commitGuideProperty((Guide) spo, propertyName, newValue);
+		} else if (spo instanceof ImageRenderer) {
+			commitImageRendererProperty((ImageRenderer) spo,
 					propertyName, newValue);
-		} else if (wo instanceof Label) {
-			commitLabelProperty((Label) wo, propertyName, newValue);
-		} else if (wo instanceof Layout) {
-			commitLayoutProperty((Layout) wo, propertyName, newValue);
-		} else if (wo instanceof OlapQuery) {
-			commitOlapQueryProperty((OlapQuery) wo, propertyName,
+		} else if (spo instanceof Label) {
+			commitLabelProperty((Label) spo, propertyName, newValue);
+		} else if (spo instanceof Layout) {
+			commitLayoutProperty((Layout) spo, propertyName, newValue);
+		} else if (spo instanceof OlapQuery) {
+			commitOlapQueryProperty((OlapQuery) spo, propertyName,
 					newValue);
-		} else if (wo instanceof Page) {
-			commitPageProperty((Page) wo, propertyName, newValue);
-		} else if (wo instanceof QueryCache) {
-			commitQueryCacheProperty((QueryCache) wo, propertyName,
+		} else if (spo instanceof Page) {
+			commitPageProperty((Page) spo, propertyName, newValue);
+		} else if (spo instanceof QueryCache) {
+			commitQueryCacheProperty((QueryCache) spo, propertyName,
 					newValue);
-		} else if (wo instanceof ReportTask) {
-			commitReportTaskProperty((ReportTask) wo, propertyName,
+		} else if (spo instanceof ReportTask) {
+			commitReportTaskProperty((ReportTask) spo, propertyName,
 					newValue);
-		} else if (wo instanceof ResultSetRenderer) {
-			commitResultSetRendererProperty((ResultSetRenderer) wo,
+		} else if (spo instanceof ResultSetRenderer) {
+			commitResultSetRendererProperty((ResultSetRenderer) spo,
 					propertyName, newValue);
-		} else if (wo instanceof User) {
-			commitUserProperty((User) wo, propertyName, newValue);
-		} else if (wo instanceof WabitConstantsContainer) {
+		} else if (spo instanceof User) {
+			commitUserProperty((User) spo, propertyName, newValue);
+		} else if (spo instanceof WabitConstantsContainer) {
 			commitWabitConstantsContainerProperty(
-					(WabitConstantsContainer) wo, propertyName,
+					(WabitConstantsContainer) spo, propertyName,
 					newValue);
-		} else if (wo instanceof WabitDataSource) {
-			commitWabitDataSourceProperty((WabitDataSource) wo,
+		} else if (spo instanceof WabitDataSource) {
+			commitWabitDataSourceProperty((WabitDataSource) spo,
 					propertyName, newValue);
-		} else if (wo instanceof WabitImage) {
-			commitWabitImageProperty((WabitImage) wo, propertyName,
+		} else if (spo instanceof WabitImage) {
+			commitWabitImageProperty((WabitImage) spo, propertyName,
 					newValue);
-		} else if (wo instanceof WabitItem) {
-			commitWabitItemProperty((WabitItem) wo, propertyName,
+		} else if (spo instanceof WabitItem) {
+			commitWabitItemProperty((WabitItem) spo, propertyName,
 					newValue);
-		} else if (wo instanceof WabitJoin) {
-			commitWabitJoinProperty((WabitJoin) wo, propertyName,
+		} else if (spo instanceof WabitJoin) {
+			commitWabitJoinProperty((WabitJoin) spo, propertyName,
 					newValue);
-		} else if (wo instanceof WabitOlapAxis) {
-			commitWabitOlapAxisProperty((WabitOlapAxis) wo,
+		} else if (spo instanceof WabitOlapAxis) {
+			commitWabitOlapAxisProperty((WabitOlapAxis) spo,
 					propertyName, newValue);
-		} else if (wo instanceof WabitOlapDimension) {
-			commitWabitOlapDimensionProperty((WabitOlapDimension) wo,
+		} else if (spo instanceof WabitOlapDimension) {
+			commitWabitOlapDimensionProperty((WabitOlapDimension) spo,
 					propertyName, newValue);
-		} else if (wo instanceof WabitOlapSelection) {
-			commitWabitOlapSelectionProperty((WabitOlapSelection) wo,
+		} else if (spo instanceof WabitOlapSelection) {
+			commitWabitOlapSelectionProperty((WabitOlapSelection) spo,
 					propertyName, newValue);
-		} else if (wo instanceof WabitTableContainer) {
-			commitWabitTableContainerProperty((WabitTableContainer) wo,
+		} else if (spo instanceof WabitTableContainer) {
+			commitWabitTableContainerProperty((WabitTableContainer) spo,
 					propertyName, newValue);
-		} else if (wo instanceof WabitWorkspace) {
-			commitWabitWorkspaceProperty((WabitWorkspace) wo,
+		} else if (spo instanceof WabitWorkspace) {
+			commitWabitWorkspaceProperty((WabitWorkspace) spo,
 					propertyName, newValue);
 		} else {
-			throw new SPPersistenceException(wo.getUUID(),
-					"Invalid WabitObject of type " + wo.getClass());
+			throw new SPPersistenceException(spo.getUUID(),
+					"Invalid WabitObject of type " + spo.getClass());
 		}
 	}
 
@@ -913,18 +1194,18 @@ public class WabitSessionPersister implements SPPersister {
 	 */
 	private void commitRemovals() throws SPPersistenceException {
 		for (String uuid : objectsToRemove.keySet()) {
-			SPObject wo = WabitUtils.findByUuid(root, uuid,
+			SPObject spo = SQLPowerUtils.findByUuid(root, uuid,
 					SPObject.class);
-			SPObject parent = WabitUtils.findByUuid(root, objectsToRemove
+			SPObject parent = SQLPowerUtils.findByUuid(root, objectsToRemove
 					.get(uuid), SPObject.class);
 			try {
-				int index = parent.getChildren().indexOf(wo);
-				index -= parent.childPositionOffset(wo.getClass());
-				parent.removeChild(wo);
+				int index = parent.getChildren().indexOf(spo);
+				index -= parent.childPositionOffset(spo.getClass());
+				parent.removeChild(spo);
 				this.objectsToRemoveRollbackList.add(
 					new RemovedObjectEntry(
 						parent.getUUID(), 
-						wo,
+						spo,
 						index));
 			} catch (IllegalArgumentException e) {
 				throw new SPPersistenceException(uuid, e);
@@ -948,7 +1229,7 @@ public class WabitSessionPersister implements SPPersister {
 			final String parentUuid = entry.getParentUUID();
 			final SPObject objectToRestore = entry.getRemovedChild();
 			final int index = entry.getIndex();
-			final SPObject parent = WabitUtils.findByUuid(root, parentUuid, SPObject.class);
+			final SPObject parent = SQLPowerUtils.findByUuid(root, parentUuid, SPObject.class);
 			try {
 				parent.addChild(objectToRestore, index);
 			} catch (Throwable t) {
@@ -965,7 +1246,7 @@ public class WabitSessionPersister implements SPPersister {
 				final String parentUuid = entry.uuid;
 				final String propertyName = entry.propertyName;
 				final Object rollbackValue = entry.rollbackValue;
-				final SPObject parent = WabitUtils.findByUuid(root, parentUuid, SPObject.class);
+				final SPObject parent = SQLPowerUtils.findByUuid(root, parentUuid, SPObject.class);
 				if (parent != null) {
 					this.applyProperty(parent, propertyName, rollbackValue);
 				}
@@ -983,8 +1264,8 @@ public class WabitSessionPersister implements SPPersister {
 				// We need to verify if the entry specifies a parent.
 				// WabitWorkspaces don't have parents so we can't remove them really...
 				if (entry.parentId != null) {
-					final SPObject parent = WabitUtils.findByUuid(root, entry.parentId, SPObject.class);
-					final SPObject child = WabitUtils.findByUuid(root, entry.childrenId, SPObject.class);
+					final SPObject parent = SQLPowerUtils.findByUuid(root, entry.parentId, SPObject.class);
+					final SPObject child = SQLPowerUtils.findByUuid(root, entry.childrenId, SPObject.class);
 					parent.removeChild(child);
 				}
 			} catch (Throwable t) {
@@ -1027,7 +1308,7 @@ public class WabitSessionPersister implements SPPersister {
 				this.rollback();
 				throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
 			}
-			SPObject objectToPersist = WabitUtils.findByUuid(root, uuid, SPObject.class);
+			SPObject objectToPersist = SQLPowerUtils.findByUuid(root, uuid, SPObject.class);
 			boolean isWorkspace= objectToPersist instanceof WabitWorkspace;
 			if (objectToPersist != null && isWorkspace) {
 				//reset now or the next object persisted will fail a few lines down.
@@ -1169,7 +1450,7 @@ public class WabitSessionPersister implements SPPersister {
 		}
 		
 		Object propertyValue = null;
-		SPObject spo = WabitUtils.findByUuid(root, uuid,
+		SPObject spo = SQLPowerUtils.findByUuid(root, uuid,
 				SPObject.class);
 		
 		if (lastPropertyValueFound != null) {
@@ -1325,7 +1606,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * on the object. This is refactored here as a lot of methods throw an
 	 * exception with a message equivalent to this one.
 	 * 
-	 * @param wo
+	 * @param spo
 	 *            The {@link WabitObject} that does not contain the given
 	 *            property.
 	 * @param propertyName
@@ -1333,11 +1614,11 @@ public class WabitSessionPersister implements SPPersister {
 	 *            cannot be found.
 	 * @return An error message for exceptions that describes the above.
 	 */
-	private String getSPPersistenceExceptionMessage(SPObject wo,
+	private String getSPPersistenceExceptionMessage(SPObject spo,
 			String propertyName) {
 		return "Cannot persist property \"" + propertyName + "\" on "
-				+ wo.getClass() + " with name \"" + wo.getName()
-				+ "\" and UUID \"" + wo.getUUID() + "\"";
+				+ spo.getClass() + " with name \"" + spo.getName()
+				+ "\" and UUID \"" + spo.getUUID() + "\"";
 	}
 
 	/**
@@ -1391,7 +1672,7 @@ public class WabitSessionPersister implements SPPersister {
 	/**
 	 * Commits a persisted {@link WabitObject} common property.
 	 * 
-	 * @param wo
+	 * @param spo
 	 *            The {@link WabitObject} to commit the persisted common
 	 *            property upon
 	 * @param propertyName
@@ -1401,31 +1682,31 @@ public class WabitSessionPersister implements SPPersister {
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
-	private void commitCommonProperty(SPObject wo, String propertyName,
+	private void commitCommonProperty(SPObject spo, String propertyName,
 			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("name")) {
-			wo.setName((String) converter.convertToComplexType(newValue,
+			spo.setName((String) converter.convertToComplexType(newValue,
 					String.class));
 		} else if (propertyName.equals("UUID")) {
-			wo.setUUID((String) converter.convertToComplexType(newValue,
+			spo.setUUID((String) converter.convertToComplexType(newValue,
 					String.class));
 		} else if (propertyName.equals("parent")) {
 			SPObject parent = (SPObject) converter.convertToComplexType(newValue,
 					SPObject.class);
 			if (logger.isDebugEnabled()) {
 				if (parent != null) {
-					logger.debug("Setting property " + propertyName + " on " + wo.getName() + 
+					logger.debug("Setting property " + propertyName + " on " + spo.getName() + 
 							" to " + parent.getName());
 				} else {
-					logger.debug("Setting property " + propertyName + " on " + wo.getName() + 
+					logger.debug("Setting property " + propertyName + " on " + spo.getName() + 
 							" to null");
 				}
 			}
-			wo.setParent(parent);
+			spo.setParent(parent);
 
 		} else {
-			throw new SPPersistenceException(wo.getUUID(),
-					getSPPersistenceExceptionMessage(wo, propertyName));
+			throw new SPPersistenceException(spo.getUUID(),
+					getSPPersistenceExceptionMessage(spo, propertyName));
 		}
 	}
 

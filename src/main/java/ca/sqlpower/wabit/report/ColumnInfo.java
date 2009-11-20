@@ -202,9 +202,5 @@ public class ColumnInfo extends AbstractWabitObject{
         return false;
     }
 
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();
-	}
-
 }
 

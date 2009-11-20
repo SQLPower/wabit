@@ -242,9 +242,5 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     protected boolean removeChildImpl(SPObject child) {
         return false;
     }
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();
-	}
     
 }

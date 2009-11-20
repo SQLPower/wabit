@@ -22,8 +22,8 @@ package ca.sqlpower.wabit.dao.session;
 import org.apache.commons.beanutils.ConversionException;
 
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
 
 
 /**
@@ -45,7 +45,7 @@ public class SPObjectConverter implements BidirectionalConverter<String, SPObjec
 
 	public SPObject convertToComplexType(String convertFrom)
 			throws ConversionException {
-		return WabitUtils.findByUuid(root, convertFrom, SPObject.class); 
+		return SQLPowerUtils.findByUuid(root, convertFrom, SPObject.class); 
 	}
 
 	public String convertToSimpleType(SPObject convertFrom, Object ... additionalValues) {

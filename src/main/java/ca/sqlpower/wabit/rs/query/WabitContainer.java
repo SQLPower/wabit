@@ -197,12 +197,6 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	public boolean allowsChildren() {
 		return true;
 	}
-	
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(getChildClass());
-		return childTypes;
-	}
 
 	public int childPositionOffset(Class<? extends SPObject> childType) {
 		if (!childType.equals(getChildClass())) throw new IllegalArgumentException("Only children of " + WabitItem.class + " are allowed in this class.");

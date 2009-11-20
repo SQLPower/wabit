@@ -166,10 +166,6 @@ public class WabitJoin extends AbstractWabitObject implements Join {
         return false;
     }
     
-    public List<Class<? extends SPObject>> allowedChildTypes() {
-    	return Collections.emptyList();
-    }
-
     public int childPositionOffset(Class<? extends SPObject> childType) {
         return 0;
     }

@@ -136,8 +136,4 @@ public class Guide extends AbstractWabitObject {
     protected boolean removeChildImpl(SPObject child) {
         return false;
     }
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();		
-	}
 }

@@ -712,10 +712,4 @@ public class CellSetRenderer extends AbstractWabitObject implements
         return false;
     }
 
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(OlapQuery.class);
-		return childTypes;
-	}
-
 }

@@ -799,9 +799,4 @@ public class Chart extends AbstractWabitObject {
         return exceptions;
     }
 
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(ChartColumn.class);
-		return childTypes;
-	}
 }

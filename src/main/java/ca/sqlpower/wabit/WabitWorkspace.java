@@ -42,6 +42,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.Report;
@@ -871,7 +872,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      *         workspace.
      */
     public <T extends SPObject> T findByUuid(String uuid, Class<T> expectedType) {
-        return WabitUtils.findByUuid(this, uuid, expectedType);
+        return SQLPowerUtils.findByUuid(this, uuid, expectedType);
     }
 
     @Override
@@ -1041,22 +1042,5 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		child.cleanup();
     	}
     }
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		if (getUUID().equals("system")) {
-			childTypes.add(User.class);
-			childTypes.add(Group.class);
-		} else {
-			childTypes.add(WabitDataSource.class);
-			childTypes.add(QueryCache.class);
-			childTypes.add(OlapQuery.class);
-			childTypes.add(Chart.class);
-			childTypes.add(WabitImage.class);
-			childTypes.add(Template.class);
-			childTypes.add(Report.class);
-			childTypes.add(ReportTask.class);
-		}
-		return childTypes;
-	}
+	
 }

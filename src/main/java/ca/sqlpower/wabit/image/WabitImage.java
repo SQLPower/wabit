@@ -25,7 +25,6 @@ import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.swing.Icon;
@@ -123,9 +122,5 @@ public class WabitImage extends AbstractWabitObject {
     protected boolean removeChildImpl(SPObject child) {
         return false;
     }
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		return Collections.emptyList();
-	}
 
 }

@@ -336,10 +336,4 @@ public class WabitOlapAxis extends AbstractWabitObject {
 	public OlapQuery getParent() {
 	    return (OlapQuery) super.getParent();
 	}
-
-	public List<Class<? extends SPObject>> allowedChildTypes() {
-		List<Class<? extends SPObject>> childTypes = new ArrayList<Class<? extends SPObject>>();
-		childTypes.add(WabitOlapDimension.class);
-		return childTypes;
-	}
 }
