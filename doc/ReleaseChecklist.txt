@@ -51,6 +51,7 @@ Good luck with the release!
   (not stretched, properly cropped)
  *Try saving and loading a Wabit file. Ensure workspace settings are persistent:
   data sources, queries and reports and so on
+ *Test printing reports with relational queries, olap queries, charts, images, and any new object types.
  *Make sure the app quits once all windows have been closed
  *For Windows only, test the uninstaller
 *Commit, then tag the release in the SVN repository, if you made it all the way
