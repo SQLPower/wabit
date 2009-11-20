@@ -32,6 +32,7 @@ import ca.sqlpower.util.SPSession;
 public class StubWabitObject implements WabitObject {
 
     public void addPropertyChangeListener(PropertyChangeListener l) {
+    	// no-op
     }
 
     public boolean allowsChildren() {
@@ -55,7 +56,7 @@ public class StubWabitObject implements WabitObject {
     }
     
 	public void setName(String name) {
-		
+    	// no-op
 	}
 
     public WabitObject getParent() {
@@ -63,19 +64,23 @@ public class StubWabitObject implements WabitObject {
     }
 
     public void removeWabitListener(SPListener l) {
+    	// no-op
     }
 
     public void removePropertyChangeListener(PropertyChangeListener l) {
+    	// no-op
     }
 
     public void setParent(WabitObject parent) {
+    	// no-op
     }
 
 	public String getUUID() {
 		return "stubby";
 	}
 	
-	public void setUUID(String uuid){
+	public void setUUID(String uuid) {
+    	// no-op
 	}
 
     public List<WabitObject> getDependencies() {

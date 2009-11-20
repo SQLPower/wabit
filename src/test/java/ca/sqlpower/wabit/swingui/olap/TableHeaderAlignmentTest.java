@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;

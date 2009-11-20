@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.report;
 
-import java.util.Collections;
 import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
