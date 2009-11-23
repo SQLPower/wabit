@@ -501,6 +501,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         		}
         	}
             ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
+            if (ci.getDataType().equals(DataType.NUMERIC)) {
+            	ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            }
             ci.setParent(ResultSetRenderer.this);
             newColumnInfo.add(ci);
         }
