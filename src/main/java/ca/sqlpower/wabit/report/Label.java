@@ -186,7 +186,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     /**
      * Return the Label text with variables substituted.
      */
-    String[] getVariableSubstitutedText() {
+    public String[] getVariableSubstitutedText() {
 		return Variables.substitute(text, getVariableContext()).split("\n");
 	}
 

@@ -38,6 +38,7 @@ public class LabelTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
     	ignored.add("variableContext");
+    	ignored.add("variableSubstitutedText");
     	return ignored;
     }
     
@@ -63,6 +64,7 @@ public class LabelTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToIgnoreForEvents() {
     	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
         ignored.add("variableContext");
+        ignored.add("variableSubstitutedText");
         return ignored;
     }
     
