@@ -917,29 +917,31 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * @param member The member whose drilldown state to toggle. Must not be null.
      * @throws QueryInitializationException 
      * @throws OlapException if the list of child members can't be retrieved
-     * @return Returns true if the query was expanded
+     * @return Returns true if the query was NOT expanded
      */
     public synchronized boolean toggleMember(Member member) throws QueryInitializationException {
         Dimension d = member.getDimension();
         QueryDimension qd = getMDXQuery().getDimension(d.getName());
-        boolean wasExpanded = false;
+        boolean wasCollapsed = false;
         for (Iterator<Selection> it = qd.getInclusions().iterator(); it.hasNext(); ) {
             Selection s = it.next();
+            logger.debug("Checking if " + s.getMember().getName() + " is a descendant of " + member.getName());
             if (OlapUtils.isDescendant(member, s.getMember()) || 
             		(member.equals(s.getMember()) && (s.getOperator() == Operator.CHILDREN || s.getOperator() == Operator.INCLUDE_CHILDREN))) {
+            	logger.debug(s.getMember().getName() + " was collapsed and removed");
                 // XXX query model docs now say not to do this,
                 // but there is no other way in the API
                 it.remove();
-                wasExpanded = true;
+                wasCollapsed = true;
             }
         }
         
-        if (!wasExpanded) {
+        if (!wasCollapsed) {
             qd.include(Operator.CHILDREN, member);
         }
         updateAttributes();
         
-        return wasExpanded;
+        return wasCollapsed;
     }
  
     /**
@@ -1421,7 +1423,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 				firePropertyChange("running", oldValue, running);
 			}
 		};
-		getSession().runInForeground(runner);
+		runInForeground(runner);
     }
     
     public boolean isRunning() {
