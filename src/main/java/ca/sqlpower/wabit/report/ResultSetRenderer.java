@@ -458,15 +458,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	/**
 	 * Constructor subroutine.
 	 * 
-	 * @param rsmd
-	 *            The metadata for the current result set.
-	 * @param columnInfo
-	 *            The list of column information for the result set. This allows
-	 *            defining column information from a load.
+	 * @param rs
+	 * 				The RS to map onto
 	 * @throws SQLException
 	 *             If the resultset metadata methods fail.
 	 */
-    private void initColumns(ResultSet rs) throws SQLException {
+    public void initColumns(ResultSet rs) throws SQLException {
     	ResultSetMetaData rsmd = rs.getMetaData();
     	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
     	for (ColumnInfo info : columnInfo) {
