@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BasicStroke;
-import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Paint;
 import java.awt.Shape;
@@ -28,6 +27,8 @@ import java.awt.Stroke;
 import java.awt.geom.Ellipse2D;
 
 import org.jfree.chart.plot.DrawingSupplier;
+
+import ca.sqlpower.util.WebColour;
 
 /**
  * Provides Wabit-approved colours and shapes to JFreeChart.
@@ -38,22 +39,22 @@ public class WabitDrawingSupplier implements DrawingSupplier {
      * An array of gradient specifications for bar colours. Each gradient spec
      * is itself an array with two entries: start colour and end colour.
      */
-    public static final Color[][] SERIES_COLOURS =
+    public static final WebColour[][] SERIES_COLOURS =
     {
-        { new Color(0x0060B6), new Color(0x003399) },
-        { new Color(0xFFBF00), new Color(0xFF7F00) },
-        { new Color(0x00A33D), new Color(0x006B33) },
-        { new Color(0xBF0000), new Color(0x8F0000) },
-        { new Color(0x885997), new Color(0x602169) },
-        { new Color(0x99CCFF), new Color(0x00A0C6) },
-        { new Color(0xFFFF00), new Color(0xFFBF00) },
-        { new Color(0xD9C6C5), new Color(0xB0A790) },
-        { new Color(0xABD498), new Color(0x7FB24A) },
-        { new Color(0x809EAD), new Color(0x466F82) },
-        { new Color(0x9A7F55), new Color(0x574109) },
-        { new Color(0xC6C8CA), new Color(0x7A7C7E) },
-        { new Color(0xCFDED8), new Color(0x8DBAA6) },
-        { new Color(0xEBC5D0), new Color(0xE786B6) }
+        { new WebColour(0x0060B6), new WebColour(0x003399) },
+        { new WebColour(0xFFBF00), new WebColour(0xFF7F00) },
+        { new WebColour(0x00A33D), new WebColour(0x006B33) },
+        { new WebColour(0xBF0000), new WebColour(0x8F0000) },
+        { new WebColour(0x885997), new WebColour(0x602169) },
+        { new WebColour(0x99CCFF), new WebColour(0x00A0C6) },
+        { new WebColour(0xFFFF00), new WebColour(0xFFBF00) },
+        { new WebColour(0xD9C6C5), new WebColour(0xB0A790) },
+        { new WebColour(0xABD498), new WebColour(0x7FB24A) },
+        { new WebColour(0x809EAD), new WebColour(0x466F82) },
+        { new WebColour(0x9A7F55), new WebColour(0x574109) },
+        { new WebColour(0xC6C8CA), new WebColour(0x7A7C7E) },
+        { new WebColour(0xCFDED8), new WebColour(0x8DBAA6) },
+        { new WebColour(0xEBC5D0), new WebColour(0xE786B6) }
     };
     
     /**
