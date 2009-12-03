@@ -326,15 +326,18 @@ public class Chart extends AbstractWabitObject {
         List<ChartColumn> newCols = new ArrayList<ChartColumn>();
         if (rs != null) {
             ResultSetMetaData rsmd = rs.getMetaData();
-            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-                String columnName = rsmd.getColumnName(i);
-                ChartColumn existing = findByName(oldCols, columnName);
-                if (existing != null) {
-                    newCols.add(existing);
-                } else {
-                    int columnType = rsmd.getColumnType(i);
-                    newCols.add(new ChartColumn(columnName, columnType));
-                }
+            // The meta data object might be null because of streaming queries.
+            if (rsmd != null) {
+	            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+	                String columnName = rsmd.getColumnName(i);
+	                ChartColumn existing = findByName(oldCols, columnName);
+	                if (existing != null) {
+	                    newCols.add(existing);
+	                } else {
+	                    int columnType = rsmd.getColumnType(i);
+	                    newCols.add(new ChartColumn(columnName, columnType));
+	                }
+	            }
             }
         }
         
