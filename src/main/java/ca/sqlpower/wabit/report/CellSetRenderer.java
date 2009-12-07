@@ -711,5 +711,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
     protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(OlapQuery.class);
+    	return types;
+    }
 
 }

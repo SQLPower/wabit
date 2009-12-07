@@ -659,4 +659,12 @@ public class Page extends AbstractWabitObject {
                     " of type " + getClass());
         }
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(ContentBox.class);
+    	types.add(Guide.class);
+    	return types;
+    }
+
 }

@@ -201,4 +201,8 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     public ContentBox getParent() {
         return (ContentBox) super.getParent();
 	}
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
 }

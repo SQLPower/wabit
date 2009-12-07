@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.rs.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -99,5 +102,11 @@ public class WabitTableContainer extends WabitContainer<WabitColumnItem> {
         }
         return false;
     }
+
+	public List<Class<? extends SPObject>> getAllowedChildTypes() {
+		List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+		types.add(WabitColumnItem.class);
+		return types;
+	}
     
 }

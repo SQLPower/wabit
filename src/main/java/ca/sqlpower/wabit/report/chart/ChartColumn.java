@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report.chart;
 
 import java.sql.Types;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -28,8 +29,6 @@ import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class handles some of the generic methods to the ColumnIdentifier.
@@ -209,6 +208,10 @@ public class ChartColumn extends AbstractWabitObject {
     @Override
     protected boolean removeChildImpl(SPObject child) {
         return false;
+    }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
     }
 
 }

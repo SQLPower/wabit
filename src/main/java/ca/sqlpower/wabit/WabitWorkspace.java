@@ -1042,5 +1042,25 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     		child.cleanup();
     	}
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	
+    	if (isSystemWorkspace()) {
+    		types.add(User.class);
+    		types.add(Group.class);
+    	} else {
+    		types.add(WabitDataSource.class);
+    		types.add(QueryCache.class);
+    		types.add(OlapQuery.class);
+    		types.add(Chart.class);
+    		types.add(WabitImage.class);
+    		types.add(Template.class);
+    		types.add(Report.class);
+    		types.add(ReportTask.class);
+    	}
+    	
+    	return types;
+    }
 	
 }

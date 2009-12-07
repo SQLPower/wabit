@@ -1295,4 +1295,12 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	}
     }
     
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(WabitConstantsContainer.class);
+    	types.add(WabitTableContainer.class);
+    	types.add(WabitJoin.class);
+    	return types;
+    }
+
 }

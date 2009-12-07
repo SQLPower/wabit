@@ -168,6 +168,9 @@ public abstract class WabitItem extends AbstractWabitObject {
 	}
 	
 	//-----------------End Item setters and getters-----------
-	
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
 
 }

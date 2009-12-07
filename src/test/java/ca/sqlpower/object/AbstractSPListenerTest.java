@@ -109,6 +109,12 @@ public class AbstractSPListenerTest extends TestCase {
         public void removeDependency(SPObject dependency) {
             //do nothing
         }
+        
+        public List<Class<? extends SPObject>> getAllowedChildTypes() {
+        	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+        	types.add(SPObject.class);
+        	return types;
+        }
 
     };
 

@@ -27,6 +27,7 @@ import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -297,4 +298,11 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     public String toString() {
     	return getName();
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(Page.class);
+    	return types;
+    }
+
 }

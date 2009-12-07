@@ -330,5 +330,15 @@ public class ContentBox extends AbstractWabitObject {
             }
         });
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(ResultSetRenderer.class);
+    	types.add(CellSetRenderer.class);
+    	types.add(ChartRenderer.class);
+    	types.add(ImageRenderer.class);
+    	types.add(Label.class);
+    	return types;
+    }
 
 }

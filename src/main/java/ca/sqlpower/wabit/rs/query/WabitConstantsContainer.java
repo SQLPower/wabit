@@ -19,6 +19,10 @@
 
 package ca.sqlpower.wabit.rs.query;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -53,5 +57,11 @@ public class WabitConstantsContainer extends WabitContainer<WabitConstantItem> {
     protected Class<WabitConstantItem> getChildClass() {
         return WabitConstantItem.class;
     }
+
+	public List<Class<? extends SPObject>> getAllowedChildTypes() {
+		List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+		types.add(WabitConstantItem.class);
+		return types;
+	}
 
 }

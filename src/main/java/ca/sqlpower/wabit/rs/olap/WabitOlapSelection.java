@@ -105,9 +105,8 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 	/**
 	 * Selections are leaf nodes.
 	 */
-	@SuppressWarnings("unchecked")
 	public List<? extends WabitObject> getChildren() {
-		return Collections.EMPTY_LIST;
+		return Collections.emptyList();
 	}
 
 	/**
@@ -161,5 +160,9 @@ public abstract class WabitOlapSelection extends AbstractWabitObject {
 		}
 		return selection;
 	}
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
 	
 }

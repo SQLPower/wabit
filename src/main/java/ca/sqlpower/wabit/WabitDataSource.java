@@ -163,4 +163,9 @@ public class WabitDataSource extends AbstractWabitObject {
 	public void removeDependency(SPObject dependency) {
 		//no-op
 	}
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
+
 }

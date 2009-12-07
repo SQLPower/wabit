@@ -257,4 +257,9 @@ public class ReportTask extends AbstractWabitObject {
 	public void setNoob(boolean noob) {
 		this.noob = noob;
 	}
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
+
 }

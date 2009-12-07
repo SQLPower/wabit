@@ -248,4 +248,8 @@ public class WabitJoin extends AbstractWabitObject implements Join {
 	}
     
     //-----------End SQLJoin getters and setters -----------
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
 }

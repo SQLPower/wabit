@@ -426,5 +426,12 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	public WabitOlapAxis getParent() {
 	    return (WabitOlapAxis) super.getParent();
 	}
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(WabitOlapInclusion.class);
+    	types.add(WabitOlapExclusion.class);
+    	return types;
+    }
 
 }

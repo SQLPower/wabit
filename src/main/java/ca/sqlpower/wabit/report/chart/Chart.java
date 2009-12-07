@@ -801,5 +801,12 @@ public class Chart extends AbstractWabitObject {
         
         return exceptions;
     }
+    
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(ChartColumn.class);
+    	return types;
+    }
 
 }

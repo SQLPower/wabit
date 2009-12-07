@@ -1004,4 +1004,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         child.setParent(this);
         fireChildAdded(child.getClass(), child, index);
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	List<Class<? extends SPObject>> types = new ArrayList<Class<? extends SPObject>>();
+    	types.add(ColumnInfo.class);
+    	return types;
+    }
+
 }

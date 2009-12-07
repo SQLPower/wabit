@@ -201,6 +201,10 @@ public class ColumnInfo extends AbstractWabitObject{
     protected boolean removeChildImpl(SPObject child) {
         return false;
     }
+    
+    public List<Class<? extends SPObject>> getAllowedChildTypes() {
+    	return Collections.emptyList();
+    }
 
 }
 

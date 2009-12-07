@@ -136,7 +136,7 @@ public class StubWabitObject implements WabitObject {
 		
 	}
 
-	public List<Class<? extends SPObject>> allowedChildTypes() {
+	public List<Class<? extends SPObject>> getAllowedChildTypes() {
 		return Collections.emptyList();
 	}
 
