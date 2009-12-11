@@ -1,6 +1,6 @@
 Wabit Release Notes
 
-Noteworthy Changes in 1.1
+Noteworthy Changes in 1.1.0
 
   SQL Power Library Support
     * Refactoring was performed to support changes to the SQL Power Library. 
