@@ -1,5 +1,12 @@
 Wabit Release Notes
 
+Noteworthy Changes in 1.1
+
+  SQL Power Library Support
+    * Refactoring was performed to support changes to the SQL Power Library. 
+      Many of the Wabit specific classes have been made generic and pushed 
+      down to SQL Power Library so they can be reused.
+
 Noteworthy Changes in 1.0.1
 
   Bug Fixes
