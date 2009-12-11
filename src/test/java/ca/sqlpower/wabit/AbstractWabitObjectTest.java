@@ -156,6 +156,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("dependencies");
     	ignore.add("UUID");
     	ignore.add("session");
+    	ignore.add("allowedChildTypes");
     	return ignore;
     }
     
