@@ -67,8 +67,6 @@ Making the new release available
 *(Create and...) Upload the dist directory to the SQL Power web server on pag 
  (/tomcat/virtualhosts/download.sqlpower.ca/wabit/x.y.z/). If the dist directory
  has not yet been created the current.html page will have to be updated.
-*Add/update the wabit.version.properties file on an update website domain. The Wabit
-will use this to check the latest version number.
 *Copy the index.html page from the wabit/x.y.z directory into the wabit directory as
  current.html
 *Test the all the links on the sqlpower.ca download page
