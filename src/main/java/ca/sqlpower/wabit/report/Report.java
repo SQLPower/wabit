@@ -52,10 +52,9 @@ public class Report extends Layout {
     public Report(Layout layout, WabitSession session) {
     	super(new Page(layout.getPage()));
     	setName(layout.getName());
-    	for (String variableName : layout.getVarContext().getVariableNames()) {
-    		setVariable(variableName, layout.getVarContext().getVariableValue(variableName, null));
+    	for (String key : layout.getVariableResolver().keySet(null)) {
+    		this.variables.store(key, layout.getVariableResolver().resolve(key));
     	}
     	setZoomLevel(layout.getZoomLevel());
-    	
 	}
 }

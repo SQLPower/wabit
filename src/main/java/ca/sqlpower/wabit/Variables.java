@@ -24,6 +24,8 @@ import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.SPVariableHelper;
+
 /**
  * A collection of static utility methods for dealing with variables.
  * 
@@ -49,7 +51,7 @@ public class Variables {
      * @param variableContext
      * @return
      */
-    public static String substitute(String textWithVars, VariableContext variableContext) {
+    public static String substitute(String textWithVars, SPVariableHelper variableHelper) {
         Pattern p = Pattern.compile("\\$\\{([$a-zA-Z0-9_.]+)\\}");
         
         logger.debug("Performing variable substitution on " + textWithVars);
@@ -65,7 +67,7 @@ public class Variables {
                 if (variableName.equals("$")) {
                     variableValue = "$";
                 } else {
-                    variableValue = variableContext.getVariableValue(variableName, (Object) ("MISSING_VAR:" + variableName));
+                    variableValue = variableHelper.resolve(variableName, (Object) ("MISSING_VAR:" + variableName));
                 }
                 logger.debug("Found variable " + variableName + " = " + variableValue);
                 text.append(textWithVars.substring(currentIndex, matcher.start()));

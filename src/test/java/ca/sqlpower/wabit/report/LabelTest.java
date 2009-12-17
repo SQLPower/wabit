@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.report;
 import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.TestingVariableContext;
 import ca.sqlpower.wabit.WabitObject;
 
 public class LabelTest extends AbstractWabitObjectTest {
@@ -46,7 +45,6 @@ public class LabelTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         label = new Label();
-        label.setVariableContext(new TestingVariableContext());
         ContentBox cb = new ContentBox();
         cb.addChild(label, 0);
         
@@ -63,7 +61,6 @@ public class LabelTest extends AbstractWabitObjectTest {
     @Override
     public Set<String> getPropertiesToIgnoreForEvents() {
     	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
-        ignored.add("variableContext");
         ignored.add("variableSubstitutedText");
         return ignored;
     }

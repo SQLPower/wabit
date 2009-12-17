@@ -31,7 +31,7 @@ import javax.swing.text.JTextComponent;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.wabit.VariableContext;
+import ca.sqlpower.object.SPVariableHelper;
 
 /**
  * A button that shows a popup menu of variables when it is clicked.
@@ -44,21 +44,24 @@ public class InsertVariableButton extends JButton {
     
     private static final char DOWN_ARROW = '\u25be';
     
-    private final VariableContext variableContext;
+    private final SPVariableHelper variableHelper;
     private final JTextComponent insertInto;
 
-    public InsertVariableButton(VariableContext variableContext, JTextComponent insertInto) {
+	private final String variableNamespace;
+
+    public InsertVariableButton(SPVariableHelper variableHelper, JTextComponent insertInto, String variableNamespace) {
         super("Variable " + DOWN_ARROW);
-        this.variableContext = variableContext;
+        this.variableHelper = variableHelper;
         this.insertInto = insertInto;
+		this.variableNamespace = variableNamespace;
         addActionListener(clickHandler);
     }
     
     private final ActionListener clickHandler = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
             JPopupMenu menu = new JPopupMenu();
-            for (String varname : variableContext.getVariableNames()) {
-                menu.add(new InsertVariableAction(varname));
+            for (String varname : variableHelper.keySet(variableNamespace)) {
+                menu.add(new InsertVariableAction(SPVariableHelper.stripNamespace(varname), varname));
                 logger.debug("Added new item for " + varname);
             }
             Component invoker = (Component) e.getSource();
@@ -71,8 +74,8 @@ public class InsertVariableButton extends JButton {
         
         private final String varName;
 
-        InsertVariableAction(String varName) {
-            super(varName);
+        InsertVariableAction(String label, String varName) {
+            super(label);
             this.varName = varName;
         }
         

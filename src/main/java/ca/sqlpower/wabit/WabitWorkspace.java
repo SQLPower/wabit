@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
 
 import javax.swing.event.UndoableEditListener;
 
@@ -37,6 +38,9 @@ import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
@@ -56,7 +60,7 @@ import ca.sqlpower.wabit.rs.query.QueryCache;
  * corresponds with the root workspace node in the XML representation of a Wabit
  * workspace. It belongs to exactly one WabitSession.
  */
-public class WabitWorkspace extends AbstractWabitObject implements DataSourceCollection<SPDataSource> {
+public class WabitWorkspace extends AbstractWabitObject implements DataSourceCollection<SPDataSource>, SPVariableResolverProvider {
 	
 	/**
 	 * A workspace with this uuid is a system workspace.
@@ -158,6 +162,21 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	 * boxes and any other side effects should not take place.
 	 */
     private int magicDisabled = 0;
+    
+    private final SPSimpleVariableResolver variableResolver;
+    
+    private class WorkspaceVariableResolver extends SPSimpleVariableResolver {
+    	@SuppressWarnings("unchecked")
+		public WorkspaceVariableResolver(String namespace) {
+			super(namespace);
+			// By default, add system variables.
+			for (Entry entry : System.getProperties().entrySet()) {
+				if (entry.getKey() instanceof String) {
+					this.store((String) entry.getKey(), entry.getValue());
+				}
+			}
+		}
+    }
 
 	/**
 	 * FIXME This enum defines the {@link WabitObject} child classes a
@@ -207,6 +226,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public WabitWorkspace() {
         listeners = new ArrayList<DatabaseListChangeListener>();
 		setName(DEFAULT_NAME);
+		this.variableResolver = new WorkspaceVariableResolver(null);
     }
     
     public List<SPObject> getChildren() {
@@ -1061,6 +1081,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	}
     	
     	return types;
+    }
+    
+    public SPVariableResolver getVariableResolver() {
+    	return this.variableResolver;
     }
 	
 }

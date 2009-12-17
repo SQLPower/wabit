@@ -42,11 +42,14 @@ import org.apache.log4j.Logger;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
 
+import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.swingui.Icons;
@@ -59,15 +62,18 @@ public class SwingLabel implements SwingContentRenderer {
     
     private final Label renderer;
 
+	private final SPVariableHelper variableHelper;
+
     public SwingLabel(Label renderer) {
         this.renderer = renderer;
+        this.variableHelper = new SPVariableHelper(renderer);
     }
 
     public DataEntryPanel getPropertiesPanel() {
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
         final JTextArea textArea = new JTextArea(renderer.getText());
-        JButton variableButton = new InsertVariableButton(renderer.getVariableContext(), textArea);
+        JButton variableButton = new InsertVariableButton(this.variableHelper, textArea, this.getLayout().getUUID());
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(Icons.LEFT_ALIGN_ICON, 
@@ -195,4 +201,11 @@ public class SwingLabel implements SwingContentRenderer {
         //do something cool here later
     }
 
+    private Layout getLayout() {
+    	SPObject obj = this.renderer;
+    	while (!(obj instanceof Layout)) {
+    		obj = obj.getParent();
+    	}
+    	return (Layout)obj;
+    }
 }

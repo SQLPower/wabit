@@ -33,6 +33,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	Set<String> ignored = super.getPropertiesToIgnoreForEvents();
     	//This is actually a child.
     	ignored.add("page");
+    	ignored.add("variableResolver");
     	return ignored;
     }
     
@@ -46,6 +47,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("printable");
     	ignored.add("varContext");
     	ignored.add("zoomLevel");
+    	ignored.add("variableResolver");
     	return ignored;
     }
     

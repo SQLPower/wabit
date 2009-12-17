@@ -30,21 +30,20 @@ import java.awt.print.PrinterException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.VariableContext;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitVersion;
 
-public abstract class Layout extends AbstractWabitObject implements Pageable, Printable {
+public abstract class Layout extends AbstractWabitObject implements Pageable, Printable, SPVariableResolverProvider {
     private static final Logger logger = Logger.getLogger(Report.class);
 
 	public static final String PROPERTY_ZOOM = "zoomLevel";
@@ -62,6 +61,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         pageFormat.setOrientation(PageFormat.LANDSCAPE);
         page = new Page("Default Page", pageFormat);
         page.setParent(this);
+        this.variables = new SPSimpleVariableResolver(this.uuid);
 	}
 	
 	public Layout(Page page) {
@@ -72,42 +72,18 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 		super(uuid);
 		this.page = page;
 		page.setParent(this);
+		this.variables = new SPSimpleVariableResolver(this.uuid);
 	}
 	
+	public void setUUID(String uuid) {
+		super.setUUID(uuid);
+		this.variables.setNamespace(uuid);
+	}
 	
 	/**
 	 * A property that defines which page is currently being printed.
 	 */
 	public static final String PAGE_NUMBER = "page_number";
-	
-	public class LayoutVarContext implements VariableContext {
-	    /**
-	     * The variables defined for this report.
-	     */
-	    private final Map<String, Object> vars = new HashMap<String, Object>();
-	    
-	    public Set<String> getVariableNames() {
-	        return vars.keySet();
-	    }
-
-	    public Object getVariableValue(String name, Object defaultValue) {
-	        if (vars.containsKey(name)) {
-	            return vars.get(name);
-	        } else {
-	            return defaultValue;
-	        }
-	    }
-	    
-	    public Map<String, Object> getVars() {
-	    	return vars;
-		}
-	};
-	
-	public LayoutVarContext varContext = new LayoutVarContext();
-	
-	public LayoutVarContext getVarContext() {
-		return varContext;
-	}
     
     /**
      * The page size and margin info.
@@ -125,6 +101,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
      */
     private int zoomLevel;
     
+    protected final SPSimpleVariableResolver variables;
+    
     /**
      * This will define if the layout is currently printing, which is also done by
      * exporting it to a PDF, as the print method is not safe for two threads to
@@ -133,11 +111,11 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
     protected void updateBuiltinVariables() {
-        setVariable("now", new Date());
-        setVariable("system_user", System.getProperty("user.name"));
-        setVariable("wabit_version", WabitVersion.VERSION);
-        setVariable(PAGE_NUMBER, 0);
-        setVariable("page_count", 0);
+        this.variables.update("now", new Date());
+        this.variables.update("system_user", System.getProperty("user.name"));
+        this.variables.update("wabit_version", WabitVersion.VERSION);
+        this.variables.update(PAGE_NUMBER, 0);
+        this.variables.update("page_count", 0);
     }
     
     public Page getPage() {
@@ -149,10 +127,6 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     	this.page = page;
     	fireChildAdded(Page.class, page, 0);
     	page.setParent(this);
-    }
-    
-    public void setVariable(String name, Object value) {
-        varContext.getVars().put(name, value);
     }
 
     public int childPositionOffset(Class<? extends SPObject> childType) {
@@ -205,8 +179,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setColor(Color.BLACK);
-        if (!((Boolean) getVarContext().getVariableValue(COUNTING_PAGES, false))) {
-        	setVariable(PAGE_NUMBER, pageIndex + 1);
+        if (!((Boolean) this.variables.resolve(COUNTING_PAGES, false))) {
+        	this.variables.update(PAGE_NUMBER, pageIndex + 1);
         }
         boolean needMorePages = false;
         for (ContentBox cb : page.getContentBoxes()) {
@@ -234,7 +208,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     public int getNumberOfPages() {
     	try {
     		countPages();
-    		setVariable("page_count", pageCount);
+    		this.variables.update("page_count", pageCount);
     		return pageCount;
     	} catch (PrinterException ex) {
     		throw new RuntimeException("Print exception occured while counting pages", ex);
@@ -256,14 +230,14 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
-    		setVariable(COUNTING_PAGES, true);
+    		this.variables.update(COUNTING_PAGES, true);
 	    	while (!done) {
 	    		int result = print(g, getPageFormat(pageNum), pageNum);
 	    		if (result == Printable.NO_SUCH_PAGE) break;
 	    		pageNum++;
 	    	}
     	} finally {
-    		setVariable(COUNTING_PAGES, false);
+    		this.variables.update(COUNTING_PAGES, false);
     		g.dispose();
     	}
     	return pageNum;
@@ -305,4 +279,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     	return types;
     }
 
+    public SPVariableResolver getVariableResolver() {
+    	return this.variables;
+    }
 }

@@ -36,6 +36,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ProgressMonitor;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.ProgressWatcher;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
@@ -51,6 +52,7 @@ public class PrintAction extends AbstractAction {
 		private final PrinterJob job;
 		private final Layout printingLayout;
 		private int progress;
+		private final SPVariableHelper variableHelper;
 
 		public PrintWorker(SwingWorkerRegistry registry, PrinterJob job, Layout layout) {
 			super(registry);
@@ -59,6 +61,7 @@ public class PrintAction extends AbstractAction {
 			setMessage(null);
 			progress = 0;
 			this.job = job;
+			this.variableHelper = new SPVariableHelper(layout);
 		}
 
 		@Override
@@ -76,7 +79,7 @@ public class PrintAction extends AbstractAction {
 
 		@Override
 		protected int getProgressImpl() {
-			Object progressObject = printingLayout.getVarContext().getVariableValue(Report.PAGE_NUMBER, progress);
+			Object progressObject = this.variableHelper.resolve(Report.PAGE_NUMBER, progress);
 			if (progressObject instanceof Integer) {
 				progress = ((Integer) progressObject).intValue();
 			}
