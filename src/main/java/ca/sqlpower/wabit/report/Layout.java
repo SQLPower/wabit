@@ -62,6 +62,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         page = new Page("Default Page", pageFormat);
         page.setParent(this);
         this.variables = new SPSimpleVariableResolver(this.uuid);
+        this.variables.setSnobbyResolver(false);
 	}
 	
 	public Layout(Page page) {
