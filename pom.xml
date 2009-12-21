@@ -617,7 +617,7 @@
 		<dependency>
 			<groupId>ca.sqlpower.architect</groupId>
 			<artifactId>architect-dbtree</artifactId>
-			<version>0.9.12-alpha</version>
+			<version>0.9.14-alpha</version>
 		</dependency>
 		<dependency>
             <groupId>jfree</groupId>
