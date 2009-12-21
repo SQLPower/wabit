@@ -28,6 +28,7 @@ import ca.sqlpower.object.AbstractSPObject;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.WorkspaceGraphModel;
 
 public abstract class AbstractWabitObject extends AbstractSPObject implements WabitObject {
 

@@ -23,6 +23,8 @@ import java.util.Collection;
 
 import junit.framework.TestCase;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.WorkspaceGraphModel;
+import ca.sqlpower.object.WorkspaceGraphModelEdge;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;

@@ -21,9 +21,9 @@ package ca.sqlpower.wabit.swingui.action;
 
 import junit.framework.TestCase;
 import ca.sqlpower.object.ObjectDependentException;
+import ca.sqlpower.object.WorkspaceGraphModel;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.WorkspaceGraphModel;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;

@@ -39,11 +39,11 @@ import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.enterprise.client.security.SPAccessManager;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.WorkspaceGraphModel;
 import ca.sqlpower.util.SPSession;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.WorkspaceGraphModel;
 
 
 public class WabitAccessManager implements SPAccessManager{

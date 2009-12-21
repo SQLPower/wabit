@@ -27,8 +27,7 @@ import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 
 import ca.sqlpower.object.SPObject;
-import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WorkspaceGraphModel;
+import ca.sqlpower.object.WorkspaceGraphModel;
 
 /**
  * Displays a WorkspaceGraphModel as a tree. Each node in the tree is wrapped in
