@@ -85,6 +85,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
+import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryChangeEvent;
@@ -642,7 +643,7 @@ public class QueryPanel implements WabitPanel {
 			public void actionPerformed(ActionEvent event) {
 				try {
 					for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
-						rootNode.removeChild(i);
+						rootNode.removeChild(rootNode.getChildren().get(i));
 					}
 					if(reportComboBox.getSelectedItem() != null) {
 					    // FIXME the session (or session context) should be maintaining a map of data
@@ -656,6 +657,8 @@ public class QueryPanel implements WabitPanel {
 				} catch (SQLObjectException e) {
 					throw new RuntimeException(
 							"Could not add DataSource to rootNode", e);
+				} catch (ObjectDependentException e) {
+					throw new RuntimeException(e);
 				}
 
 			}
@@ -1199,9 +1202,9 @@ public class QueryPanel implements WabitPanel {
 		queryUIComponents.disconnectListeners();
 		try {
 			for (int i = rootNode.getChildren().size() - 1; i >= 0; i--) {
-				rootNode.removeChild(i);
+				rootNode.removeChild(rootNode.getChildren().get(i));
 			}
-		} catch (SQLObjectException e) {
+		} catch (ObjectDependentException e) {
 			throw new RuntimeException(e);
 		}
 		queryPen.cleanup();

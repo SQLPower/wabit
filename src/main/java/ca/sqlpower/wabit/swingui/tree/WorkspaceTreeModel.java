@@ -275,11 +275,7 @@ public class WorkspaceTreeModel implements TreeModel {
 		WabitSessionContext context = workspace.getSession().getContext();
 		if (spDS instanceof JDBCDataSource) {
 			JDBCDataSource jdbcDS = (JDBCDataSource) spDS;
-			try {
-				children.addAll(context.getDatabase(jdbcDS).getChildren());
-			} catch (SQLObjectException e) {
-				throw new RuntimeException(e);
-			}
+			children.addAll(context.getDatabase(jdbcDS).getChildren());
 		} else if (spDS instanceof Olap4jDataSource) {
 			Olap4jDataSource olapDS = (Olap4jDataSource) spDS;
 			Olap4jTreeModel olapTreeModel;
@@ -338,11 +334,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.indexOf(child);
     	} else if (parent instanceof SQLObject) {
-    		try {
-				return ((SQLObject) parent).getChildren().indexOf(child);
-			} catch (SQLObjectException e) {
-				throw new RuntimeException(e);
-			}
+    		return ((SQLObject) parent).getChildren().indexOf(child);
     	} else if (parent instanceof QueryCache) {
     	    return 0;
     	} else if (parent instanceof SPObject) {

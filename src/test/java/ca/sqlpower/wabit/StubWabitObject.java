@@ -167,4 +167,8 @@ public class StubWabitObject implements WabitObject {
 		
 	}
 
+	public boolean allowsChildType(Class<? extends SPObject> type) {
+		return false;
+	}
+
 }
