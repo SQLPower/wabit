@@ -38,6 +38,10 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -72,7 +76,7 @@ import ca.sqlpower.wabit.rs.StreamingResultSetCollectionListener;
  * This method will be able to execute and cache the results of a query. It also
  * delegates some of the methods to the {@link QueryImpl} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements Query, StatementExecutor, ResultSetProducer {
+public class QueryCache extends AbstractWabitObject implements Query, StatementExecutor, ResultSetProducer, SPVariableResolverProvider {
     
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
@@ -221,6 +225,46 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     private WabitConstantsContainer constantContainer;
     
+    private final QueryVariableResolver variables;
+    
+    /**
+     * Extends {@link SPSimpleVariableResolver} to make sure that we
+     * initialize the variables before trying to resolve them.
+     */
+    private final class QueryVariableResolver extends SPSimpleVariableResolver {
+    	public QueryVariableResolver(String namespace) {
+			super(namespace);
+		}
+    	protected void beforeLookups(String key) {
+    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))) {
+    			this.updateVars(true);
+    		}
+    	}
+    	protected void beforeKeyLookup(String namespace) {
+    		if (this.resolvesNamespace(namespace)) {
+    			this.updateVars(false);
+    		}
+    	}
+		private void updateVars(boolean completeUpdate) {
+			try {
+				executeStatement(completeUpdate);
+				CachedRowSet rs = getCachedRowSet();
+				List<Item> columns = getSelectedColumns();
+				variables.clear();
+				if (rs.first()) {
+					do {
+						for (Item column : columns) {
+							String name = column.getAlias() == "" ? column.getName() : column.getAlias();
+							this.store(name, rs.getObject(name));
+						}
+					} while (rs.next());
+				}
+			} catch (SQLException e) {
+				logger.error("Failed to resolve available variables from a query.", e);
+			}
+		}
+    }
+    
     /**
      * When each container is added to a query cache a WabitObject wrapper is made for 
      * it and placed in this list to let this query fire Wabit events based on it.
@@ -281,6 +325,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * can have its listeners connected to allow using this query cache in the workspace.
      */
     public QueryCache(QueryCache q, boolean connectListeners) {
+    	
+    	// Create a variable context.
+        this.variables = new QueryVariableResolver(this.uuid);
+        
         this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());
@@ -343,6 +391,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants,
     		WabitConstantsContainer newConstantsContainer, JDBCDataSource dataSource) {
+    	
+    	// Create a variable context.
+        this.variables = new QueryVariableResolver(this.uuid);
+        
     	if (newConstantsContainer != null) {
     		query = new QueryImpl(dbMapping, prepopulateConstants, 
     				newConstantsContainer.getDelegate(), dataSource);
@@ -1285,6 +1337,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public void setUUID(String uuid) {
     	super.setUUID(uuid);
     	query.setUUID(uuid);
+    	if (this.variables != null)
+    		this.variables.setNamespace(uuid);
     }
     
     @Override
@@ -1293,6 +1347,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	if (query != null) {
     		query.setUUID(getUUID());
     	}
+    	if (this.variables != null)
+    		this.variables.setNamespace(getUUID());
     }
     
     public List<Class<? extends SPObject>> getAllowedChildTypes() {
@@ -1303,4 +1359,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	return types;
     }
 
+    public SPVariableResolver getVariableResolver() {
+    	return this.variables;
+    }
 }

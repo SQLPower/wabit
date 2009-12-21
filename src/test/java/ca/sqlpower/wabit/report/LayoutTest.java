@@ -34,6 +34,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	//This is actually a child.
     	ignored.add("page");
     	ignored.add("variableResolver");
+    	ignored.add("variables");
     	return ignored;
     }
     
@@ -48,6 +49,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("varContext");
     	ignored.add("zoomLevel");
     	ignored.add("variableResolver");
+    	ignored.add("variables");
     	return ignored;
     }
     

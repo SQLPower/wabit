@@ -22,9 +22,11 @@ package ca.sqlpower.wabit.swingui;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JMenu;
 import javax.swing.JPopupMenu;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
@@ -32,6 +34,8 @@ import javax.swing.text.JTextComponent;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.query.QueryCache;
 
 /**
  * A button that shows a popup menu of variables when it is clicked.
@@ -49,11 +53,14 @@ public class InsertVariableButton extends JButton {
 
 	private final String variableNamespace;
 
-    public InsertVariableButton(SPVariableHelper variableHelper, JTextComponent insertInto, String variableNamespace) {
+	private final WabitWorkspace wabitWorkspace;
+
+    public InsertVariableButton(SPVariableHelper variableHelper, JTextComponent insertInto, String variableNamespace, WabitWorkspace wabitWorkspace) {
         super("Variable " + DOWN_ARROW);
         this.variableHelper = variableHelper;
         this.insertInto = insertInto;
 		this.variableNamespace = variableNamespace;
+		this.wabitWorkspace = wabitWorkspace;
         addActionListener(clickHandler);
     }
     
@@ -63,6 +70,18 @@ public class InsertVariableButton extends JButton {
             for (String varname : variableHelper.keySet(variableNamespace)) {
                 menu.add(new InsertVariableAction(SPVariableHelper.stripNamespace(varname), varname));
                 logger.debug("Added new item for " + varname);
+            }
+            // Now we add sub menus for query provided variables
+            SPVariableHelper queryVarHelper = new SPVariableHelper(wabitWorkspace, true);
+            for (QueryCache query : wabitWorkspace.getQueries()) {
+            	Collection<String> vars = queryVarHelper.keySet(query.getUUID());
+            	if (vars.size()>0) {
+            		JMenu subMenu = new JMenu(query.getName());
+            		menu.add(subMenu);
+            		for (String queryVar : vars) {
+            			subMenu.add(new InsertVariableAction(SPVariableHelper.stripNamespace(queryVar), queryVar));
+            		}
+            	}
             }
             Component invoker = (Component) e.getSource();
             logger.debug("Popup invoked by " + invoker);

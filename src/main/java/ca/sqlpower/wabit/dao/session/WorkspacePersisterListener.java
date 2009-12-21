@@ -947,7 +947,8 @@ public class WorkspacePersisterListener implements SPListener {
 			// This happens when we pick up our own events.
 			return;
 		}
-		if (eventSource.isHeadingToWisconsin()) {
+		if (eventSource == null ||
+				eventSource.isHeadingToWisconsin()) {
 			// This means that the SessionPersister is cleaning his stuff and
 			// we need to do the same. Close all current transactions... bla bla bla.
 			this.objectsToRemoveRollbackList.clear();

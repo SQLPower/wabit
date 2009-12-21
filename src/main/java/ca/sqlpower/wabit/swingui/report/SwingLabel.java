@@ -47,6 +47,7 @@ import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
@@ -73,7 +74,7 @@ public class SwingLabel implements SwingContentRenderer {
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
         final JTextArea textArea = new JTextArea(renderer.getText());
-        JButton variableButton = new InsertVariableButton(this.variableHelper, textArea, this.getLayout().getUUID());
+        JButton variableButton = new InsertVariableButton(this.variableHelper, textArea, this.getLayout().getUUID(), WabitUtils.getWorkspace(renderer));
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(Icons.LEFT_ALIGN_ICON, 

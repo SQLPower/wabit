@@ -102,6 +102,9 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		//The data source is being persisted itself.
 		noPersist.add("wabitDataSource");
 		
+		// This is just varible resolver.
+		noPersist.add("variableResolver");
+		
 		return noPersist;
 	}
 	
