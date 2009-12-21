@@ -43,9 +43,12 @@ import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.dao.PersistedObjectEntry;
+import ca.sqlpower.dao.PersistedPropertiesEntry;
 import ca.sqlpower.dao.PersistedSPOProperty;
 import ca.sqlpower.dao.PersistedSPObject;
 import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.RemovedObjectEntry;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.enterprise.client.Grant;
@@ -1245,16 +1248,16 @@ public class WabitSessionPersister implements SPPersister {
 		Collections.reverse(this.persistedPropertiesRollbackList);
 		for (PersistedPropertiesEntry entry : this.persistedPropertiesRollbackList) {
 			try {
-				final String parentUuid = entry.uuid;
-				final String propertyName = entry.propertyName;
-				final Object rollbackValue = entry.rollbackValue;
+				final String parentUuid = entry.getUUID();
+				final String propertyName = entry.getPropertyName();
+				final Object rollbackValue = entry.getRollbackValue();
 				final SPObject parent = SQLPowerUtils.findByUuid(root, parentUuid, SPObject.class);
 				if (parent != null) {
 					this.applyProperty(parent, propertyName, rollbackValue);
 				}
 			} catch (Throwable t) {
 				// Keep going. We need to rollback as much as we can.
-				logger.error("Cannot rollback change to " + entry.propertyName + " to value " + entry.rollbackValue, t);
+				logger.error("Cannot rollback change to " + entry.getPropertyName() + " to value " + entry.getRollbackValue(), t);
 			}
 		}
 	}
@@ -1265,14 +1268,14 @@ public class WabitSessionPersister implements SPPersister {
 			try {
 				// We need to verify if the entry specifies a parent.
 				// WabitWorkspaces don't have parents so we can't remove them really...
-				if (entry.parentId != null) {
-					final SPObject parent = SQLPowerUtils.findByUuid(root, entry.parentId, SPObject.class);
-					final SPObject child = SQLPowerUtils.findByUuid(root, entry.childrenId, SPObject.class);
+				if (entry.getParentId() != null) {
+					final SPObject parent = SQLPowerUtils.findByUuid(root, entry.getParentId(), SPObject.class);
+					final SPObject child = SQLPowerUtils.findByUuid(root, entry.getChildId(), SPObject.class);
 					parent.removeChild(child);
 				}
 			} catch (Throwable t) {
 				// Keep going. We need to rollback as much as we can.
-				logger.error("Cannot rollback " + entry.childrenId + " child creation", t);
+				logger.error("Cannot rollback " + entry.getChildId() + " child creation", t);
 			}
 		}
 	}
