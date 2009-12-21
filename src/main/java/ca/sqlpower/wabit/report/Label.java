@@ -32,7 +32,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.Variables;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -103,8 +102,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     }
     
     /**
-     * Sets the new text for this label. The text may include variables as described
-     * in the class-level docs of {@link Variables}.
+     * Sets the new text for this label.
      */
     public void setText(String text) {
         String oldText = this.text;
