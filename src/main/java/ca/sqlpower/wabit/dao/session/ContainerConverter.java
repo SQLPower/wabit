@@ -24,6 +24,8 @@ import java.util.List;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.BidirectionalConverter;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
@@ -63,7 +65,7 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 		String pattern = convertFrom.substring(firstSeparator + 1);
 		
 		if (className.equals(ItemContainer.class.getSimpleName())) {
-			String[] pieces = SessionPersisterUtils.splitByDelimiter(pattern, 2);
+			String[] pieces = PersisterUtils.splitByDelimiter(pattern, 2);
 
 			ItemContainer container = new ItemContainer(pieces[0], pieces[1]);
 
@@ -71,7 +73,7 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 		} else if (className.equals(TableContainer.class.getSimpleName())) {
 			String[] tableAndItems = pattern.split(ITEM_DELIMITER);
 			
-			String[] pieces = SessionPersisterUtils.splitByDelimiter(tableAndItems[0], 5);
+			String[] pieces = PersisterUtils.splitByDelimiter(tableAndItems[0], 5);
 			
 			JDBCDataSource ds = session.getDataSources().getDataSource(pieces[1], JDBCDataSource.class);
 			SQLDatabase db = session.getContext().getDatabase(ds);

@@ -38,6 +38,8 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.PersistedSPOProperty;
+import ca.sqlpower.dao.PersistedSPObject;
 import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
@@ -56,11 +58,8 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.testutil.NewValueMaker;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
-import ca.sqlpower.wabit.dao.PersistedWabitObject;
-import ca.sqlpower.wabit.dao.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
-import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
-import ca.sqlpower.wabit.dao.session.SessionPersisterUtils;
+import ca.sqlpower.wabit.dao.session.WabitSessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
@@ -117,7 +116,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     /**
      * A converter for use in tests involving persisting objects.
      */
-	private SessionPersisterSuperConverter converterFactory;
+	private WabitSessionPersisterSuperConverter converterFactory;
     
     public WabitWorkspace getWorkspace() {
     	return session.getWorkspace();
@@ -201,7 +200,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	valueMaker = new WabitNewValueMaker(getWorkspace());
     	
-    	converterFactory = new SessionPersisterSuperConverter(session, getWorkspace());
+    	converterFactory = new WabitSessionPersisterSuperConverter(session, getWorkspace());
     }
 
 	/**
@@ -282,7 +281,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         SPObject wo = getObjectUnderTest();
         wo.addSPListener(listener);
 
-        SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
+        WabitSessionPersisterSuperConverter converterFactory = new WabitSessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
         List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -324,9 +323,9 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 //The first property change at current is always the property change we are
                 //looking for, this may need to be changed in the future to find the correct
                 //property.
-                WabitObjectProperty propertyChange = null;
+                PersistedSPOProperty propertyChange = null;
                 
-                for (WabitObjectProperty nextPropertyChange : countingPersister.getAllPropertyChanges()) {
+                for (PersistedSPOProperty nextPropertyChange : countingPersister.getAllPropertyChanges()) {
                 	if (nextPropertyChange.getPropertyName().equals(property.getName())) {
                 		propertyChange = nextPropertyChange;
                 		break;
@@ -366,7 +365,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
                 } else {
                 	classType = newVal.getClass();
                 }
-                assertEquals(SessionPersisterUtils.getDataType(classType), propertyChange.getDataType());
+                assertEquals(PersisterUtils.getDataType(classType), propertyChange.getDataType());
             } catch (InvocationTargetException e) {
                 logger.debug("(non-fatal) Failed to write property '"+property.getName()+" to type "+wo.getClass().getName());
             }
@@ -394,7 +393,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	WabitSessionPersister persister = new WabitSessionPersister("secondary test persister", session, getWorkspace());
 		
-    	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
+    	WabitSessionPersisterSuperConverter converterFactory = new WabitSessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
         List<PropertyDescriptor> settableProperties;
         settableProperties = Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass()));
@@ -439,7 +438,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
             }
             
-            DataType type = SessionPersisterUtils.getDataType(property.getPropertyType());
+            DataType type = PersisterUtils.getDataType(property.getPropertyType());
 			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
 			persister.begin();
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
@@ -507,7 +506,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, session.getWorkspace());
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
 		
-    	SessionPersisterSuperConverter converterFactory = new SessionPersisterSuperConverter(
+    	WabitSessionPersisterSuperConverter converterFactory = new WabitSessionPersisterSuperConverter(
         		new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
         
     	List<PropertyDescriptor> settableProperties;
@@ -617,7 +616,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	listener.childAdded(new SPChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
     	
     	assertTrue(persister.getPersistObjectCount() > 0);
-    	PersistedWabitObject persistedWabitObject = persister.getAllPersistedObjects().get(0);
+    	PersistedSPObject persistedWabitObject = persister.getAllPersistedObjects().get(0);
     	assertEquals(wo.getClass().getSimpleName(), persistedWabitObject.getType());
     	assertEquals(wo.getUUID(), persistedWabitObject.getUUID());
     	
@@ -626,11 +625,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	List<PropertyDescriptor> settableProperties = new ArrayList<PropertyDescriptor>(
     			Arrays.asList(PropertyUtils.getPropertyDescriptors(wo.getClass())));
-    	List<WabitObjectProperty> allPropertyChanges = persister.getAllPropertyChanges();
+    	List<PersistedSPOProperty> allPropertyChanges = persister.getAllPropertyChanges();
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
     	ignorableProperties.addAll(getPropertiesToIgnoreForEvents());
     	
-    	List<WabitObjectProperty> changesOnObject = new ArrayList<WabitObjectProperty>();
+    	List<PersistedSPOProperty> changesOnObject = new ArrayList<PersistedSPOProperty>();
     	for (int i = allPropertyChanges.size() - 1; i >= 0; i--) {
     		if (allPropertyChanges.get(i).getUUID().equals(wo.getUUID())) {
     			changesOnObject.add(allPropertyChanges.get(i));
@@ -646,8 +645,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	if (settablePropertyNames.size() != changesOnObject.size()) {
     		for (String descriptor : settablePropertyNames) {
-        		WabitObjectProperty foundChange = null;
-        		for (WabitObjectProperty propertyChange : changesOnObject) {
+        		PersistedSPOProperty foundChange = null;
+        		for (PersistedSPOProperty propertyChange : changesOnObject) {
         			if (propertyChange.getPropertyName().equals(descriptor)) {
         				foundChange = propertyChange;
         				break;
@@ -659,11 +658,11 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	logger.debug("Property names" + settablePropertyNames);
     	assertTrue(settablePropertyNames.size()<=changesOnObject.size());
     	
-    	SessionPersisterSuperConverter factory = new SessionPersisterSuperConverter(
+    	WabitSessionPersisterSuperConverter factory = new WabitSessionPersisterSuperConverter(
     			new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
     	for (String descriptor : settablePropertyNames) {
-    		WabitObjectProperty foundChange = null;
-    		for (WabitObjectProperty propertyChange : changesOnObject) {
+    		PersistedSPOProperty foundChange = null;
+    		for (PersistedSPOProperty propertyChange : changesOnObject) {
     			if (propertyChange.getPropertyName().equals(descriptor)) {
     				foundChange = propertyChange;
     				break;
@@ -800,7 +799,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
             	additionalVals.add(((OlapQuery) wo).getOlapDataSource());
             }
             
-            DataType type = SessionPersisterUtils.getDataType(property.getPropertyType());
+            DataType type = PersisterUtils.getDataType(property.getPropertyType());
 			Object basicNewValue = converterFactory.convertToBasicType(newVal, additionalVals.toArray());
 			persister.persistProperty(wo.getUUID(), property.getName(), type, 
 					converterFactory.convertToBasicType(oldVal, additionalVals.toArray()), 

@@ -23,6 +23,8 @@ import org.apache.commons.beanutils.ConversionException;
 import org.olap4j.Axis;
 import org.olap4j.Axis.Standard;
 
+import ca.sqlpower.dao.session.BidirectionalConverter;
+
 /**
  * Convert between an Olap4j axis and its name. While the {@link Axis} is described
  * as an enum in documentation it is actually an interface.

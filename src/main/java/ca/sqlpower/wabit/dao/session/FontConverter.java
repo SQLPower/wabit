@@ -23,6 +23,8 @@ import java.awt.Font;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.session.BidirectionalConverter;
+
 public class FontConverter implements BidirectionalConverter<String, Font> {
 	
 	/**

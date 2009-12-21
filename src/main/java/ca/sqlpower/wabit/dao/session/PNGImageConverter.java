@@ -30,6 +30,7 @@ import javax.imageio.ImageIO;
 import org.apache.commons.beanutils.ConversionException;
 
 import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.BidirectionalConverter;
 
 /**
  * Converts between an Image and an InputStream.

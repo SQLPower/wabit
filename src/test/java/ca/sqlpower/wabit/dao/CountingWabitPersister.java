@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import ca.sqlpower.dao.PersistedSPOProperty;
+import ca.sqlpower.dao.PersistedSPObject;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 
@@ -33,9 +35,9 @@ public class CountingWabitPersister implements SPPersister {
 	private int persistPropertyUnconditionallyCount = 0;
 	private int removeObjectCount = 0;
 	
-	private final List<WabitObjectProperty> propertiesPersisted = new ArrayList<WabitObjectProperty>();
+	private final List<PersistedSPOProperty> propertiesPersisted = new ArrayList<PersistedSPOProperty>();
 	
-	private final List<PersistedWabitObject> persistedObjects = new ArrayList<PersistedWabitObject>();  
+	private final List<PersistedSPObject> persistedObjects = new ArrayList<PersistedSPObject>();  
 
 	public void begin() throws SPPersistenceException {
 		// TODO Auto-generated method stub
@@ -50,7 +52,7 @@ public class CountingWabitPersister implements SPPersister {
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws SPPersistenceException {
 		persistObjectCount++;
-		persistedObjects.add(new PersistedWabitObject(parentUUID, type, uuid, index));
+		persistedObjects.add(new PersistedSPObject(parentUUID, type, uuid, index));
 	}
 
 
@@ -58,7 +60,7 @@ public class CountingWabitPersister implements SPPersister {
 			DataType propertyType, Object oldValue, Object newValue)
 			throws SPPersistenceException {
 		persistPropertyCount++;
-		propertiesPersisted.add(new WabitObjectProperty(uuid, propertyName, propertyType, oldValue, 
+		propertiesPersisted.add(new PersistedSPOProperty(uuid, propertyName, propertyType, oldValue, 
 				newValue, false));
 	}
 
@@ -66,7 +68,7 @@ public class CountingWabitPersister implements SPPersister {
 			DataType propertyType, Object newValue)
 			throws SPPersistenceException {
 		persistPropertyUnconditionallyCount++;
-		propertiesPersisted.add(new WabitObjectProperty(uuid, propertyName, propertyType, null, 
+		propertiesPersisted.add(new PersistedSPOProperty(uuid, propertyName, propertyType, null, 
 				newValue, true));
 	}
 
@@ -116,15 +118,15 @@ public class CountingWabitPersister implements SPPersister {
 		return propertiesPersisted.get(propertiesPersisted.size() - 1).getNewValue();
 	}
 	
-	public PersistedWabitObject getLastPersistObject() {
+	public PersistedSPObject getLastPersistObject() {
 		return persistedObjects.get(persistedObjects.size() - 1);
 	}
 	
-	public List<PersistedWabitObject> getAllPersistedObjects() {
+	public List<PersistedSPObject> getAllPersistedObjects() {
 		return Collections.unmodifiableList(persistedObjects);
 	}
 	
-	public List<WabitObjectProperty> getAllPropertyChanges() {
+	public List<PersistedSPOProperty> getAllPropertyChanges() {
 		return Collections.unmodifiableList(propertiesPersisted);
 	}
 

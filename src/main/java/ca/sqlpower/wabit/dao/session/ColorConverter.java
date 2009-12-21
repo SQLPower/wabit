@@ -21,6 +21,8 @@ package ca.sqlpower.wabit.dao.session;
 
 import java.awt.Color;
 
+import ca.sqlpower.dao.session.BidirectionalConverter;
+
 /**
  * Converts a {@link Color} to its string representation and back.
  */

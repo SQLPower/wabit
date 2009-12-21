@@ -23,6 +23,8 @@ import java.util.List;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.BidirectionalConverter;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
@@ -43,7 +45,7 @@ public class SQLJoinConverter implements BidirectionalConverter<String, SQLJoin>
 
 	public SQLJoin convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 5);
+		String[] pieces = PersisterUtils.splitByDelimiter(convertFrom, 5);
 		
 		String queryID = pieces[0];
 		String leftTableID = pieces[1];

@@ -43,6 +43,8 @@ import org.apache.log4j.Logger;
 import org.olap4j.metadata.Cube;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.dao.PersistedSPOProperty;
+import ca.sqlpower.dao.PersistedSPObject;
 import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
@@ -72,7 +74,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.dao.session.SessionPersisterSuperConverter;
+import ca.sqlpower.wabit.dao.session.WabitSessionPersisterSuperConverter;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -154,7 +156,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
 	 * individual persisted property
 	 */
-	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap.create();
+	private Multimap<String, PersistedSPOProperty> persistedProperties = LinkedListMultimap.create();
 
 	/**
 	 * This will be the list we will use to rollback persisted properties
@@ -165,7 +167,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
 	 * passed into the persistedObject call in the order of insertion
 	 */
-	protected List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
+	protected List<PersistedSPObject> persistedObjects = new LinkedList<PersistedSPObject>();
 
 	/**
 	 * This will be the list we use to rollback persisted objects.
@@ -259,25 +261,25 @@ public class WabitSessionPersister implements SPPersister {
 
 				c = index2 - index1;
 
-			} else if (previousAncestor.equals(WabitWorkspace.class.getSimpleName())) {
+			} else if (previousAncestor instanceof WabitWorkspace) {
 				WabitWorkspace.WabitObjectOrder order1 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
 				WabitWorkspace.WabitObjectOrder order2 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
-			} else if (previousAncestor.equals(QueryCache.class.getSimpleName())) {
+			} else if (previousAncestor instanceof QueryCache) {
 				QueryCache.WabitObjectOrder order1 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
 				QueryCache.WabitObjectOrder order2 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
-			} else if (previousAncestor.equals(WabitOlapDimension.class.getSimpleName())) {
+			} else if (previousAncestor instanceof WabitOlapDimension) {
 				WabitOlapDimension.WabitObjectOrder order1 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
 				WabitOlapDimension.WabitObjectOrder order2 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
-			} else if (previousAncestor.equals(Page.class.getSimpleName())) {
+			} else if (previousAncestor instanceof Page) {
 				Page.WabitObjectOrder order1 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
 				Page.WabitObjectOrder order2 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
 
@@ -308,7 +310,7 @@ public class WabitSessionPersister implements SPPersister {
 	/**
 	 * This converter will do all of the converting for this persister.
 	 */
-	private final SessionPersisterSuperConverter converter;
+	private final WabitSessionPersisterSuperConverter converter;
 
 	/**
 	 * This root object is used to find other objects by UUID by walking the
@@ -350,7 +352,7 @@ public class WabitSessionPersister implements SPPersister {
 		this.session = session;
 		this.root = root;
 
-		converter = new SessionPersisterSuperConverter(session, root);
+		converter = new WabitSessionPersisterSuperConverter(session, root);
 	}
 
 	@Override
@@ -425,16 +427,16 @@ public class WabitSessionPersister implements SPPersister {
 	}
 
 	/**
-	 * Returns an ancestor list of {@link PersistedWabitObject}s from a given
-	 * child PersistedWabitObject.
+	 * Returns an ancestor list of {@link PersistedSPObject}s from a given
+	 * child PersistedSPObject.
 	 */
-	private List<PersistedWabitObject> getAncestorListFromPersistedObjects(PersistedWabitObject child) {
-		List<PersistedWabitObject> resultList = new ArrayList<PersistedWabitObject>();
+	private List<PersistedSPObject> getAncestorListFromPersistedObjects(PersistedSPObject child) {
+		List<PersistedSPObject> resultList = new ArrayList<PersistedSPObject>();
 
 		// Iterate through list of persisted WabitObjects to build an ancestor
 		// list from objects that do not exist in the workspace yet.
 		String uuid = child.getParentUUID();
-		PersistedWabitObject pwo;
+		PersistedSPObject pwo;
 		while ((pwo = findPersistedObjectByUUID(uuid)) != null) {
 			resultList.add(0, pwo);
 			uuid = pwo.getParentUUID();
@@ -456,9 +458,9 @@ public class WabitSessionPersister implements SPPersister {
 	}
 	
 	/**
-	 * Returns a new {@link PersistedWabitObject} based on a given {@link SPObject}.
+	 * Returns a new {@link PersistedSPObject} based on a given {@link SPObject}.
 	 */
-	private PersistedWabitObject createPersistedObjectFromSPObject(SPObject spo) {
+	private PersistedSPObject createPersistedObjectFromSPObject(SPObject spo) {
 		String parentUUID = null;
 		int index = 0;
 		
@@ -467,18 +469,18 @@ public class WabitSessionPersister implements SPPersister {
 			index = spo.getParent().getChildren(spo.getClass()).indexOf(spo);
 		}
 		
-		return new PersistedWabitObject(parentUUID, spo.getClass().getSimpleName(), 
+		return new PersistedSPObject(parentUUID, spo.getClass().getSimpleName(), 
 				spo.getUUID(), index);
 	}
 
 	/**
-	 * Returns an existing {@link PersistedWabitObject} in the
+	 * Returns an existing {@link PersistedSPObject} in the
 	 * {@link #persistedObjects} list given by the UUID. If it does not exist,
 	 * null is returned.
 	 */
-	private PersistedWabitObject findPersistedObjectByUUID(String uuid) {
+	private PersistedSPObject findPersistedObjectByUUID(String uuid) {
 		if (uuid != null) {
-			for (PersistedWabitObject pwo : persistedObjects) {
+			for (PersistedSPObject pwo : persistedObjects) {
 				if (uuid.equals(pwo.getUUID())) {
 					return pwo;
 				}
@@ -487,11 +489,11 @@ public class WabitSessionPersister implements SPPersister {
 		return null;
 	}
 	
-	protected final Comparator<PersistedWabitObject> persistedObjectComparator = new Comparator<PersistedWabitObject>() {
+	protected final Comparator<PersistedSPObject> persistedObjectComparator = new Comparator<PersistedSPObject>() {
 
 		// If the two objects being compared are of the same type and are children of the same parent, the one with the lower index should go first.
 		// Otherwise, the one with the smaller ancestor tree should go first (e.g. Report should go before Page).
-		public int compare(PersistedWabitObject o1, PersistedWabitObject o2) {
+		public int compare(PersistedSPObject o1, PersistedSPObject o2) {
 			
 			if (o1.getParentUUID() == null && o2.getParentUUID() == null) {
 				return 0;
@@ -503,12 +505,12 @@ public class WabitSessionPersister implements SPPersister {
 				return Integer.signum(o1.getIndex() - o2.getIndex());
 			}
 			
-			List<PersistedWabitObject> ancestorList1 = getAncestorListFromPersistedObjects(o1);
-			List<PersistedWabitObject> ancestorList2 = getAncestorListFromPersistedObjects(o2);
+			List<PersistedSPObject> ancestorList1 = getAncestorListFromPersistedObjects(o1);
+			List<PersistedSPObject> ancestorList2 = getAncestorListFromPersistedObjects(o2);
 			
-			PersistedWabitObject previousAncestor = null;
-			PersistedWabitObject ancestor1 = null;
-			PersistedWabitObject ancestor2 = null;
+			PersistedSPObject previousAncestor = null;
+			PersistedSPObject ancestor1 = null;
+			PersistedSPObject ancestor2 = null;
 			boolean compareWithAncestor = false;
 			
 			for (int i = 0, j = 0; i < ancestorList1.size() && j < ancestorList2.size(); i++, j++) {
@@ -588,7 +590,7 @@ public class WabitSessionPersister implements SPPersister {
 	private void commitObjects() throws SPPersistenceException {
 		Collections.sort(persistedObjects, persistedObjectComparator);
 		
-		for (PersistedWabitObject pwo : persistedObjects) {
+		for (PersistedSPObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
 			SPObject parent = SQLPowerUtils.findByUuid(root, pwo
@@ -631,7 +633,7 @@ public class WabitSessionPersister implements SPPersister {
 
 	/**
 	 * This method creates the actual new object defined by the
-	 * {@link PersistedWabitObject}. Additional properties may be retrieved from
+	 * {@link PersistedSPObject}. Additional properties may be retrieved from
 	 * the transaction to be used as constructor arguments depending on the
 	 * object being created.
 	 * <p>
@@ -646,7 +648,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The object created by this method.
 	 * @throws SPPersistenceException
 	 */
-	private SPObject loadWabitObject(PersistedWabitObject pwo)
+	private SPObject loadWabitObject(PersistedSPObject pwo)
 			throws SPPersistenceException {
 		String uuid = pwo.getUUID();
 		String type = pwo.getType();
@@ -983,7 +985,7 @@ public class WabitSessionPersister implements SPPersister {
 	 */
 	private Object getPropertyAndRemove(String uuid, String propertyName)
 			throws SPPersistenceException {
-		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+		for (PersistedSPOProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				Object value = wop.getNewValue();
 
@@ -1011,7 +1013,7 @@ public class WabitSessionPersister implements SPPersister {
 	 *         properties contains the property name under the specified UUID.
 	 */
 	private boolean containsProperty(String uuid, String propertyName) {
-		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+		for (PersistedSPOProperty wop : persistedProperties.get(uuid)) {
 			if (wop.getPropertyName().equals(propertyName)) {
 				return true;
 			}
@@ -1028,7 +1030,7 @@ public class WabitSessionPersister implements SPPersister {
 	 */
 	private boolean exists(String uuid) {
 		if (!objectsToRemove.containsKey(uuid)) {
-			for (PersistedWabitObject pwo : persistedObjects) {
+			for (PersistedSPObject pwo : persistedObjects) {
 				if (uuid.equals(pwo.getUUID())) {
 					return true;
 				}
@@ -1046,7 +1048,7 @@ public class WabitSessionPersister implements SPPersister {
 	 */
 	private SPObject createObjectByCalls(String parentUUID, String classType)
 			throws SPPersistenceException {
-		for (PersistedWabitObject pwo : persistedObjects) {
+		for (PersistedSPObject pwo : persistedObjects) {
 			if (pwo.isLoaded())
 				continue;
 			if (pwo.getType().equals(classType)
@@ -1078,7 +1080,7 @@ public class WabitSessionPersister implements SPPersister {
 						+ uuid + " in session");
 			}
 
-			for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+			for (PersistedSPOProperty wop : persistedProperties.get(uuid)) {
 				
 				propertyName = wop.getPropertyName();
 				newValue = wop.getNewValue();
@@ -1322,7 +1324,7 @@ public class WabitSessionPersister implements SPPersister {
 						+ " already exists.");
 			}
 
-			PersistedWabitObject pwo = new PersistedWabitObject(parentUUID,
+			PersistedSPObject pwo = new PersistedSPObject(parentUUID,
 					type, uuid, index);
 			persistedObjects.add(pwo);
 		}
@@ -1443,7 +1445,7 @@ public class WabitSessionPersister implements SPPersister {
 		
 		Object lastPropertyValueFound = null;
 		
-		for (WabitObjectProperty wop : persistedProperties.get(uuid)) {
+		for (PersistedSPOProperty wop : persistedProperties.get(uuid)) {
 			if (propertyName.equals(wop.getPropertyName())) {
 				lastPropertyValueFound = wop.getNewValue();
 			}
@@ -1592,10 +1594,10 @@ public class WabitSessionPersister implements SPPersister {
 		}
 		
 		if (spo != null) {
-			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
+			persistedProperties.put(uuid, new PersistedSPOProperty(uuid,
 					propertyName, propertyType, propertyValue, newValue, unconditional));
 		} else {
-			persistedProperties.put(uuid, new WabitObjectProperty(uuid,
+			persistedProperties.put(uuid, new PersistedSPOProperty(uuid,
 					propertyName, propertyType, oldValue, newValue, unconditional));
 		}
 	}
@@ -1651,7 +1653,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -1728,7 +1730,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -1782,7 +1784,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -1831,7 +1833,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -1959,7 +1961,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2034,7 +2036,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2105,7 +2107,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2240,7 +2242,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2318,7 +2320,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2412,7 +2414,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2471,7 +2473,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2520,7 +2522,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2595,7 +2597,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2712,7 +2714,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2782,7 +2784,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2851,7 +2853,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2897,7 +2899,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -2975,7 +2977,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3069,7 +3071,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3118,7 +3120,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3208,7 +3210,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3298,7 +3300,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3382,7 +3384,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3481,7 +3483,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3579,7 +3581,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3685,7 +3687,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3741,7 +3743,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3807,7 +3809,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3855,7 +3857,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
@@ -3903,7 +3905,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return The value stored in the variable of the object we are given at
 	 *         the property name after it has been converted to a type that can
 	 *         be stored. The conversion is based on the
-	 *         {@link SessionPersisterSuperConverter}.
+	 *         {@link WabitSessionPersisterSuperConverter}.
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */

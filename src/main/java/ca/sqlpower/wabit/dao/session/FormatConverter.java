@@ -25,6 +25,8 @@ import java.text.SimpleDateFormat;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.session.BidirectionalConverter;
+
 public class FormatConverter implements BidirectionalConverter<String, Format> {
 
 	public Format convertToComplexType(String convertFrom)

@@ -28,6 +28,9 @@ import java.util.concurrent.CountDownLatch;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.PersistedSPOProperty;
+import ca.sqlpower.dao.PersistedSPObject;
+import ca.sqlpower.dao.RemovedSPObject;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.wabit.WabitSession;
@@ -49,7 +52,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 	private int persistObjectCount = 0;
 	private int persistPropertyCount = 0;
 	private int removeObjectCount = 0;
-	private List<PersistedWabitObject> savedPersistedObjects;
+	private List<PersistedSPObject> savedPersistedObjects;
 	private Map<String, String> savedObjectsToRemove;
 	
 	public TrackingWabitSessionPersister(WabitSession session, CountDownLatch latch) {
@@ -80,9 +83,9 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 		if (beginCount == commitCount) {
 			Collections.sort(persistedObjects, persistedObjectComparator);
 			
-			savedPersistedObjects = new ArrayList<PersistedWabitObject>();
-			for (PersistedWabitObject pwo : persistedObjects) {
-				savedPersistedObjects.add(new PersistedWabitObject(
+			savedPersistedObjects = new ArrayList<PersistedSPObject>();
+			for (PersistedSPObject pwo : persistedObjects) {
+				savedPersistedObjects.add(new PersistedSPObject(
 						pwo.getParentUUID(), pwo.getType(), pwo.getUUID(), pwo.getIndex()));
 			}
 			
@@ -116,7 +119,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 	public void persistObject(String parentUUID, String type, String uuid,
 			int index) throws SPPersistenceException {
 		persistObjectCount++;
-		persisterCalls.add(new PersistedWabitObject(parentUUID, type, uuid, index));
+		persisterCalls.add(new PersistedSPObject(parentUUID, type, uuid, index));
 		super.persistObject(parentUUID, type, uuid, index);
 	}
 
@@ -129,7 +132,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 			DataType propertyType, Object oldValue, Object newValue)
 			throws SPPersistenceException {
 		persistPropertyCount++;
-		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, oldValue, newValue, false));
+		persisterCalls.add(new PersistedSPOProperty(uuid, propertyName, propertyType, oldValue, newValue, false));
 		super.persistProperty(uuid, propertyName, propertyType, oldValue, newValue);
 	}
 
@@ -142,7 +145,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 			DataType propertyType, Object newValue)
 			throws SPPersistenceException {
 		persistPropertyCount++;
-		persisterCalls.add(new WabitObjectProperty(uuid, propertyName, propertyType, null, newValue, true));
+		persisterCalls.add(new PersistedSPOProperty(uuid, propertyName, propertyType, null, newValue, true));
 		super.persistProperty(uuid, propertyName, propertyType, newValue);
 	}
 
@@ -154,7 +157,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 	public void removeObject(String parentUUID, String uuid)
 			throws SPPersistenceException {
 		removeObjectCount++;
-		persisterCalls.add(new RemovedWabitObject(parentUUID, uuid));
+		persisterCalls.add(new RemovedSPObject(parentUUID, uuid));
 		super.removeObject(parentUUID, uuid);
 	}
 	
@@ -231,7 +234,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 		this.latch = latch;
 	}
 	
-	public List<PersistedWabitObject> getPersistObjectCalls() {
+	public List<PersistedSPObject> getPersistObjectCalls() {
 		return savedPersistedObjects;
 	}
 	

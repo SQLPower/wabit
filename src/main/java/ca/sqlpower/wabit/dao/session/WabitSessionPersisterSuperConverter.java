@@ -29,7 +29,7 @@ import java.text.Format;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
-import ca.sqlpower.object.SPObject;
+import ca.sqlpower.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLJoin;
@@ -39,18 +39,13 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 
 /**
- * Converts any known object in Wabit into a simple type of object that can be
- * pushed through an HTTP request and persisted on the server. This also
- * contains a way to get the object back based on the simple type that can be
- * passed and stored.
+ * @see SessionPersisterSuperConverter
  */
-public class SessionPersisterSuperConverter {
+public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperConverter {
 	
 	private static final ColorConverter colorConverter = new ColorConverter();
 	
 	private final CubeConverter cubeConverter;
-	
-	private final SPObjectConverter spObjectConverter;
 	
 	private static final FontConverter fontConverter = new FontConverter();
 	
@@ -73,53 +68,28 @@ public class SessionPersisterSuperConverter {
 	private final Olap4JAxisConverter olap4jAxisConverter = new Olap4JAxisConverter();
 
 	/**
-	 * This converter will allow changes between any complex object in the
-	 * session's workspace and a simple type that can be passed between
-	 * persisters.
-	 * 
-	 * @param session
-	 *            The session used to find necessary parts for converting
-	 *            between simple and complex types. The session may be used to
-	 *            look up connections, cubes, and {@link WabitObject}s in the
-	 *            workspace.
+	 * @see SessionPersisterSuperConverter#SessionPersisterSuperConverter(ca.sqlpower.util.SPSession, ca.sqlpower.object.SPObject)
 	 */
-	public SessionPersisterSuperConverter(WabitSession session, WabitObject root) {
-		spObjectConverter = new SPObjectConverter(root);
+	public WabitSessionPersisterSuperConverter(WabitSession session, WabitObject root) {
+		super(session, root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
 		containerConverter = new ContainerConverter(session);
 		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
-		
 		itemConverter = new ItemConverter(session.getWorkspace());
 	}
-
-	/**
-	 * Converts a complex object to a basic type or reference value that can
-	 * then be passed on to other persisters. To reverse this process see
-	 * {@link #convertToComplexType}. If a basic object is given to this method
-	 * it will be returned without modification.
-	 * 
-	 * @param convertFrom
-	 *            The value to convert to a basic type
-	 * @param fromType
-	 *            the type that the basic type will be defined as
-	 * @param additionalInfo
-	 *            any additional information that is required by the converters
-	 *            for specific object types. The ONLY class that currently
-	 *            requires an additional type is the cube converter. If we can
-	 *            remove the need to pass the data source type with the cube
-	 *            then this value can go away.
-	 */
-	@SuppressWarnings("unchecked")
+	
+	@Override
 	public Object convertToBasicType(Object convertFrom, Object ... additionalInfo) {
-		if (convertFrom == null) {
-			return null;
-		} else if (convertFrom instanceof SPObject) {
-			SPObject wo = (SPObject) convertFrom;
-			return spObjectConverter.convertToSimpleType(wo);
-			
-		} else if (convertFrom instanceof Color) {
+		try {
+			return super.convertToBasicType(convertFrom, additionalInfo);
+		} catch (IllegalArgumentException e) {
+			// Could not convert to basic type through SessionPersisterSuperConverter.
+			// Squishing the exception so that we can also check known types in Wabit.
+		}
+		
+		if (convertFrom instanceof Color) {
 			Color c = (Color) convertFrom;
 			return colorConverter.convertToSimpleType(c);
 			
@@ -162,37 +132,22 @@ public class SessionPersisterSuperConverter {
 		} else if (convertFrom instanceof Axis) {
 			return olap4jAxisConverter.convertToSimpleType((Axis) convertFrom);
 			
-		} else if (convertFrom instanceof String) {
-			return convertFrom;
-			
-		} else if (convertFrom instanceof Integer) {
-			return convertFrom;
-			
-		} else if (convertFrom instanceof Double) {
-			return convertFrom;
-			
-		} else if (convertFrom instanceof Boolean) {
-			return convertFrom;
-			
-		} else if (convertFrom.getClass().isEnum()) {
-			return new EnumConverter(convertFrom.getClass()).convertToSimpleType((Enum) convertFrom);
-			
 		} else {
 			throw new IllegalArgumentException("Cannot convert " + convertFrom + " of type " + 
 					convertFrom.getClass());
 		}
-		
 	}
 	
-	@SuppressWarnings("unchecked")
+	@Override
 	public Object convertToComplexType(Object o, Class<? extends Object> type) {
-		if (o == null) {
-			return null;
-			
-		} else if (SPObject.class.isAssignableFrom(type)) {
-			return spObjectConverter.convertToComplexType((String) o);
-			
-		} else if (Color.class.isAssignableFrom(type)) {
+		try {
+			return super.convertToComplexType(o, type);
+		} catch (IllegalArgumentException e) {
+			// Could not convert to complex type through SessionPersisterSuperConverter.
+			// Squishing the exception so that we can also check known types in Wabit.
+		}
+		
+		if (Color.class.isAssignableFrom(type)) {
 			return colorConverter.convertToComplexType((String) o);
 			
 		} else if (Cube.class.isAssignableFrom(type)) {
@@ -200,9 +155,6 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (Font.class.isAssignableFrom(type)) {
 			return fontConverter.convertToComplexType((String) o);
-			
-		} else if (Enum.class.isAssignableFrom(type)) {
-			return new EnumConverter(type).convertToComplexType((String) o);
 			
 		} else if (Point2D.class.isAssignableFrom(type)) {
 			return point2DConverter.convertToComplexType((String) o);
@@ -232,18 +184,6 @@ public class SessionPersisterSuperConverter {
 			
 		} else if (Axis.class.isAssignableFrom(type)) {
 			return olap4jAxisConverter.convertToComplexType((String) o);
-			
-		} else if (String.class.isAssignableFrom(type)) {
-			return (String) o;
-			
-		} else if (Integer.class.isAssignableFrom(type)) {
-			return (Integer) o;
-			
-		} else if (Double.class.isAssignableFrom(type)) {
-			return (Double) o;
-			
-		} else if (Boolean.class.isAssignableFrom(type)) {
-			return (Boolean) o;
 			
 		} else {
 			throw new IllegalArgumentException("Cannot convert " + o + " of type " + 

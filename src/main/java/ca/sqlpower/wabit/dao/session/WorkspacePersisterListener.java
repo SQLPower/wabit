@@ -30,6 +30,9 @@ import java.util.Map.Entry;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.PersistedSPOProperty;
+import ca.sqlpower.dao.PersistedSPObject;
+import ca.sqlpower.dao.PersisterUtils;
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
@@ -52,9 +55,7 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.PersistedObjectEntry;
 import ca.sqlpower.wabit.dao.PersistedPropertiesEntry;
-import ca.sqlpower.wabit.dao.PersistedWabitObject;
 import ca.sqlpower.wabit.dao.RemovedObjectEntry;
-import ca.sqlpower.wabit.dao.WabitObjectProperty;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -85,7 +86,7 @@ import com.google.common.collect.LinkedListMultimap;
 import com.google.common.collect.Multimap;
 
 /**
- * An implementation of {@link WabitListener} used exclusively for listening to
+ * An implementation of {@link SPListener} used exclusively for listening to
  * a {@link WabitWorkspace} and its children. When an event is fired from an
  * object this listener will convert the event into persist calls. The persist
  * calls will be made on the target persister.
@@ -152,13 +153,13 @@ public class WorkspacePersisterListener implements SPListener {
 	 * Persisted property buffer, mapping of {@link WabitObject} UUIDs to each
 	 * individual persisted property
 	 */
-	private Multimap<String, WabitObjectProperty> persistedProperties = LinkedListMultimap.create();
+	private Multimap<String, PersistedSPOProperty> persistedProperties = LinkedListMultimap.create();
 	
 	/**
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
 	 * passed into the persistedObject call in the order of insertion
 	 */
-	private List<PersistedWabitObject> persistedObjects = new LinkedList<PersistedWabitObject>();
+	private List<PersistedSPObject> persistedObjects = new LinkedList<PersistedSPObject>();
 	
 	/**
 	 * {@link WabitObject} removal buffer, mapping of {@link WabitObject} UUIDs
@@ -207,7 +208,7 @@ public class WorkspacePersisterListener implements SPListener {
 	/**
 	 * Converts any object into a simple type and converts any simple type back.
 	 */
-	private final SessionPersisterSuperConverter converter;
+	private final WabitSessionPersisterSuperConverter converter;
 
 	private final WabitSessionPersister eventSource;
 
@@ -254,7 +255,7 @@ public class WorkspacePersisterListener implements SPListener {
 	public WorkspacePersisterListener(WabitSession session,
 			SPPersister targetPersister, WabitSessionPersister eventSource) {
 		this.session = session;
-		this.converter = new SessionPersisterSuperConverter(session, session.getWorkspace());
+		this.converter = new WabitSessionPersisterSuperConverter(session, session.getWorkspace());
 		this.target = targetPersister;
 		this.eventSource = eventSource;
 	}
@@ -372,7 +373,7 @@ public class WorkspacePersisterListener implements SPListener {
 		}
 		
 		this.persistedObjects.add(
-				new PersistedWabitObject(
+				new PersistedSPObject(
 						parentUUID, 
 						child.getClass().getSimpleName(), 
 						child.getUUID(),
@@ -889,7 +890,7 @@ public class WorkspacePersisterListener implements SPListener {
 			additionalParams.add(((OlapQuery) source).getOlapDataSource());
 		}
 
-		DataType typeForClass = SessionPersisterUtils.
+		DataType typeForClass = PersisterUtils.
 				getDataType(newValue == null ? Void.class : newValue.getClass());
 		Object oldBasicType;
 		Object newBasicType; 
@@ -913,7 +914,7 @@ public class WorkspacePersisterListener implements SPListener {
 				propertyType.name() + ", " + newValue + ", " + newValue + ")");
 		this.persistedProperties.put(
 				uuid,
-				new WabitObjectProperty(
+				new PersistedSPOProperty(
 					uuid,
 					propertyName, 
 					propertyType, 
@@ -932,7 +933,7 @@ public class WorkspacePersisterListener implements SPListener {
 		logger.debug("persistProperty(" + uuid + ", " + propertyName + ", " + propertyType.name() + ", " + oldValue + ", " + newValue + ")");
 		this.persistedProperties.put(
 				uuid,
-				new WabitObjectProperty(
+				new PersistedSPOProperty(
 					uuid,
 					propertyName, 
 					propertyType, 
@@ -1023,7 +1024,7 @@ public class WorkspacePersisterListener implements SPListener {
 	 * @throws SPPersistenceException
 	 */
 	private void commitObjects() throws SPPersistenceException {
-		for (PersistedWabitObject pwo : persistedObjects) {
+		for (PersistedSPObject pwo : persistedObjects) {
 			target.persistObject(
 				pwo.getParentUUID(), 
 				pwo.getType(),
@@ -1038,8 +1039,8 @@ public class WorkspacePersisterListener implements SPListener {
 	
 	private void commitProperties() throws SPPersistenceException {
 		logger.debug("commitProperties()");
-		for (Entry<String, WabitObjectProperty> entry : persistedProperties.entries()) {
-			WabitObjectProperty wop = entry.getValue();
+		for (Entry<String, PersistedSPOProperty> entry : persistedProperties.entries()) {
+			PersistedSPOProperty wop = entry.getValue();
 			String uuid = entry.getKey();
 			if (wop.isUnconditional()) {
 				target.persistProperty(

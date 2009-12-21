@@ -25,6 +25,8 @@ import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Schema;
 
+import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.BidirectionalConverter;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -48,7 +50,7 @@ public class CubeConverter implements BidirectionalConverter<String, Cube> {
 
 	public Cube convertToComplexType(String convertFrom) throws ConversionException {
 
-		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 4);
+		String[] pieces = PersisterUtils.splitByDelimiter(convertFrom, 4);
 		
 		Olap4jDataSource ds = dsCollection.getDataSource(pieces[0], Olap4jDataSource.class);
 		

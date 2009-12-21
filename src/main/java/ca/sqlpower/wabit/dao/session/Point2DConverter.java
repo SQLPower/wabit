@@ -23,12 +23,15 @@ import java.awt.geom.Point2D;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.BidirectionalConverter;
+
 public class Point2DConverter implements
 		BidirectionalConverter<String, Point2D> {
 
 	public Point2D convertToComplexType(String convertFrom)
 			throws ConversionException {
-		String[] pieces = SessionPersisterUtils.splitByDelimiter(convertFrom, 2);
+		String[] pieces = PersisterUtils.splitByDelimiter(convertFrom, 2);
 
 		double x = Double.valueOf(pieces[0]);
 		double y = Double.valueOf(pieces[1]);

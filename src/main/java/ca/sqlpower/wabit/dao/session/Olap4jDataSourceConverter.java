@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.dao.session;
 
 import org.apache.commons.beanutils.ConversionException;
 
+import ca.sqlpower.dao.session.BidirectionalConverter;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.WabitWorkspace;
 
