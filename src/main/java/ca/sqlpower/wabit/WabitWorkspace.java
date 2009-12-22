@@ -154,11 +154,10 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final SPSimpleVariableResolver variableResolver;
     
     private class WorkspaceVariableResolver extends SPSimpleVariableResolver {
-    	@SuppressWarnings("unchecked")
 		public WorkspaceVariableResolver(String namespace) {
 			super(namespace);
 			// By default, add system variables.
-			for (Entry entry : System.getProperties().entrySet()) {
+			for (Entry<Object,Object> entry : System.getProperties().entrySet()) {
 				if (entry.getKey() instanceof String) {
 					this.store((String) entry.getKey(), entry.getValue());
 				}
