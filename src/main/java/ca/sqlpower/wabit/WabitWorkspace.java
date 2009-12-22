@@ -151,18 +151,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     private WabitSession session;
 
-	/**
-	 * If magic is disabled secondary side effects of methods or events should
-	 * not be performed. Magic is disabled if the disabled value is greater than
-	 * 0. For example, if a guide is moved in a report the content boxes
-	 * attached to it will normally be moved with it. If magic is disabled the
-	 * content boxes attached to a guide should not be moved as the guide moves.
-	 * The guide that is moved while magic is disabled should still fire an
-	 * event that it was moved but the secondary event of moving the content
-	 * boxes and any other side effects should not take place.
-	 */
-    private int magicDisabled = 0;
-    
     private final SPSimpleVariableResolver variableResolver;
     
     private class WorkspaceVariableResolver extends SPSimpleVariableResolver {
@@ -334,7 +322,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         query.setParent(this);
         query.setDBMapping(session.getContext());
         fireChildAdded(QueryCache.class, query, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(query);
         }
     }
@@ -362,7 +350,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         templates.add(index, template);
         template.setParent(this);
         fireChildAdded(Template.class, template, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(template);
         }
 	}
@@ -389,7 +377,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         reports.add(index, report);
         report.setParent(this);
         fireChildAdded(Report.class, report, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(report);
         }
     }
@@ -416,7 +404,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         images.add(index, image);
         image.setParent(this);
         fireChildAdded(WabitImage.class, image, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(image);
         }
     }
@@ -447,7 +435,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         charts.add(index, chart);
         chart.setParent(this);
         fireChildAdded(Chart.class, chart, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(chart);
         }
     }
@@ -546,7 +534,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	users.add(index, u);
     	u.setParent(this);
     	fireChildAdded(User.class, u, index);
-    	if (!isMagicDisabled()) {
+    	if (isMagicEnabled()) {
     		setEditorPanelModel(u);
     	}
     }
@@ -572,7 +560,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	groups.add(index, g);
     	g.setParent(this);
     	fireChildAdded(Group.class, g, index);
-    	if (!isMagicDisabled()) {
+    	if (isMagicEnabled()) {
     		setEditorPanelModel(g);
     	}
     }
@@ -602,7 +590,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	}
     	task.setParent(this);
         fireChildAdded(ReportTask.class, task, reportTasks.indexOf(task));
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(task);
         }
     }
@@ -843,7 +831,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
         olapQueries.add(index, newQuery);
         newQuery.setParent(this);
         fireChildAdded(OlapQuery.class, newQuery, index);
-        if (!isMagicDisabled()) {
+        if (isMagicEnabled()) {
         	setEditorPanelModel(newQuery);
         }
     }
@@ -1022,18 +1010,6 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	return this.session.isEnterpriseServerSession();
     }
     
-    public boolean isMagicDisabled() {
-		return magicDisabled > 0;
-	}
-    
-    public void setMagicDisabled(boolean magicDisabled) {
-		if (magicDisabled) {
-			this.magicDisabled++;
-		} else {
-			this.magicDisabled--;
-		}
-	}
-
 	/**
 	 * Resets the workspace by removing all of the children in the workspace and
 	 * setting all of the values in the workspace to defaults. Child removed

@@ -73,7 +73,7 @@ public class MagicWorkspaceTest extends TestCase {
 		
 		assertEquals(initialOffset + 10, box.getX());
 		
-		workspace.setMagicDisabled(true);
+		workspace.setMagicEnabled(false);
 		
 		guide.setOffset(guide.getOffset() + 10);
 		
@@ -90,7 +90,7 @@ public class MagicWorkspaceTest extends TestCase {
 		WabitSession session = new WabitSessionImpl(context);
 		WabitWorkspace workspace = new WabitWorkspace();
 		
-		workspace.setMagicDisabled(true);
+		workspace.setMagicEnabled(false);
 		
 		QueryCache query = new QueryCache(context);
 		workspace.addQuery(query, session);
@@ -129,7 +129,7 @@ public class MagicWorkspaceTest extends TestCase {
 		renderer2.setName("renderer2");
 		String boxName = box.getName();
 		
-		workspace.setMagicDisabled(true);
+		workspace.setMagicEnabled(false);
 		box.setContentRenderer(renderer2);
 		
 		assertEquals(boxName, box.getName());

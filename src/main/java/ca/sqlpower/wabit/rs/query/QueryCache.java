@@ -896,7 +896,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public void setDataSource(JDBCDataSource ds) {
     	JDBCDataSource oldValue = this.getDataSource();
     	WabitWorkspace workspace = WabitUtils.getWorkspace(this);
-    	if (workspace != null && workspace.isMagicDisabled()) {
+    	if (workspace != null && !workspace.isMagicEnabled()) {
     		if (!query.setDataSourceWithoutSideEffects(ds)) {
     			return;
     		}

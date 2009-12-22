@@ -97,7 +97,7 @@ public class ContentBox extends AbstractWabitObject {
             if (evt.getPropertyName().equals("name") && evt.getNewValue() != null 
                     && ((String) evt.getNewValue()).length() > 0
                     && evt.getSource() == contentRenderer
-                    && (workspace == null || !workspace.isMagicDisabled())) {
+                    && (workspace == null || workspace.isMagicEnabled())) {
                 setName("Content from " + (String) evt.getNewValue());
             }
             repaint();           
@@ -177,7 +177,7 @@ public class ContentBox extends AbstractWabitObject {
         this.contentRenderer = contentRenderer;
         WabitWorkspace workspace = WabitUtils.getWorkspace(this);
         if (contentRenderer != null) {
-        	if (workspace == null || !workspace.isMagicDisabled()) {
+        	if (workspace == null || workspace.isMagicEnabled()) {
         		if (getParent() != null) {
         			getParent().setUniqueName(ContentBox.this,
         					"Content from " + contentRenderer.getName());
@@ -189,7 +189,7 @@ public class ContentBox extends AbstractWabitObject {
             SQLPowerUtils.listenToHierarchy(contentRenderer, childListener);
             fireChildAdded(ReportContentRenderer.class, contentRenderer, 0);
         } else {
-        	if (workspace == null || !workspace.isMagicDisabled()) {
+        	if (workspace == null || workspace.isMagicEnabled()) {
         		setName(EMPTY_BOX_NAME);
         	}
         }

@@ -81,7 +81,7 @@ public class Guide extends AbstractWabitObject {
         this.offset = guideOffset;
         firePropertyChange("offset", oldOffset, guideOffset);
         WabitWorkspace workspace = WabitUtils.getWorkspace(this);
-        if (workspace != null && !workspace.isMagicDisabled()) {
+        if (workspace != null && workspace.isMagicEnabled()) {
         	dragSnappedEdges(oldOffset, guideOffset);
         }
     }

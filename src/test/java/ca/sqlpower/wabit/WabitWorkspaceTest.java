@@ -132,12 +132,11 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     
     @Override
     public Set<String> getPropertiesToIgnoreForEvents() {
-    	Set<String> ignore = new HashSet<String>();
+    	Set<String> ignore = super.getPropertiesToIgnoreForEvents();
         ignore.add("dataSourceTypes");
         ignore.add("serverBaseURI");
         ignore.add("mondrianServerBaseURI");
         ignore.add("session");
-        ignore.add("magicDisabled");
         
         //workspace parents cannot be set as they are always null.
         ignore.add("parent");

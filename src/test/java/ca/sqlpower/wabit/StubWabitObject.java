@@ -171,4 +171,12 @@ public class StubWabitObject implements WabitObject {
 		return false;
 	}
 
+	public boolean isMagicEnabled() {
+		return true;
+	}
+
+	public void setMagicEnabled(boolean enable) {
+		// no-op
+	}
+
 }

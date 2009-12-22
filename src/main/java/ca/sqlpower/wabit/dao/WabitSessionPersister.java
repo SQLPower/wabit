@@ -385,7 +385,7 @@ public class WabitSessionPersister implements SPPersister {
 			final WabitWorkspace workspace = session.getWorkspace();
 			synchronized (workspace) {
 				try {
-					workspace.setMagicDisabled(true);
+					workspace.setMagicEnabled(false);
 					if (transactionCount == 0) {
 						throw new SPPersistenceException(null,
 							"Commit attempted while not in a transaction");
@@ -423,7 +423,7 @@ public class WabitSessionPersister implements SPPersister {
 					this.rollback();
 					throw new SPPersistenceException(null, t);
 				} finally {
-					workspace.setMagicDisabled(false);
+					workspace.setMagicEnabled(true);
 				}
 			}
 		}

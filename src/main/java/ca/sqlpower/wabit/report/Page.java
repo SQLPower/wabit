@@ -253,7 +253,7 @@ public class Page extends AbstractWabitObject {
         int oldWidth = this.width;
         this.width = width;
         firePropertyChange("width", oldWidth, width);
-        if (!WabitUtils.getWorkspace(this).isMagicDisabled()) {
+        if (WabitUtils.getWorkspace(this).isMagicEnabled()) {
         	adjustMarginForPageWidth(oldWidth, width);
         }
     }
@@ -282,7 +282,7 @@ public class Page extends AbstractWabitObject {
         int oldHeight = this.height;
         this.height = height;
         firePropertyChange("height", oldHeight, height);
-        if (!WabitUtils.getWorkspace(this).isMagicDisabled()) {
+        if (WabitUtils.getWorkspace(this).isMagicEnabled()) {
         	adjustMarginForPageHeight(oldHeight, height);
         }
     }
@@ -317,7 +317,7 @@ public class Page extends AbstractWabitObject {
         // the following expression is meant to evaluate to false under the following conditions:
         // 1. The page orientation hasn't actually changed
         // 2. The page orientation has changed between LANDSCAPE and REVERSE_LANDSCAPE
-        if (!WabitUtils.getWorkspace(this).isMagicDisabled()) {
+        if (WabitUtils.getWorkspace(this).isMagicEnabled()) {
         	if (   (oldOrientation == PageOrientation.PORTRAIT && orientation != PageOrientation.PORTRAIT)
         			|| (oldOrientation != PageOrientation.PORTRAIT && orientation == PageOrientation.PORTRAIT)) {
         		
@@ -610,7 +610,7 @@ public class Page extends AbstractWabitObject {
         
         setOrientation(PageOrientation.forPrintApiCode(pageFormat.getOrientation()));
         
-        if (!WabitUtils.getWorkspace(this).isMagicDisabled()) {
+        if (WabitUtils.getWorkspace(this).isMagicEnabled()) {
         	// important to set the page dimensions after orientation so
         	// setOrientation() doesn't swap them inappropriately
         	if (getOrientation() == PageOrientation.PORTRAIT) {

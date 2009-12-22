@@ -130,6 +130,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Set<String> ignore = new HashSet<String>();
         ignore.add("class");
         ignore.add("session");
+        ignore.add("magicEnabled");
         return ignore;
     }
     
