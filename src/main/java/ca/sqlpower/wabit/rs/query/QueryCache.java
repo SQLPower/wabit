@@ -257,7 +257,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 				if (rsCollection == null) executeStatement(completeUpdate);
 				ResultSet rs = rsCollection.getFirstNonNullResultSet();
 				variables.clear();
-				if (rs.first()) {
+				if (rs != null &&
+						rs.first()) {
 					do {
 						for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
 							this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
