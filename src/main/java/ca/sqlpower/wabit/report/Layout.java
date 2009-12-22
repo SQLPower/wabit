@@ -183,7 +183,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setColor(Color.BLACK);
         if (!((Boolean) this.variables.resolve(COUNTING_PAGES, false))) {
-        	this.variables.update(PAGE_NUMBER, pageIndex + 1);
+        	this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + PAGE_NUMBER, pageIndex + 1);
         }
         boolean needMorePages = false;
         for (ContentBox cb : page.getContentBoxes()) {
@@ -211,7 +211,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     public int getNumberOfPages() {
     	try {
     		countPages();
-    		this.variables.update("page_count", pageCount);
+    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "page_count", pageCount);
     		return pageCount;
     	} catch (PrinterException ex) {
     		throw new RuntimeException("Print exception occured while counting pages", ex);
@@ -233,14 +233,14 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
-    		this.variables.update(COUNTING_PAGES, true);
+    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + COUNTING_PAGES, true);
 	    	while (!done) {
 	    		int result = print(g, getPageFormat(pageNum), pageNum);
 	    		if (result == Printable.NO_SUCH_PAGE) break;
 	    		pageNum++;
 	    	}
     	} finally {
-    		this.variables.update(COUNTING_PAGES, false);
+    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + COUNTING_PAGES, false);
     		g.dispose();
     	}
     	return pageNum;
