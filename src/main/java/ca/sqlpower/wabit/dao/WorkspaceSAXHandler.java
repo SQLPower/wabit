@@ -507,6 +507,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		    cache.setExecuteQueriesWithCrossJoins(Boolean.parseBoolean(aval));
         		} else if (aname.equals("automatically-executing")) {
         		    cache.setAutomaticallyExecuting(Boolean.parseBoolean(aval));
+        		} else if (aname.equals("streaming")) {
+        		    cache.setStreaming(Boolean.parseBoolean(aval));
         		} else {
         			logger.warn("Unexpected attribute of <query>: " + aname + "=" + aval);
         		}

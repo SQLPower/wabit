@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.report;
 
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.WabitSession;
 
 /**
@@ -52,8 +54,9 @@ public class Report extends Layout {
     public Report(Layout layout, WabitSession session) {
     	super(new Page(layout.getPage()));
     	setName(layout.getName());
+    	this.variables.setNamespace(this.getUUID());
     	for (String key : layout.getVariableResolver().keySet(null)) {
-    		this.variables.store(key, layout.getVariableResolver().resolve(key));
+    		this.variables.store(this.getUUID().concat(SPVariableResolver.NAMESPACE_DELIMITER).concat(SPVariableHelper.stripNamespace(key)), layout.getVariableResolver().resolve(key));
     	}
     	setZoomLevel(layout.getZoomLevel());
 	}

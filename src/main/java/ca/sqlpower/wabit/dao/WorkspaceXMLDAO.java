@@ -683,6 +683,7 @@ public class WorkspaceXMLDAO {
 		printAttribute("grouping-enabled", Boolean.toString(data.isGroupingEnabled()));
 		printAttribute("prompt-for-cross-joins", cache.getPromptForCrossJoins());
 		printAttribute("automatically-executing", cache.isAutomaticallyExecuting());
+		printAttribute("streaming", cache.isStreaming());
 		if (!cache.getPromptForCrossJoins()) {
 		    printAttribute("execute-queries-with-cross-joins", cache.getExecuteQueriesWithCrossJoins());
 		}

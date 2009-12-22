@@ -19,6 +19,9 @@
 
 package ca.sqlpower.wabit.swingui.query;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -67,6 +70,12 @@ public class QueryPropertiesPanel implements DataEntryPanel {
      * to the GUI even if the query contains cross joins.
      */
     private final JCheckBox executeWithCrossJoinsCB;
+    
+    /**
+     * Tells if this query is a streaming type query.
+     */
+    private final JCheckBox streamingComboBox;
+    
 
     /**
      * If checked the query will execute every time there is a change to the GUI
@@ -74,21 +83,29 @@ public class QueryPropertiesPanel implements DataEntryPanel {
      */
     private final JCheckBox automaticallyExecutingCB;
 	
-	public QueryPropertiesPanel(QueryCache query) {
-		this.query = query;
+	public QueryPropertiesPanel(QueryCache queryArg) {
+		this.query = queryArg;
 		streamingRowLimitField.setValue(Integer.valueOf(query.getStreamingRowLimit()));
 		streamingRowLimitField.setToolTipText("The number of rows to retain while streaming. " +
 				"Old rows will be removed for new ones.");
 		
 		promptForCrossJoinsCB = new JCheckBox("Always prompt if query contains cross joins", 
-		        query.getPromptForCrossJoins());
+				query.getPromptForCrossJoins());
 		
 		executeWithCrossJoinsCB = new JCheckBox("Execute if there is a cross join",
-		        query.getExecuteQueriesWithCrossJoins());
+				query.getExecuteQueriesWithCrossJoins());
 		if (query.getPromptForCrossJoins()) {
 		    executeWithCrossJoinsCB.setEnabled(false);
 		    executeWithCrossJoinsCB.setSelected(false);
 		}
+		
+		streamingComboBox = new JCheckBox("Streaming query", query.isStreaming());
+		streamingComboBox.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				query.setStreaming(streamingComboBox.isSelected());
+				updateUi();
+			}
+		});
 		
 		promptForCrossJoinsCB.addChangeListener(new ChangeListener() {
         
@@ -103,32 +120,28 @@ public class QueryPropertiesPanel implements DataEntryPanel {
         });
 		
 		automaticallyExecutingCB = new JCheckBox("Automatically execute",
-		        query.isAutomaticallyExecuting());
+				query.isAutomaticallyExecuting());
 		
-		buildUI();
-	}
-	
-	private void buildUI() {
-	    panel.setLayout(new MigLayout());
 		
+		panel.setLayout(new MigLayout());
 		panel.add(automaticallyExecutingCB, "span");
 		panel.add(promptForCrossJoinsCB, "span");
 		panel.add(executeWithCrossJoinsCB, "gapbefore 20, span");
 		
-		String connectionStyle;
-		if (query.isStreaming()) {
-			connectionStyle = "Streaming";
-		} else {
-			connectionStyle = "Non-streaming";
-		}
-		panel.add(new JLabel("Connection Style"));
-		panel.add(new JLabel(connectionStyle), "wrap");
-		if (query.isStreaming()) {
-			panel.add(new JLabel("Row Limit"));
-			panel.add(streamingRowLimitField, "wrap");
-		} else {
-			//TODO:add non streaming properties here.
-		}
+		
+		panel.add(streamingComboBox, "span, wrap");
+		panel.add(new JLabel("Row Limit"), "gapbefore 20");
+		panel.add(streamingRowLimitField, "wrap, wmin 100");
+		
+		updateUi();
+	}
+	
+	private void updateUi() {
+	    if (query.isStreaming()) {
+	    	this.streamingRowLimitField.setEnabled(true);
+	    } else {
+	    	this.streamingRowLimitField.setEnabled(false);
+	    }
 	}
 
 	public boolean applyChanges() {

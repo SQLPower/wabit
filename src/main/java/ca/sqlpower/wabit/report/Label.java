@@ -48,12 +48,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * described in the class-level docs.
      */
     private String text;
-    
-    /**
-     * Contains the text property, but with variables resolved.
-     * Caches the result...
-     */
-    private String[] resolvedText = null;
 
     private HorizontalAlignment hAlignment = HorizontalAlignment.LEFT;
     private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
@@ -82,6 +76,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         setName("Label");
         setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
         this.variableHelper = new SPVariableHelper(this);
+        this.variableHelper.setWalkDown(true);
     }
     
     /**
@@ -95,6 +90,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	this.vAlignment = label.getVerticalAlignment();
     	setName(label.getName());
     	this.variableHelper = new SPVariableHelper(this);
+    	this.variableHelper.setWalkDown(true);
     }
     
     public Label() {
@@ -107,7 +103,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     public void setText(String text) {
         String oldText = this.text;
         this.text = text;
-        this.resolvedText = null;
         firePropertyChange("text", oldText, text);
     }
     
@@ -187,9 +182,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * Return the Label text with variables substituted.
      */
     public String[] getVariableSubstitutedText() {
-    	if (this.resolvedText == null)
-    		resolvedText = SPVariableHelper.substitute(text, this.variableHelper).split("\n");
-    	return resolvedText;
+    	return SPVariableHelper.substitute(text, this.variableHelper).split("\n");
 	}
 
     @Override

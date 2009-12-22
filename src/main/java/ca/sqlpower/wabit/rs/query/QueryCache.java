@@ -232,35 +232,42 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * initialize the variables before trying to resolve them.
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
+    	private boolean updateNeeded = true;
     	public QueryVariableResolver(String namespace) {
 			super(namespace);
 		}
+    	public void setUpdateNeeded(boolean updateNeeded) {
+    		this.updateNeeded = updateNeeded;
+    	}
     	protected void beforeLookups(String key) {
-    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))) {
+    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
+    				&& this.updateNeeded) {
     			this.updateVars(true);
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.resolvesNamespace(namespace)) {
+    		if (this.resolvesNamespace(namespace)
+    				&& this.updateNeeded) {
     			this.updateVars(false);
     		}
     	}
-		private void updateVars(boolean completeUpdate) {
+		public void updateVars(boolean completeUpdate) {
+
 			try {
-				executeStatement(completeUpdate);
-				CachedRowSet rs = getCachedRowSet();
-				List<Item> columns = getSelectedColumns();
+				if (rsCollection == null) executeStatement(completeUpdate);
+				ResultSet rs = rsCollection.getFirstNonNullResultSet();
 				variables.clear();
 				if (rs.first()) {
 					do {
-						for (Item column : columns) {
-							String name = column.getAlias() == "" ? column.getName() : column.getAlias();
-							this.store(name, rs.getObject(name));
+						for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+							this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
 						}
 					} while (rs.next());
 				}
 			} catch (SQLException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
+			} finally {
+				this.updateNeeded = false;
 			}
 		}
     }
@@ -514,6 +521,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         } catch (SQLObjectException e) {
             throw new SQLObjectRuntimeException(e);
         } finally {
+        	this.variables.setUpdateNeeded(true);
             if (!query.isStreaming()) {
                 if (rs != null) {
                     try {

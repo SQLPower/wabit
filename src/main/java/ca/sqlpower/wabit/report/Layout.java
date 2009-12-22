@@ -112,6 +112,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
     protected void updateBuiltinVariables() {
+    	// Make sure we operate under the right namespace
+    	this.variables.setNamespace(this.getUUID());
         this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "now", new Date());
         this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "system_user", System.getProperty("user.name"));
         this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "wabit_version", WabitVersion.VERSION);
