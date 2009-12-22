@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.datatransfer.Transferable;
@@ -636,7 +637,30 @@ public class QueryPanel implements WabitPanel {
 		builder.append(havingLabel);
 		builder.append(columnNameLabel);
 		
-		dragTree = new JTree();
+		dragTree = new JTree(){
+			public void expandPath(TreePath tp) {
+				try {
+					if (tp.getLastPathComponent() instanceof SQLObject) {
+					    ((SQLObject) tp.getLastPathComponent()).populate();
+					}
+					super.expandPath(tp);
+				} catch (Exception ex) {
+					logger.warn("Unexpected exception while expanding path "+tp, ex); //$NON-NLS-1$
+				}
+			}
+			
+			@Override
+			public void expandRow(int row) {
+			    if (getPathForRow(row).getLastPathComponent() instanceof SQLObject) {
+			        try {
+		                ((SQLObject) getPathForRow(row).getLastPathComponent()).populate();
+		            } catch (SQLObjectException e) {
+		                throw new RuntimeException(e);
+		            }
+			    }
+			    super.expandRow(row);
+			}
+		};
 		dragTree.setRootVisible(false);
 		rootNode = new SQLObjectRoot();
 		reportComboBox.addActionListener(new AbstractAction() {
