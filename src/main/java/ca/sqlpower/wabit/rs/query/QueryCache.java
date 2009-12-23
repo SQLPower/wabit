@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.rs.query;
 
 import java.beans.PropertyChangeEvent;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -97,7 +98,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * <p>
      * This is only used if {@link QueryImpl#streaming} is true.
      */
-    private Statement currentStatement;
+    private PreparedStatement currentStatement;
     
     /**
      * This is the connection currently entering result sets into this query cache.
@@ -225,7 +226,17 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     private WabitConstantsContainer constantContainer;
     
-    private final QueryVariableResolver variables;
+    /**
+     * This is a variable resolver to allow this query to 
+     * expose it's columns as variables to other objects.
+     */
+    private final QueryVariableResolver variableProvider;
+    
+    /**
+     * This helps the query to resolve variable that
+     * come from other objects.
+     */
+    private final SPVariableHelper variableResolver;
     
     /**
      * Extends {@link SPSimpleVariableResolver} to make sure that we
@@ -335,7 +346,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public QueryCache(QueryCache q, boolean connectListeners) {
     	
     	// Create a variable context.
-        this.variables = new QueryVariableResolver(this.uuid);
+        this.variableProvider = new QueryVariableResolver(this.uuid);
+        
+        // Create a variable resolver and bind it to this node
+        this.variableResolver = new SPVariableHelper(this);
+        this.variableResolver.setWalkDown(true);
         
         this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
@@ -401,7 +416,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     		WabitConstantsContainer newConstantsContainer, JDBCDataSource dataSource) {
     	
     	// Create a variable context.
-        this.variables = new QueryVariableResolver(this.uuid);
+        this.variableProvider = new QueryVariableResolver(this.uuid);
+
+        // Create a variable resolver and bind it to this node
+        this.variableResolver = new SPVariableHelper(this);
+        this.variableResolver.setWalkDown(true);
         
     	if (newConstantsContainer != null) {
     		query = new QueryImpl(dbMapping, prepopulateConstants, 
@@ -492,11 +511,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         try {
             setRunning(true);
             currentConnection = query.getDatabase().getConnection();
-            currentStatement = currentConnection.createStatement();
+            currentStatement = this.variableResolver.substituteForDb(currentConnection, sql);
             if (!fetchFullResults) {
                 currentStatement.setMaxRows(query.getRowLimit());
             }
-            boolean initialResult = currentStatement.execute(sql);
+            boolean initialResult = currentStatement.execute();
             setRsCollection(new ResultSetAndUpdateCountCollection(currentStatement, initialResult, 
                     isStreaming(), getStreamingRowLimit(), getSession()));
             final ResultSetAndUpdateCountCollection resultsToFire;
@@ -520,9 +539,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             return initialResult;
             
         } catch (SQLObjectException e) {
+        	logger.error("Cannot execute query.", e);
             throw new SQLObjectRuntimeException(e);
         } finally {
-        	this.variables.setUpdateNeeded(true);
+        	this.variableProvider.setUpdateNeeded(true);
             if (!query.isStreaming()) {
                 if (rs != null) {
                     try {
@@ -1346,8 +1366,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public void setUUID(String uuid) {
     	super.setUUID(uuid);
     	query.setUUID(uuid);
-    	if (this.variables != null)
-    		this.variables.setNamespace(uuid);
+    	if (this.variableProvider != null)
+    		this.variableProvider.setNamespace(uuid);
     }
     
     @Override
@@ -1356,8 +1376,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	if (query != null) {
     		query.setUUID(getUUID());
     	}
-    	if (this.variables != null)
-    		this.variables.setNamespace(getUUID());
+    	if (this.variableProvider != null)
+    		this.variableProvider.setNamespace(getUUID());
     }
     
     public List<Class<? extends SPObject>> getAllowedChildTypes() {
@@ -1369,6 +1389,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public SPVariableResolver getVariableResolver() {
-    	return this.variables;
+    	return this.variableProvider;
     }
 }
