@@ -29,6 +29,7 @@ import java.text.Format;
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
 
+import ca.sqlpower.dao.session.JDBCDataSourceConverter;
 import ca.sqlpower.dao.session.SessionPersisterSuperConverter;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
@@ -71,11 +72,11 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 	 * @see SessionPersisterSuperConverter#SessionPersisterSuperConverter(ca.sqlpower.util.SPSession, ca.sqlpower.object.SPObject)
 	 */
 	public WabitSessionPersisterSuperConverter(WabitSession session, WabitObject root) {
-		super(session, root);
+		super(session.getDataSources(), root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
 		containerConverter = new ContainerConverter(session);
 		sqlJoinConverter = new SQLJoinConverter(root);
-		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getWorkspace());
+		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getDataSources());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());
 		itemConverter = new ItemConverter(session.getWorkspace());
 	}

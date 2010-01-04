@@ -673,6 +673,9 @@ public class QueryPanel implements WabitPanel {
 					    // FIXME the session (or session context) should be maintaining a map of data
 					    // sources to SQLDatabase instances. Each SQLDatabase instance has its own connection pool! 
 						rootNode.addChild(context.getDatabase((JDBCDataSource) reportComboBox.getSelectedItem()));
+						for (SQLObject child : rootNode.getChildren()) {
+							child.populate();
+						}
 						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
 						dragTree.setModel(tempTreeModel);
 						dragTree.expandRow(0);

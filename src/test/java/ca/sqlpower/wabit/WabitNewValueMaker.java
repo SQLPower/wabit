@@ -47,6 +47,7 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.GenericNewValueMaker;
+import ca.sqlpower.testutil.SPObjectRoot;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.ContentBox;
@@ -85,6 +86,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
     
     
     public WabitNewValueMaker(WabitWorkspace workspace) {
+    	super(new SPObjectRoot());
+    	getRootObject().addChild(workspace, 0);
     	this.workspace = workspace;
     	
         plIni = new PlDotIni();
