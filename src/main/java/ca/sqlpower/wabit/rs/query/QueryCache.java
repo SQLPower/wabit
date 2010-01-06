@@ -246,6 +246,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	private boolean updateNeeded = true;
     	public QueryVariableResolver(String namespace) {
 			super(namespace);
+			this.setSnobbyResolver(false);
 		}
     	public void setUpdateNeeded(boolean updateNeeded) {
     		this.updateNeeded = updateNeeded;
@@ -257,8 +258,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.resolvesNamespace(namespace)
-    				&& this.updateNeeded) {
+    		if (this.updateNeeded) {
     			this.updateVars(false);
     		}
     	}
