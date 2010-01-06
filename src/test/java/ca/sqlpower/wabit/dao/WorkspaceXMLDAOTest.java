@@ -50,8 +50,10 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitDataSource;
+import ca.sqlpower.wabit.WabitNewValueMaker;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -70,14 +72,20 @@ public class WorkspaceXMLDAOTest extends TestCase {
 	private StubWabitSessionContext context;
 	private Connection con;
 	private Statement stmt;
-
+	private WabitNewValueMaker valueMaker;
+	private StubWabitSession session;
+	
 	private List<String> getPropertiesToIgnore() {
 		List<String> ignoreList = new ArrayList<String>();
 		ignoreList.add("parent");
 		ignoreList.add("session");
+		ignoreList.add("magicEnabled"); // We don't save that
+		ignoreList.add("variableResolver"); // Never saved.
+		ignoreList.add("orderByOrdering"); // We don't save that.
 		ignoreList.add("DBMapping"); //Similar to the session
         ignoreList.add("dataSourceTypes"); //Currently unsupported.
         ignoreList.add("serverBaseURI"); //Currently unsupported.
+        ignoreList.add("mondrianServerBaseURI"); //Currently unsupported.
 		return ignoreList;
 	}
 	
@@ -154,10 +162,10 @@ public class WorkspaceXMLDAOTest extends TestCase {
 					        newVal = OrderByArgument.ASC;
 					    }
 					} else {
-						throw new RuntimeException("This test case lacks a value for "
-								+ property.getName() + " (type "
-								+ property.getPropertyType().getName() + ") from "
-								+ object.getClass());
+						newVal = valueMaker.makeNewValue(
+									property.getPropertyType(), 
+									oldVal, 
+									property.getName());
 					}
 					
 					assertNotNull("Ooops we should have set "+property.getName() + " to a value in "+object.getClass().getName(),newVal);
@@ -237,6 +245,24 @@ public class WorkspaceXMLDAOTest extends TestCase {
             }
             
         };
+        
+        session = new StubWabitSession(context) {
+    		
+    		private final WabitWorkspace workspace = new WabitWorkspace();
+    		
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    		
+    		@Override
+    		public WabitWorkspace getWorkspace() {
+    			workspace.setSession(this);
+    			return workspace;
+    		}
+    	};
+        
+        valueMaker = new WabitNewValueMaker(session.getWorkspace(), plIni);
 	}
 	
 	@Override

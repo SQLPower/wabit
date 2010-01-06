@@ -215,6 +215,11 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	    //do nothing, no dependencies
 	}
 	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName();
+	}
+	
 	//------------Container getters and setters-------------
 	//TODO We will want to make this a correct delegate when we have time. For now we 
 	//are just adding the getters and setters that fire events.
