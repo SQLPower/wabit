@@ -1086,6 +1086,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         if (!qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qa.addDimension(ordinal, qd);
+        	if (qa.getLocation() != Axis.FILTER) {
+        		hierarchiesInUse.put(qd, qd.getDimension().getDefaultHierarchy());
+        	}
         } else {
         	int index = qa.getDimensions().indexOf(qd);
         	if (index >= 0) {
@@ -1094,6 +1097,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
         			ordinal--;
         		}
         		qa.getDimensions().add(ordinal, qd);
+        		if (qa.getLocation() != Axis.FILTER) {
+            		hierarchiesInUse.put(qd, qd.getDimension().getDefaultHierarchy());
+            	}
         	}
         }
     }
