@@ -85,12 +85,12 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
     private WabitWorkspace workspace;
     
     
-    public WabitNewValueMaker(WabitWorkspace workspace) {
-    	super(new SPObjectRoot());
+    public WabitNewValueMaker(WabitWorkspace workspace, PlDotIni pl) {
+    	super(new SPObjectRoot(), pl);
     	getRootObject().addChild(workspace, 0);
     	this.workspace = workspace;
     	
-        plIni = new PlDotIni();
+        plIni = pl;
         try {
             plIni.read(new File("src/test/java/pl.regression.ini"));
             final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
@@ -128,6 +128,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             
             if (!propName.equals("addDataSource")) {
             	workspace.addDataSource(wabitDataSource);
+            	workspace.getSession().getDataSources().addDataSource(ds);
             }
             
             newValue = wabitDataSource;

@@ -199,7 +199,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		}
     	};
     	
-    	valueMaker = new WabitNewValueMaker(getWorkspace());
+    	valueMaker = new WabitNewValueMaker(getWorkspace(), plIni);
     	
     	converterFactory = new WabitSessionPersisterSuperConverter(session, getWorkspace());
     }
