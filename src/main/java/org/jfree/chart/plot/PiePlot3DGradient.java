@@ -35,7 +35,6 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.geom.Arc2D.Double;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
