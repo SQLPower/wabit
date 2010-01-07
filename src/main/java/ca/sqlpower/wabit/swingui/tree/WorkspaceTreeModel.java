@@ -268,7 +268,6 @@ public class WorkspaceTreeModel implements TreeModel {
 		return layoutChildren;
 	}
 	
-	@SuppressWarnings("unchecked") //everything in here will be an object, no warning is needed
 	private List<Object> getWabitDatasourceChildren(WabitDataSource parent) {
 		List<Object> children = new ArrayList<Object>();
 		SPDataSource spDS = parent.getSPDataSource();
@@ -580,57 +579,6 @@ public class WorkspaceTreeModel implements TreeModel {
 			TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(),
 					new int[] { index }, new Object[] { e.getChild() });
 			fireTreeNodesRemoved(treeEvent);
-		}
-
-		/**
-		 * Given the index of an object in the workspace in relation to all of
-		 * the children of its parent, this method will convert the index into
-		 * the correct index in relation to the other children in the same
-		 * folder. If the object given is not a direct child of the workspace
-		 * the same index given will be returned.
-		 * 
-		 * @param wabitObject
-		 *            The object to find its location in a folder.
-		 * @param actualIndex
-		 *            The index of the child in relation to all of its siblings.
-		 * @return The index of the object within a folder.
-		 */
-		private int getCorrectIndex(WabitObject wabitObject, final int actualIndex) {
-		    
-			// Unfortunately, can't use WabitObject.childPositionOffset because
-			// MDX and SQL query objects are mixed in the same folder and therefore
-			// need the same offset.
-			
-			if (wabitObject.getParent() != workspace) return actualIndex;
-			
-			int index = actualIndex;
-			
-			if (workspace.isSystemWorkspace()) {
-				return actualIndex - workspace.childPositionOffset(wabitObject.getClass());
-			} else {
-				if (wabitObject instanceof WabitDataSource) return index;
-				index -= (workspace.getConnections().size());
-
-				if (wabitObject instanceof OlapQuery || wabitObject instanceof QueryCache) return index;
-				index -= (workspace.getQueries().size()) + (workspace.getOlapQueries().size());
-
-				if (wabitObject instanceof Chart) return index;
-				index -= (workspace.getCharts().size());
-
-				if (wabitObject instanceof WabitImage) return index;
-				index -= (workspace.getImages().size());
-
-				if (wabitObject instanceof Template) return index;
-				index -= (workspace.getTemplates().size());
-
-				if (wabitObject instanceof Report) return index;
-				index -= (workspace.getReports().size());
-				
-				if (wabitObject instanceof ReportTask) return index;
-				index -= (workspace.getReportTasks().size());
-			}
-			
-			return actualIndex;
 		}
 
         public void transactionEnded(TransactionEvent e) {
