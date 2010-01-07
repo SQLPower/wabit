@@ -393,14 +393,16 @@ public class CellSetRenderer extends AbstractWabitObject implements
                         throw new IllegalStateException("Unknown alignment of type " + bodyAlignment);
                 }
 //                g.setBackground(Color.decode((String) cell.getPropertyValue(Property.StandardCellProperty.BACK_COLOR)));
-                logger.debug("");
-                logger.debug("Value: " + cell.getPropertyValue(Property.StandardCellProperty.VALUE));
-                logger.debug("Cell evaluation list: " + cell.getPropertyValue(Property.StandardCellProperty.CELL_EVALUATION_LIST));
-                logger.debug("Font flags: " + cell.getPropertyValue(Property.StandardCellProperty.FONT_FLAGS));
-                logger.debug("Fore Color: "  + cell.getPropertyValue(Property.StandardCellProperty.FORE_COLOR));
-                logger.debug("Back Color " + cell.getPropertyValue(Property.StandardCellProperty.BACK_COLOR));
-                logger.debug("Formatted Value " + cell.getPropertyValue(Property.StandardCellProperty.FORMATTED_VALUE));
-                logger.debug("Non empty behaviour" + cell.getPropertyValue(Property.StandardCellProperty.NON_EMPTY_BEHAVIOR));
+                if (logger.isDebugEnabled()) {
+                	logger.debug("");
+                	logger.debug("Value: " + cell.getPropertyValue(Property.StandardCellProperty.VALUE));
+                	logger.debug("Cell evaluation list: " + cell.getPropertyValue(Property.StandardCellProperty.CELL_EVALUATION_LIST));
+                	logger.debug("Font flags: " + cell.getPropertyValue(Property.StandardCellProperty.FONT_FLAGS));
+                	logger.debug("Fore Color: "  + cell.getPropertyValue(Property.StandardCellProperty.FORE_COLOR));
+                	logger.debug("Back Color " + cell.getPropertyValue(Property.StandardCellProperty.BACK_COLOR));
+                	logger.debug("Formatted Value " + cell.getPropertyValue(Property.StandardCellProperty.FORMATTED_VALUE));
+                	logger.debug("Non empty behaviour" + cell.getPropertyValue(Property.StandardCellProperty.NON_EMPTY_BEHAVIOR));
+                }
 //                g.setColor((Color) cell.getPropertyValue(Property.StandardCellProperty.FORE_COLOR));
                 g.drawString(formattedValue, (int) (rowHeaderWidth + colPosition + alignmentShift), (int) (colHeaderSumHeight + ((row - firstRecord) * maxRowHeight) + maxRowHeight));
                 colPosition += columnWidth;
