@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.dao.json;
 
-import org.apache.log4j.Logger;
 import org.json.JSONObject;
 
 import ca.sqlpower.dao.MessageSender;
@@ -36,9 +35,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
  * over a network connection.
  */
 public class WabitJSONPersister extends SPJSONPersister {
-
-	private static final Logger logger = Logger
-			.getLogger(WabitJSONPersister.class);
 	
 	/**
 	 * Create a {@link WabitJSONPersister} that uses the given

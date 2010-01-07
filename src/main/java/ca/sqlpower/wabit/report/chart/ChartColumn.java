@@ -153,12 +153,10 @@ public class ChartColumn extends AbstractWabitObject {
         return 0;
     }
 
-    @SuppressWarnings("unchecked")
     public List<? extends WabitObject> getChildren() {
         return Collections.emptyList();
     }
 
-    @SuppressWarnings("unchecked")
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }

@@ -39,14 +39,12 @@ import javax.swing.JToggleButton;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
-import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.swingui.Icons;
@@ -201,13 +199,5 @@ public class SwingLabel implements SwingContentRenderer {
 
     public void processEvent(PInputEvent event, int type) {
         //do something cool here later
-    }
-
-    private Layout getLayout() {
-    	SPObject obj = this.renderer;
-    	while (!(obj instanceof Layout)) {
-    		obj = obj.getParent();
-    	}
-    	return (Layout)obj;
     }
 }

@@ -29,7 +29,7 @@ import ca.sqlpower.swingui.SPSUtils;
 public class ExceptionHandler implements UncaughtExceptionHandler {
 	
 	public void uncaughtException(Thread t, Throwable e) {
-		SPSUtils.showExceptionDialogNoReport("An unexpected exception has occured: ", e);
+		SPSUtils.showExceptionDialogNoReport(null, "An unexpected exception has occured: ", e);
 	}
 
 }

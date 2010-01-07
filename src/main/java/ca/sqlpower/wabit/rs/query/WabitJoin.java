@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
@@ -41,8 +39,6 @@ import ca.sqlpower.wabit.WabitObject;
  * events.
  */
 public class WabitJoin extends AbstractWabitObject implements Join {
-    
-	private static final Logger logger = Logger.getLogger(WabitJoin.class);
 	
     /**
      * The object that is listened to for join events.

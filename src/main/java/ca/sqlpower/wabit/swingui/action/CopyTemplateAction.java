@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.Window;
-import java.awt.event.ActionEvent;
 
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.report.Template;

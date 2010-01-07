@@ -22,8 +22,6 @@ package ca.sqlpower.wabit;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.object.AbstractSPObject;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.ObjectDependentException;
@@ -31,8 +29,6 @@ import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.WorkspaceGraphModel;
 
 public abstract class AbstractWabitObject extends AbstractSPObject implements WabitObject {
-
-    private static final Logger logger = Logger.getLogger(AbstractWabitObject.class);
     
     public AbstractWabitObject() {
     	super();

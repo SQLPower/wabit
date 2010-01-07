@@ -46,7 +46,8 @@ public class BarChartAnimator extends AbstractChartAnimator {
         }
     }
 
-    protected void setup() {
+    @SuppressWarnings("unchecked")
+	protected void setup() {
         for (Comparable rowKey : (List<Comparable>) animatingData.getRowKeys()) {
             for (Comparable colKey : (List<Comparable>) animatingData.getColumnKeys()) {
                 animatingData.setValue(0.0, rowKey, colKey);
@@ -55,6 +56,7 @@ public class BarChartAnimator extends AbstractChartAnimator {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     protected void doFrame(int frame, double pct) {
         for (Comparable rowKey : (List<Comparable>) animatingData.getRowKeys()) {
             for (Comparable colKey : (List<Comparable>) animatingData.getColumnKeys()) {

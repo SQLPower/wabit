@@ -1182,6 +1182,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             return false;
         }
 
+		@SuppressWarnings("unchecked")
 		public void drop(DropTargetDropEvent dtde) {
 			Point mouseLocation = dtde.getLocation();
 			int tabIndex = stackedTabPane.indexAtLocation(mouseLocation.x, mouseLocation.y);
@@ -1360,7 +1361,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      *
      * <p>This code came from Apple's "OS X Java Adapter" example.
      */
-    private void macOSXRegistration() {
+    @SuppressWarnings("unchecked")
+	private void macOSXRegistration() {
 
 		Action exitAction = new AbstractAction() {
 			public void actionPerformed(ActionEvent e) {
@@ -2186,7 +2188,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                      ex.printStackTrace();
                     // We wish we had a parent component to direct the dialog but this is being invoked, so
                     // everything else blew up.
-                    SPSUtils.showExceptionDialogNoReport("An unexpected error occured while launching Wabit",ex);
+                    SPSUtils.showExceptionDialogNoReport(null,"An unexpected error occured while launching Wabit",ex);
                 }
             }
         });

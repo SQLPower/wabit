@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ca.sqlpower.object.SPObject;
-import ca.sqlpower.wabit.WabitObject;
 
 import com.rc.retroweaver.runtime.Collections;
 

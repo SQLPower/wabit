@@ -26,8 +26,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPChildEvent;
@@ -47,8 +45,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
  * values will
  */
 public class ContentBox extends AbstractWabitObject {
-	
-	private static final Logger logger = Logger.getLogger(ContentBox.class);
 	
 	private static final String EMPTY_BOX_NAME = "Empty Content Box";
 

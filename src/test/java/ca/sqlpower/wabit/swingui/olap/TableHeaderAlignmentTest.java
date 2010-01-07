@@ -19,19 +19,14 @@
 
 package ca.sqlpower.wabit.swingui.olap;
 
-import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.JFrame;
 import javax.swing.JList;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
@@ -58,7 +53,6 @@ public class TableHeaderAlignmentTest {
 		{ "Cat", "Meow" },
 		{ "Duck", "Quack" },
 	};
-	private static int rowHeight = 0;
 	
 	public static void main(String[] args) {
 		final JTable table = new JTable(ROW_DATA, ROW_HEADER);
@@ -107,49 +101,5 @@ public class TableHeaderAlignmentTest {
 		f.setLocationRelativeTo(null);
 		f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		f.setVisible(true);
-	}
-	
-	private static class RowListRenderer extends DefaultListCellRenderer {
-		private final JTable table;
-
-		public RowListRenderer(JTable table) {
-			this.table = table;
-		}
-		
-		
-		@Override
-		public Dimension getPreferredSize() {
-			Dimension preferredSize = super.getPreferredSize();
-			preferredSize.height =  table.getRowHeight();
-			return preferredSize;
-		}
-	}
-	
-	private static class RowLabelComponent extends JPanel {
-
-		private final JTable table;
-
-		RowLabelComponent(JTable table) {
-			this.table = table;
-			PropertyChangeListener heightListener = new PropertyChangeListener() {
-	        	public void propertyChange(PropertyChangeEvent evt) {
-	        		repaint();
-	        	}
-	        };
-	        
-	        table.addPropertyChangeListener("rowHeight", heightListener);
-		}
-		
-		@Override
-		protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			g.setFont(table.getFont());
-			FontMetrics fm = g.getFontMetrics();
-			int y = fm.getAscent();
-			for (int i = 0; i < table.getRowCount(); i++) {
-				g.drawString(String.valueOf(i + 1), 0, y);
-				y += table.getRowHeight();
-			}
-		}
 	}
 }

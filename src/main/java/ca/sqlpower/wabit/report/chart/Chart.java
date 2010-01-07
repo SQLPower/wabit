@@ -318,7 +318,6 @@ public class Chart extends AbstractWabitObject {
         if (unfilteredResults != null) {
             unfilteredResults.removeRowSetListener(rowSetListener );
         }
-        CachedRowSet oldUnfilteredResults = unfilteredResults;
         unfilteredResults = rs;
         
         // synchronize chart columns with new result set
@@ -368,17 +367,6 @@ public class Chart extends AbstractWabitObject {
             }
         }
         return null;
-    }
-    
-    /**
-     * Removes all column identifier from the end of the column names list back
-     * to the beginning. Fires a childRemoved event once for each column
-     * removed.
-     */
-    private void removeAllColumns() {
-        for (int i = chartColumns.size() - 1; i >= 0; i--) {
-            removeColumnIdentifier(chartColumns.get(i));
-        }
     }
 
     /**

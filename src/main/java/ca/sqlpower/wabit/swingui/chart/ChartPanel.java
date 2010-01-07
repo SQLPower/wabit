@@ -221,12 +221,6 @@ public class ChartPanel implements WabitPanel {
     final Chart chart;
 
     /**
-     * Flag maintained by the chart property change listener to tell if this
-     * panel has any unsaved changes.
-     */
-    private boolean chartHasChanges = false;
-
-    /**
      * Listens for changes to all text fields on this panel. Updates the chart
      * object and its preview on each document event.
      */
@@ -277,9 +271,6 @@ public class ChartPanel implements WabitPanel {
             logger.debug(
                     "Got chart property change: \""+evt.getPropertyName()+"\" " +
                     		evt.getOldValue() + " -> " + evt.getNewValue());
-            if (!ignorableProperties.contains(evt.getPropertyName())) {
-                chartHasChanges = true;
-            }
             
             try {
                 updateGUIFromChart();

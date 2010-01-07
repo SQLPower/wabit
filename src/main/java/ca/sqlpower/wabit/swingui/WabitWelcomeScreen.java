@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.net.URI;
@@ -33,14 +32,12 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JToolBar;
 
 import net.miginfocom.swing.MigLayout;
-import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
 import ca.sqlpower.wabit.swingui.WorkspacePanel.FurryPanel;
@@ -140,14 +137,6 @@ public class WabitWelcomeScreen {
 		serverConnectionButton.setAction(new AbstractAction() {
 		
 			public void actionPerformed(ActionEvent evt) {
-				ServerListMenuItemFactory serverListMenuItemFactory = 
-					new ServerListMenuItemFactory() {
-		            public JMenuItem createMenuEntry(SPServerInfo serviceInfo, 
-		            		Component dialogOwner) {
-		                return new JMenuItem(new LogInToServerAction(dialogOwner, 
-		                		serviceInfo, context));
-		            }
-		        };
 		        JPopupMenu serverPopup = ServerListMenu.createPopupInstance(context, mainPanel);
 		        serverPopup.show(serverConnectionButton, 0, serverConnectionButton.getHeight());
 			}

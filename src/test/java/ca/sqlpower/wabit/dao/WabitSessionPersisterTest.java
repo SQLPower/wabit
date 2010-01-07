@@ -22,15 +22,13 @@ package ca.sqlpower.wabit.dao;
 import java.io.IOException;
 
 import junit.framework.TestCase;
-
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.dao.SPPersister;
 import ca.sqlpower.dao.SPPersister.DataType;
 import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
@@ -43,9 +41,6 @@ import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.image.WabitImage;
 
 public class WabitSessionPersisterTest extends TestCase {
-
-	private static final Logger logger = Logger
-			.getLogger(WabitSessionPersisterTest.class);
 
 	private WabitSessionPersister wsp;
 
@@ -75,7 +70,7 @@ public class WabitSessionPersisterTest extends TestCase {
 			}
 
 			@Override
-			public DataSourceCollection getDataSources() {
+			public DataSourceCollection<SPDataSource> getDataSources() {
 				return defaultPlIni;
 			}
 		};

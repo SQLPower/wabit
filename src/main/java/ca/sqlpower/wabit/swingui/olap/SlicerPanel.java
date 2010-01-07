@@ -263,10 +263,6 @@ public class SlicerPanel extends JPanel {
 
 	private class MouseHandler implements MouseListener {
 
-		public void mouseMoved(MouseEvent e) {
-			//Do nothing
-		}
-
 		public void mouseClicked(MouseEvent e) {
 			// hey you: don't implement "click" behaviour here. Use mousePressed() or mouseReleased().
 		}

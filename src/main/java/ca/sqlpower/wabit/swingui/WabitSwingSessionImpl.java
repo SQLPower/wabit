@@ -157,6 +157,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             return (containsFileList && !isFromLeftTree);
         }
 
+        @SuppressWarnings("unchecked")
         public void drop(DropTargetDropEvent dtde) {
         	Transferable transferable = dtde.getTransferable();
         	DataFlavor[] dataFlavors = transferable.getTransferDataFlavors();

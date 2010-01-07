@@ -35,6 +35,7 @@ import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.geom.Arc2D.Double;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -98,6 +99,7 @@ public class PiePlot3DGradient extends PiePlot3D {
      * @param info  collects info about the drawing
      *              (<code>null</code> permitted).
      */
+	@SuppressWarnings("unchecked")
 	public void draw(Graphics2D g2, Rectangle2D plotArea, Point2D anchor,
 			PlotState parentState,
 			PlotRenderingInfo info) {
@@ -489,6 +491,7 @@ public class PiePlot3DGradient extends PiePlot3D {
      *
      * @see #lookupSectionPaint(Comparable, boolean)
      */
+	@SuppressWarnings("unchecked")
     protected Paint lookupSidePaint(Comparable key) {
         return lookupSidePaint(key, getAutoPopulateSectionPaint());
     }
@@ -516,6 +519,7 @@ public class PiePlot3DGradient extends PiePlot3D {
      *
      * @since 1.0.3
      */
+	@SuppressWarnings("unchecked")
     protected Paint lookupSidePaint(Comparable key, boolean autoPopulate) {
     	Paint result;
         // check if there is a paint defined for the specified key
@@ -556,6 +560,7 @@ public class PiePlot3DGradient extends PiePlot3D {
      *
      * @since 1.0.3
      */
+	@SuppressWarnings("unchecked")
     public void setSidePaint(Comparable key, Paint paint){
     	this.sidePaintMap.put(key, paint);
         fireChangeEvent();

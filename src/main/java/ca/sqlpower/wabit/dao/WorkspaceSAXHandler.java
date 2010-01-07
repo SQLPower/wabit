@@ -55,7 +55,6 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
-import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -174,12 +173,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private ColumnInfo colInfo;
 
 	/**
-	 * The list of column info items we are loading for the current result set
-	 * renderer we are loading.
-	 */
-	private List<ColumnInfo> columnInfoList = new ArrayList<ColumnInfo>();
-
-	/**
 	 * This stores the currently loading Image renderer. This will be null if no image
 	 * renderer is being loaded.
 	 */
@@ -203,13 +196,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * appear in this map.
 	 */
 	private final Map<String, String> oldToNewDSNames;
-
-	/**
-	 * This is the UUID for the editorPanelModel to be set in the loading workspace.
-	 * This cannot be set for the workspace until the end of the loading as the workspace's
-	 * children will not be loaded at the start tag.
-	 */
-	private String currentEditorPanelModel;
 
 	/**
 	 * This is an {@link OlapQuery} that is currently being loaded from the file. This
@@ -414,16 +400,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 
         } else if (name.equals("project")) {
             createdObject = session.getWorkspace();
-            for (int i = 0; i < attributes.getLength(); i++) {
-                String aname = attributes.getQName(i);
-                String aval = attributes.getValue(i);
-
-                if (aname.equals("editorPanelModel")) {
-                    currentEditorPanelModel = aval;
-                } else {
-                    logger.warn("Unexpected attribute of <project>: " + aname + "=" + aval);
-                }
-            }
         } else if (name.equals("data-source")) {
         	String dsName = attributes.getValue("name");
         	checkMandatory("name", dsName);
@@ -1160,7 +1136,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
         } else if (name.equals("cell-set-renderer")) {
-            String uuid = attributes.getValue("uuid");
             String queryUUID = attributes.getValue("olap-query-uuid");
             OlapQuery newQuery = null;
             for (OlapQuery query : session.getWorkspace().getOlapQueries()) {
@@ -1389,13 +1364,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     	if (isCancelled()) return;
     	
     	if (name.equals("project")) {
-    	    SPObject initialView = session.getWorkspace();
-    		for (SPObject obj : session.getWorkspace().getChildren()) {
-    			if (obj.getUUID().equals(currentEditorPanelModel)) {
-    				initialView = obj;
-    				break;
-    			}
-    		}
     		//XXX uncomment the code below when we are confident that Wabit runs all
     		//of its queries and other intensive operations on a separate thread.
     		//See bug 2040.

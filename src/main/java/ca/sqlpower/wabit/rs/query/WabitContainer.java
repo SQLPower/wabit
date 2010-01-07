@@ -184,9 +184,10 @@ public abstract class WabitContainer<T extends WabitItem> extends AbstractWabitO
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
 	protected void addChildImpl(SPObject child, int index) {
 	    final WabitItem wabitItem = (WabitItem) child;
-	    children.add(index, (T) child);
+    	children.add(index, (T)child);
 	    child.setParent(this);
 	    fireChildAdded(child.getClass(), child, index);
 	    

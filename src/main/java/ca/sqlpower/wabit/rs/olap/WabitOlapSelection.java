@@ -22,7 +22,6 @@ package ca.sqlpower.wabit.rs.olap;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
@@ -35,9 +34,6 @@ import ca.sqlpower.wabit.WabitObject;
  * Exclusion.
  */
 public abstract class WabitOlapSelection extends AbstractWabitObject {
-
-	private static final Logger logger = Logger
-			.getLogger(WabitOlapSelection.class);
 
 	/**
 	 * The {@link Selection} this class wraps. Should not be leaked out of the

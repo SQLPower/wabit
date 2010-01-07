@@ -23,14 +23,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.SQLPowerUtils;
 
 public class WabitUtils {
-    
-    private static final Logger logger = Logger.getLogger(WabitUtils.class);
 
 	/**
 	 * This method returns a list of all of the ancestors of the given

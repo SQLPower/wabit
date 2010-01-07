@@ -115,7 +115,7 @@ public class WorkspaceSAXHandlerTest extends TestCase {
         replacementDS.setName("Replacement DS");
         WabitSessionContext context = new StubWabitSessionContext() {
             @Override
-            public DataSourceCollection getDataSources() {
+            public DataSourceCollection<SPDataSource> getDataSources() {
                 return plIni;
             }
         	

@@ -36,7 +36,6 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.swingui.WorkspacePanel;
 
 public abstract class CopyAction extends AbstractAction {
 

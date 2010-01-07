@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui;
 
 import junit.framework.TestCase;
-import ca.sqlpower.testutil.CountingPropertyChangeListener;
 
 public class WabitSwingSessionImplTest extends TestCase {
 	

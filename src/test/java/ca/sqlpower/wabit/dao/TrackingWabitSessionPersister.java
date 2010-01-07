@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.CountDownLatch;
 
-import org.apache.log4j.Logger;
-
 import ca.sqlpower.dao.PersistedSPOProperty;
 import ca.sqlpower.dao.PersistedSPObject;
 import ca.sqlpower.dao.RemovedSPObject;
@@ -40,8 +38,6 @@ import ca.sqlpower.wabit.WabitSession;
  * purpose of being used in tests.
  */
 public class TrackingWabitSessionPersister extends WabitSessionPersister {
-	
-	private static final Logger logger = Logger.getLogger(TrackingWabitSessionPersister.class);
 	
 	private CountDownLatch latch;
 	private final List<Object> persisterCalls = new ArrayList<Object>();

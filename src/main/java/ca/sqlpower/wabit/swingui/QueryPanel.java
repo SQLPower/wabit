@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.datatransfer.Transferable;
@@ -97,7 +96,6 @@ import ca.sqlpower.query.QueryImpl.OrderByArgument;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sql.SpecificDataSourceCollection;
-import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRoot;
@@ -219,11 +217,6 @@ public class QueryPanel implements WabitPanel {
 	 * give the users a more noticeable change when there is an update occurring.
 	 */
 	private static final Color REFRESH_GREY = new Color(0xeeeeee);
-
-	/**
-	 * The action for expanding and un-expanding the query and text panel quickly.
-	 */
-	private static final Object EXPAND_ACTION = "expandAction";
     
 	private static final Preferences prefs = Preferences.userNodeForPackage(QueryPanel.class);
 
@@ -711,7 +704,7 @@ public class QueryPanel implements WabitPanel {
                 	public void doStuff() throws Exception {
                 		if (startingDataSource != null) {
                 			//populate the database
-                            SQLDatabase db = context.getDatabase(startingDataSource);
+                            context.getDatabase(startingDataSource);
                 		}
                 	}
                 	
@@ -753,17 +746,16 @@ public class QueryPanel implements WabitPanel {
 					}
 					list.add((SQLObject) selectedNode);
 				}
-					
-				Object firstSelectedObject = dragTree.getSelectionPath().getLastPathComponent();
-				String name;
-				if (firstSelectedObject instanceof SQLObject) {
-					name = ((SQLObject) firstSelectedObject).getName();
-				} else {
-					name = firstSelectedObject.toString();
-				}
 				
 				Transferable dndTransferable = new SQLObjectSelection(list);
-				dge.getDragSource().startDrag(dge, null, dndTransferable, new DragSourceAdapter() {});
+				dge.getDragSource().startDrag(
+						dge, 
+						null, 
+						dndTransferable, 
+						new DragSourceAdapter() { 
+							// no op 
+						});
+					
 			}
 		});
 
