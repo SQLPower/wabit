@@ -29,6 +29,9 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.Monitorable;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
@@ -134,10 +137,33 @@ public class OpenWorkspaceXMLDAO implements Monitorable {
      *            {@link #UNKNOWN_STREAM_LENGTH}.
      */
 	public OpenWorkspaceXMLDAO(WabitSessionContext context, InputStream in, long bytesInStream) {
+		this(context, in, bytesInStream, null);
+	}
+
+	/**
+	 * Creates a new XML DAO for Wabit workspaces. This must be constructed on
+	 * the foreground thread.
+	 * 
+	 * @param context
+	 *            The session context to create new sessions in.
+	 * @param in
+	 *            The input stream of the workspace's XML representation.
+	 * @param bytesInStream
+	 *            The length of the stream in question. If not known, specify
+	 *            {@link #UNKNOWN_STREAM_LENGTH}.
+	 * @param dsCollection
+	 *            If the DAO is being used to import objects into a server
+	 *            session the session's data source collection must be supplied
+	 *            to know what connections are available. If the session is being
+	 *            loaded locally for either import or from scratch this may be
+	 *            null in which case the local data source collection will be used.
+	 */
+	public OpenWorkspaceXMLDAO(WabitSessionContext context, InputStream in, 
+			long bytesInStream, DataSourceCollection<SPDataSource> dsCollection) {
 		this.context = context;
         this.bytesInStream = bytesInStream;
 		this.in = new CountingInputStream(in);
-		saxHandler = new WorkspaceSAXHandler(context);
+		saxHandler = new WorkspaceSAXHandler(context, dsCollection);
 	}
 
     /**

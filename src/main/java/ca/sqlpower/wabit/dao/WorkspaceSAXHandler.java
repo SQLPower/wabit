@@ -54,7 +54,6 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
-import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
@@ -64,6 +63,7 @@ import ca.sqlpower.query.SQLObjectItem;
 import ca.sqlpower.query.StringItem;
 import ca.sqlpower.query.TableContainer;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
+import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -247,6 +247,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private String olapName;
 
 	private String olapID;
+
+	/**
+	 * The data sources in this collection will be used to verify if
+	 * {@link WabitDataSource}s being loaded can find valid JDBC or OLAP data
+	 * sources. If the data sources do not exist the user will be prompted.
+	 */
+	private final DataSourceCollection<SPDataSource> dsCollection;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of
@@ -273,19 +280,21 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 *            The context that will create sessions for loading and creates
 	 *            user prompters if input is required.
 	 * @param serverInfo
-	 *            Describes a connection to a server. If this is not null, a
-	 *            server session will be created that is connected to a server.
+	 *            The collection of data sources available to the objects being
+	 *            loaded into Wabit. If this is null the local collection will
+	 *            be used.
 	 */
-	public WorkspaceSAXHandler(WabitSessionContext context, SPServerInfo serverInfo) {
+	public WorkspaceSAXHandler(WabitSessionContext context, DataSourceCollection<SPDataSource> dsCollection) {
 	    this.context = context;
         this.promptFactory = context;
 		oldToNewDSNames = new HashMap<String, String>();
 		setCancelled(false);
-	    if (serverInfo == null) {
-            session = context.createSession();
-        } else {
-            session = context.createServerSession(serverInfo);
-        }
+		session = context.createSession();
+		if (dsCollection != null) {
+			this.dsCollection = dsCollection;
+		} else {
+			this.dsCollection = context.getDataSources();
+		}
 	}
 
 	@Override
@@ -406,7 +415,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	
         	progressMessage = session.getWorkspace().getName() + ": loading data source " + dsName;
         	
-        	SPDataSource ds = context.getDataSources().getDataSource(dsName);
+        	SPDataSource ds = dsCollection.getDataSource(dsName);
         	if (ds == null) {
         		List<Class<? extends SPDataSource>> dsTypes = new ArrayList<Class<? extends SPDataSource>>();
         		dsTypes.add(JDBCDataSource.class);
@@ -416,7 +425,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		UserPrompter prompter = promptFactory.createDatabaseUserPrompter(
         				"The data source \"" + dsName + "\" does not exist. Please select a replacement.", 
         				dsTypes, UserPromptOptions.OK_NEW_NOTOK_CANCEL,
-        				UserPromptResponse.NOT_OK, null, context.getDataSources(), "Select Data Source", 
+        				UserPromptResponse.NOT_OK, null, dsCollection, "Select Data Source", 
         				"New...", "Skip Data Source", "Cancel Load");
         		
         		UserPromptResponse response = prompter.promptUser();

@@ -1207,7 +1207,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 						throw new RuntimeException(e);
 					}
 					OpenWorkspaceXMLDAO open =
-					    new OpenWorkspaceXMLDAO(delegateContext, input, file.length());
+					    new OpenWorkspaceXMLDAO(WabitSwingSessionContextImpl.this, input, 
+					    		file.length(), getActiveSession().getDataSources());
 					open.importWorkspaces(getActiveSession());
 					
 				}
@@ -1292,7 +1293,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         }
         byte[] outByteArray = byteOut.toByteArray();
         ByteArrayInputStream input = new ByteArrayInputStream(outByteArray);
-        OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(delegateContext, input, outByteArray.length);
+        OpenWorkspaceXMLDAO open = new OpenWorkspaceXMLDAO(this, input, 
+        		outByteArray.length, getActiveSession().getDataSources());
         open.importWorkspaces(getActiveSession());
         return true;
     }

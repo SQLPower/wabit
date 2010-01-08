@@ -22,6 +22,8 @@ package ca.sqlpower.wabit.swingui;
 import java.io.File;
 import java.io.IOException;
 
+import javax.swing.SwingUtilities;
+
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -77,7 +79,7 @@ public class WabitSwingSessionContextImplTest extends TestCase {
             new TestingWabitSessionContextImpl(true, false, plIni, "", false);
         delegateContext.setPlDotIniPath("src/test/java/pl.regression.ini");
         
-        WabitSwingSessionContextImpl context = 
+        final WabitSwingSessionContextImpl context = 
             new WabitSwingSessionContextImpl(delegateContext, true, 
                     new DefaultUserPrompterFactory());
         
@@ -108,7 +110,7 @@ public class WabitSwingSessionContextImplTest extends TestCase {
 
         WabitSession stubWabitSession = 
             new StubWabitSession(new StubWabitSessionContext());
-        WabitWorkspace dummyWorkspace = new WabitWorkspace();
+        final WabitWorkspace dummyWorkspace = new WabitWorkspace();
         dummyWorkspace.setSession(stubWabitSession);
         WabitDataSource ds = new WabitDataSource(jdbcDS);
         dummyWorkspace.addDataSource(ds);
@@ -128,7 +130,12 @@ public class WabitSwingSessionContextImplTest extends TestCase {
         report.setName("report");
         dummyWorkspace.addReport(report);
         
-        context.importIntoActiveSession(dummyWorkspace.getChildren(WabitObject.class));
+        Runnable r = new Runnable() {
+			public void run() {
+				context.importIntoActiveSession(dummyWorkspace.getChildren(WabitObject.class));
+			}
+		};
+		SwingUtilities.invokeAndWait(r);
         assertTrue(inactiveSession.getWorkspace().getChildren().isEmpty());
         WabitWorkspace activeWorkspace = session.getWorkspace();
         assertEquals(1, activeWorkspace.getQueries().size());
