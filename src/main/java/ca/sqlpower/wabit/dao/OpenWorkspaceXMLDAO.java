@@ -29,7 +29,6 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.Monitorable;
