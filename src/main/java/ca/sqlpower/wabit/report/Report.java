@@ -56,7 +56,7 @@ public class Report extends Layout {
     	setName(layout.getName());
     	this.variables.setNamespace(this.getUUID());
     	for (String key : layout.getVariableResolver().keySet(null)) {
-    		this.variables.store(this.getUUID().concat(SPVariableResolver.NAMESPACE_DELIMITER).concat(SPVariableHelper.stripNamespace(key)), layout.getVariableResolver().resolve(key));
+    		this.variables.store(this.getUUID().concat(SPVariableResolver.NAMESPACE_DELIMITER).concat(SPVariableHelper.getKey(key)), layout.getVariableResolver().resolve(key));
     	}
     	setZoomLevel(layout.getZoomLevel());
 	}
