@@ -23,9 +23,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.JTextComponent;
 
 import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.swingui.DataEntryPanelBuilder;
+import ca.sqlpower.swingui.object.VariableInsertionCallback;
+import ca.sqlpower.swingui.object.VariablesPanel;
 
 /**
  * A button that shows a popup menu of variables when it is clicked.
@@ -34,14 +39,13 @@ import ca.sqlpower.object.SPVariableHelper;
  */
 public class InsertVariableButton extends JButton {
 
-    private static final char DOWN_ARROW = '\u25be';
     private final SPVariableHelper variableHelper;
     private final JTextComponent insertInto;
 	private final String variableNamespace;
 	private final InsertVariableButton reference;
 
     public InsertVariableButton(SPVariableHelper variableHelper, JTextComponent insertInto, String variableNamespace) {
-        super("Variable " + DOWN_ARROW);
+        super("Variables");
         this.variableHelper = variableHelper;
         this.insertInto = insertInto;
 		this.variableNamespace = variableNamespace;
@@ -51,7 +55,30 @@ public class InsertVariableButton extends JButton {
     
     private final ActionListener clickHandler = new ActionListener() {
         public void actionPerformed(ActionEvent e) {
-            variableHelper.promptAndInsertVariable(variableNamespace, reference, insertInto);
+        	VariablesPanel vp = 
+        		new VariablesPanel(
+    				variableHelper,
+    				variableNamespace,
+    				new VariableInsertionCallback() {
+						public void insert(String variable) {
+							try {
+								insertInto.getDocument().insertString(
+									insertInto.getCaretPosition(), 
+									variable, 
+									null);
+							} catch (BadLocationException e) {
+								// no op
+							}
+						}
+					});
+        	
+			JDialog dialog = 
+				DataEntryPanelBuilder.createDataEntryPanelDialog(
+					vp,
+			        reference, 
+			        "Insert a variable", 
+			        "Insert");
+			dialog.setVisible(true);
         }
     };
 }
