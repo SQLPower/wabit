@@ -69,6 +69,10 @@ import org.olap4j.query.Selection.Operator;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.TransactionEvent;
@@ -111,7 +115,7 @@ import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
  * been added.
  */
 @ThreadSafe
-public class OlapQuery extends AbstractWabitObject implements ResultSetProducer {
+public class OlapQuery extends AbstractWabitObject implements ResultSetProducer, SPVariableResolverProvider {
     
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
     
@@ -119,6 +123,54 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * This is the query name given to all Olap4j queries in this class.
      */
     private static final String OLAP4J_QUERY_NAME = "GUI Query";
+    
+    /**
+     * This object will be passed to people who are interested in using
+     * this olap query's variables.
+     */
+    private OlapVariableResolver variableProvider = null;
+    
+    private final class OlapVariableResolver extends SPSimpleVariableResolver {
+    	
+    	private boolean updateNeeded = true;
+    	
+    	public OlapVariableResolver(String namespace) {
+			super(namespace);
+			this.setSnobbyResolver(false);
+		}
+    	public void setUpdateNeeded(boolean updateNeeded) {
+    		this.updateNeeded = updateNeeded;
+    	}
+    	protected void beforeLookups(String key) {
+    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
+    				&& this.updateNeeded) {
+    			this.updateVars(true);
+    		}
+    	}
+    	protected void beforeKeyLookup(String namespace) {
+    		if (this.updateNeeded) {
+    			this.updateVars(false);
+    		}
+    	}
+		public void updateVars(boolean completeUpdate) {
+
+			try {
+				OlapResultSet rs = new OlapResultSet();
+		        rs.populate( executeOlapQuery() );
+		        rs.first();
+		        variables.clear();
+		        do {
+					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+						this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+					}
+				} while (rs.next());
+			} catch (Exception e) {
+				logger.error("Failed to resolve available variables from a query.", e);
+			} finally {
+				this.updateNeeded = false;
+			}
+		}
+    }
     
     /**
      * This is the member to filter by, since mondrian does not support compound
@@ -294,6 +346,20 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
      * persistence layer.
      */
     public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName) {
+    	this(uuid, olapMapping, name, queryName, catalogName, schemaName, cubeName, true);
+    }
+    
+    /**
+     * Creates a new, empty query that will use the given persistent object ID
+     * when it's saved. This constructor is only of particular use to the
+     * persistence layer.
+     * 
+     * <p>This constructor exposes a supplemental parameter that tells the query if it should
+     * provide the workspace with variables. Olap queries that are wrapped by a report should not 
+     * act as variable providers.
+     * 
+     */
+    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName, boolean actsAsVariableProvider) {
         super(uuid);
         this.olapMapping = olapMapping;
         this.setName(name);
@@ -301,6 +367,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 		this.catalogName = catalogName;
 		this.schemaName = schemaName;
 		this.cubeName = cubeName;
+		if (actsAsVariableProvider) {
+			this.variableProvider = new OlapVariableResolver(this.uuid);
+		}
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
@@ -458,6 +527,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
                 setRunning(false);
             }
         } finally {
+        	if (this.variableProvider!=null) {
+        		this.variableProvider.setUpdateNeeded(true);
+            }
             executionSemaphore.release();
         }
     }
@@ -804,6 +876,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     	childListener.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Updating OLAP Attributes"));
     	for (WabitOlapAxis axis :  axes) {
     		axis.updateChildren();
+    	}
+    	if (this.variableProvider!=null) {
+    		this.variableProvider.setUpdateNeeded(true);
     	}
     	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
     }
@@ -1379,7 +1454,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	    fireChildAdded(child.getClass(), child, index);
 	}
 	
-	public String getQueryName() {
+	public synchronized String getQueryName() {
 		if (isInitDone()) {
 			return mdxQuery.getName();
 		} else {
@@ -1414,7 +1489,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
 	// -------------- WabitBackgroundWorker interface --------------
 	
 	private volatile boolean backgroundWorkerRunning;
-	
+
     public void cancel() {
         // TODO
         throw new UnsupportedOperationException("Not yet implemented");
@@ -1484,5 +1559,9 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer 
     	types.add(WabitOlapAxis.class);
     	return types;
     }
+
+	public SPVariableResolver getVariableResolver() {
+		return this.variableProvider;
+	}
     
 }

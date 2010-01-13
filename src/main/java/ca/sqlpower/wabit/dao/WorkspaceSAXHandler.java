@@ -254,6 +254,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	 * sources. If the data sources do not exist the user will be prompted.
 	 */
 	private final DataSourceCollection<SPDataSource> dsCollection;
+
+	private boolean isInLayout = false;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of
@@ -724,7 +726,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             cubeName = attributes.getValue("cube-name");
             createdObject = null;
         } else if (name.equals("olap4j-query")) {
-            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), attributes.getValue("name"), catalogName, schemaName, cubeName);
+            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), attributes.getValue("name"), catalogName, schemaName, cubeName, !isInLayout);
             olapQuery.setName(olapName);
             olapQuery.setOlapDataSource(olapDataSource);
             if (cellSetRenderer == null) {
@@ -857,6 +859,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             createdObject = null;
 
         } else if (name.equals("layout")) {
+        	this.isInLayout = true;
     		String layoutName = attributes.getValue("name");
     		checkMandatory("name", layoutName);
     		if (attributes.getValue("template") == null || !Boolean.parseBoolean(attributes.getValue("template"))) {
@@ -1379,6 +1382,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     		session.getWorkspace().setEditorPanelModel(session.getWorkspace());
 //    		session.getWorkspace().setEditorPanelModel(initialView);
     		
+    	} else if (name.equals("layout")) {
+    		isInLayout  = false;
     	} else if (name.equals("table")) {
     		TableContainer table = new TableContainer(container.getUUID(), cache.getDatabase(),
     		        container.getName(), ((TableContainer) container).getSchema(), 
