@@ -285,7 +285,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         } else if (renderer instanceof ChartRenderer) {
             swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
         } else if (renderer instanceof Label) {
-            swingRenderer = new SwingLabel((Label) renderer);
+            swingRenderer = new SwingLabel((Label) renderer, parentPanel);
         } else if (renderer == null) {
             swingRenderer = null;
         } else {

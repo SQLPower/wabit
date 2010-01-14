@@ -342,7 +342,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         private MaximizeEditorAction() {
             putValue(ACCELERATOR_KEY,
-                    KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, InputEvent.CTRL_DOWN_MASK));
+                    KeyStroke.getKeyStroke(KeyEvent.VK_PERIOD, InputEvent.CTRL_DOWN_MASK));
             updateName();
         }
 

@@ -23,9 +23,12 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
+import javax.swing.Action;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -36,6 +39,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
+import javax.swing.text.BadLocationException;
 
 import org.apache.log4j.Logger;
 
@@ -43,12 +48,13 @@ import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
+import ca.sqlpower.swingui.object.InsertVariableAction;
+import ca.sqlpower.swingui.object.VariableInsertionCallback;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.swingui.Icons;
-import ca.sqlpower.wabit.swingui.InsertVariableButton;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -61,19 +67,52 @@ public class SwingLabel implements SwingContentRenderer {
     
     private final Label renderer;
 
-	private final SPVariableHelper variableHelper;
+	private final SPVariableHelper variablesHelper;
 
-    public SwingLabel(Label renderer) {
+	private final LayoutPanel parentPanel;
+
+    public SwingLabel(Label renderer, LayoutPanel parentPanel) {
         this.renderer = renderer;
-        this.variableHelper = new SPVariableHelper(renderer);
-        this.variableHelper.setWalkDown(true);
+		this.parentPanel = parentPanel;
+        this.variablesHelper = new SPVariableHelper(renderer);
+        this.variablesHelper.setWalkDown(true);
     }
 
     public DataEntryPanel getPropertiesPanel() {
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
         final JTextArea textArea = new JTextArea(renderer.getText());
-        JButton variableButton = new InsertVariableButton(this.variableHelper, textArea, null);
+        
+        Action insertVariableAction = new InsertVariableAction(
+        		"Variables",
+				this.variablesHelper, 
+				null, 
+				new VariableInsertionCallback() {
+					public void insert(String variable) {
+						try {
+							textArea.getDocument().insertString(
+									textArea.getCaretPosition(), 
+									variable, 
+									null);
+						} catch (BadLocationException e) {
+							// no op
+						}
+					}
+				}, 
+				parentPanel.getPanel());
+        
+        JButton variableButton = new JButton("Variables");
+        variableButton.setAction(insertVariableAction);
+        
+        // Maps CTRL+SPACE to insert variable
+        textArea.getInputMap().put(
+				KeyStroke.getKeyStroke(
+						KeyEvent.VK_SPACE,
+						InputEvent.CTRL_MASK),
+						"insertVariable");
+        textArea.getActionMap().put(
+				"insertVariable", 
+				insertVariableAction);
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(Icons.LEFT_ALIGN_ICON, 
