@@ -49,7 +49,7 @@ import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.swingui.object.InsertVariableAction;
-import ca.sqlpower.swingui.object.VariableInsertionCallback;
+import ca.sqlpower.swingui.object.VariableInserter;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.VerticalAlignment;
@@ -69,11 +69,8 @@ public class SwingLabel implements SwingContentRenderer {
 
 	private final SPVariableHelper variablesHelper;
 
-	private final LayoutPanel parentPanel;
-
-    public SwingLabel(Label renderer, LayoutPanel parentPanel) {
+    public SwingLabel(Label renderer) {
         this.renderer = renderer;
-		this.parentPanel = parentPanel;
         this.variablesHelper = new SPVariableHelper(renderer);
         this.variablesHelper.setWalkDown(true);
     }
@@ -87,7 +84,7 @@ public class SwingLabel implements SwingContentRenderer {
         		"Variables",
 				this.variablesHelper, 
 				null, 
-				new VariableInsertionCallback() {
+				new VariableInserter() {
 					public void insert(String variable) {
 						try {
 							textArea.getDocument().insertString(
@@ -95,11 +92,11 @@ public class SwingLabel implements SwingContentRenderer {
 									variable, 
 									null);
 						} catch (BadLocationException e) {
-							// no op
+							throw new IllegalStateException(e);
 						}
 					}
 				}, 
-				parentPanel.getPanel());
+				textArea);
         
         JButton variableButton = new JButton("Variables");
         variableButton.setAction(insertVariableAction);
