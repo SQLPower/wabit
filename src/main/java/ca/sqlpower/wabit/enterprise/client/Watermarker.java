@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.enterprise.client;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -108,8 +109,10 @@ public class Watermarker {
         int textWidth = fm.stringWidth(watermarkMessage);
         int scaleWidth = (int) size.getWidth() - 50;
         Font font = fm.getFont();
-        watermarkMessage = "<html><div style='font-family: " + font.getFamily() + "; font-size: " + (font.getSize()*((double)scaleWidth)/textWidth) + "pt; color: FF6600;'>" + watermarkMessage;
         
+        font = font.deriveFont((float) (font.getSize()*((double)scaleWidth)/textWidth));
+        label.setFont(font);
+        label.setForeground(Color.decode("0xFF6600"));
         label.setText(watermarkMessage);
         label.setBounds(new java.awt.Rectangle(0, 20, (int) size.getWidth(), fm.getHeight() + 20));
         label.setHorizontalAlignment(SwingConstants.HORIZONTAL);
