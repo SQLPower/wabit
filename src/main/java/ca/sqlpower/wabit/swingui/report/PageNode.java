@@ -78,8 +78,8 @@ public class PageNode extends PNode implements WabitNode {
     }
     
     @Override
-    protected void paint(PPaintContext pc) {
-    	super.paint(pc);
+    protected void paintAfterChildren(PPaintContext pc) {
+    	super.paintAfterChildren(pc);
         Watermarker watermarker = 
         	new Watermarker(
         			WabitUtils.getWorkspace(page).getSession());
