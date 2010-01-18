@@ -46,6 +46,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
@@ -277,6 +278,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	};
 	
 	/**
+	 * This listener will be attached to each {@link ColumnInfo} object in the renderer
+	 * and will request a repaint when any properties of the column change. This will 
+	 * be removed from the {@link ColumnInfo} when the column is removed.
+	 */
+	private final SPListener columnInfoChangeListener = new AbstractSPListener() {
+		protected void propertyChangeImpl(PropertyChangeEvent evt) {
+			if (getParent() != null) {
+				getParent().repaint();
+			}
+		};
+	};
+	
+	/**
 	 * This listener will fire a change event when the query changes to signal that
 	 * the result set renderer needs to be repainted.
 	 */
@@ -291,9 +305,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 		}
 	};
 
-	// TODO eventually, this will be the thing that triggers a repaint of this
-	// renderer. When we make that change, we'll only depend on ResultSetProducer
-	// and not all of QueryCache.
 	private final class ResultSetHandler implements ResultSetListener {
 	    private CachedRowSet currentRowSet = null;
 	    
@@ -302,6 +313,17 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             currentRowSet = evt.getResults().getFirstNonNullResultSet();
             if (currentRowSet != null) {
                 currentRowSet.addRowSetListener(rowSetChangeListener);
+            }
+            paintingRS = currentRowSet;
+            if (paintingRS != null) {
+            	try {
+            		initColumns(paintingRS);
+            	} catch (Exception ex) {
+            		executeException = ex;
+            	}
+            }
+            if (getParent() != null) {
+            	getParent().repaint();
             }
         }
         
@@ -347,8 +369,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	this.columnInfo = new ArrayList<ColumnInfo>();
     	for (ColumnInfo column : resultSetRenderer.columnInfo) {
     		ColumnInfo newColumnInfo = new ColumnInfo(column);
-    		newColumnInfo.setParent(this);
-			columnInfo.add(newColumnInfo);
+    		addChild(newColumnInfo, columnInfo.size());
     	}
     	
     	query.addSPListener(queryChangeListener);
@@ -379,8 +400,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
 
 	/**
-	 * This will execute the query contained in this result set and set the
-	 * result set to be a new result set.
+	 * This will execute the query contained in this result set and the event
+	 * fired from the query will set the result set to be a new result set.
 	 * <p>
 	 * NOTE: This method should not contain any method calls that could fire
 	 * events on the result set renderer. Firing a property change event can
@@ -393,27 +414,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
-        ResultSet executedRs = null;
-        paintingRS = null;
-        executeException = null;
-		try {
-		    //TODO This method should just call query.execute() and the ResultSetHandler
-		    //should set the result set in this class to the query's results. The 
-		    //render report content method should also give a message notifying the user
-		    //that the query is being refreshed.
-            executedRs = query.execute().get().getFirstNonNullResultSet();
-            if (executedRs == null) {
-                return;
-            }
-            initColumns(executedRs);
-            if (executedRs instanceof CachedRowSet) {
-                paintingRS = ((CachedRowSet) executedRs).createShared();
-            } else {
-                paintingRS = new CachedRowSet();
-                paintingRS.populate(executedRs);
-            }
-        } catch (Exception ex) {
-            executeException = ex;
+        if (paintingRS == null) {
+        	paintingRS = null;
+        	executeException = null;
+        	try {
+        		query.execute();
+        	} catch (Exception ex) {
+        		executeException = ex;
+        	}
         }
         
         if (logger.isDebugEnabled()) {
@@ -463,8 +471,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * @throws SQLException
 	 *             If the resultset metadata methods fail.
 	 */
-    public void initColumns(ResultSet rs) throws SQLException {
+    public void initColumns(ResultSet rs) throws SQLException, ObjectDependentException {
     	ResultSetMetaData rsmd = rs.getMetaData();
+    	
+    	//id columns by items and alias in cases where the query is text based.
     	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
     	for (ColumnInfo info : columnInfo) {
     		logger.debug("Loaded key " + info.getColumnInfoItem());
@@ -474,6 +484,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	for (ColumnInfo info : columnInfo) {
     		colAliasToInfoMap.put(info.getColumnAlias(), info);
     	}
+    	
+    	//sort column info into the new desired positions.
     	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         	logger.debug(rsmd.getColumnClassName(col));
@@ -505,28 +517,31 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             newColumnInfo.add(ci);
         }
         
+        //rearrange columns to match result set.
         logger.debug("Initializing columns: now have " + newColumnInfo.size() + " columns, previously had " + columnInfo.size());
-        for (int i = Math.min(newColumnInfo.size(), columnInfo.size()) - 1; i >= 0; i--) {
-        	if (newColumnInfo.get(i) != columnInfo.get(i)) {
-        		ColumnInfo removedColumn = columnInfo.remove(i);
-        		fireChildRemoved(ColumnInfo.class, removedColumn, i);
-        		columnInfo.add(i, newColumnInfo.get(i));
-        		fireChildAdded(ColumnInfo.class, newColumnInfo.get(i), i);
+        
+        //Be careful, iterating forward while removing elements from columnInfo
+        //can cause us to run off the end before we finish iterating through 
+        //newColumnInfo
+        for (int i = 0 ; i < newColumnInfo.size(); i++) {
+        	if (i >= columnInfo.size()) {
+        		logger.debug("Adding column info to position " + i);
+        		addChild(newColumnInfo.get(i), i);
+        	} else if (newColumnInfo.get(i) != columnInfo.get(i)) {
+        		ColumnInfo oldInfo = columnInfo.get(i);
+        		ColumnInfo newInfo = newColumnInfo.get(i);
+        		removeChild(oldInfo);
+        		if (columnInfo.contains(newInfo)) {
+        			removeChild(newInfo);
+        		}
+        		addChild(newInfo, i);
         	}
         }
         
-        if (newColumnInfo.size() > columnInfo.size()) {
-        	logger.debug("New columns have been added. There should be " + (newColumnInfo.size() - columnInfo.size()) + " columns added.");
-        	for (int i = columnInfo.size(); i < newColumnInfo.size(); i++) {
-        		columnInfo.add(newColumnInfo.get(i));
-        		logger.debug("Adding column info to position " + i);
-        		fireChildAdded(ColumnInfo.class, columnInfo.get(i), i);
-        	}
-        } else if (newColumnInfo.size() < columnInfo.size()) {
+        if (newColumnInfo.size() < columnInfo.size()) {
         	logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
         	for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
-        		ColumnInfo removedCI = columnInfo.remove(i);
-        		fireChildRemoved(ColumnInfo.class, removedCI, i);
+        		removeChild(columnInfo.get(i));
         	}
         }
     }
@@ -675,8 +690,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         if (isLastPage) {
             if (printing) {
                 printingResultSet = null;
-            } else {
-                this.paintingRS = null;
             }
         }
         return !isLastPage;
@@ -689,7 +702,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     public void clearResultSetLayout() {
         pageCells.set(null);
         printingResultSet = null;
-        paintingRS = null;
     }
 
     /**
@@ -962,7 +974,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 		try {
 			// Force the query to get a new result set
 			query.executeStatement();
-			executeQuery();
 		} catch (SQLException ex) {
 			executeException = ex;
 		}
@@ -988,6 +999,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         if (columnInfo.contains(child)) {
             int index = columnInfo.indexOf(child);
             columnInfo.remove(child);
+            child.removeSPListener(columnInfoChangeListener);
             fireChildRemoved(child.getClass(), child, index);
             return true;
         }
@@ -1002,6 +1014,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     protected void addChildImpl(SPObject child, int index) {
         columnInfo.add(index, (ColumnInfo) child);
         child.setParent(this);
+        child.addSPListener(columnInfoChangeListener);
         fireChildAdded(child.getClass(), child, index);
     }
     
