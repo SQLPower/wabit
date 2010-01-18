@@ -72,7 +72,6 @@ public class SwingLabel implements SwingContentRenderer {
     public SwingLabel(Label renderer) {
         this.renderer = renderer;
         this.variablesHelper = new SPVariableHelper(renderer);
-        this.variablesHelper.setWalkDown(true);
     }
 
     public DataEntryPanel getPropertiesPanel() {

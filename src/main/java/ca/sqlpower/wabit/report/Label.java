@@ -76,7 +76,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         setName("Label");
         setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
         this.variableHelper = new SPVariableHelper(this);
-        this.variableHelper.setWalkDown(true);
     }
     
     /**
@@ -90,7 +89,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	this.vAlignment = label.getVerticalAlignment();
     	setName(label.getName());
     	this.variableHelper = new SPVariableHelper(this);
-    	this.variableHelper.setWalkDown(true);
     }
     
     public Label() {

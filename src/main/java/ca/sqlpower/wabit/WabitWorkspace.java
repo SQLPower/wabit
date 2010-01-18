@@ -154,8 +154,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     private final SPSimpleVariableResolver variableResolver;
     
     private class WorkspaceVariableResolver extends SPSimpleVariableResolver {
-		public WorkspaceVariableResolver(String namespace) {
-			super(namespace);
+		public WorkspaceVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
+			super(owner, namespace, userFriendlyName);
 			// By default, add system variables.
 			for (Entry<Object,Object> entry : System.getProperties().entrySet()) {
 				if (entry.getKey() instanceof String) {
@@ -212,8 +212,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
      */
     public WabitWorkspace() {
         listeners = new ArrayList<DatabaseListChangeListener>();
+        this.variableResolver = new WorkspaceVariableResolver(this, this.getUUID(), "Workspace - " + this.getName());
 		setName(DEFAULT_NAME);
-		this.variableResolver = new WorkspaceVariableResolver(null);
     }
     
     public List<SPObject> getChildren() {
@@ -1061,5 +1061,14 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     public SPVariableResolver getVariableResolver() {
     	return this.variableResolver;
     }
-	
+    
+    public void setUUID(String uuid) {
+    	super.setUUID(uuid);
+    	this.variableResolver.setNamespace(uuid);
+    }
+
+    public void setName(String name) {
+    	super.setName(name);
+    	this.variableResolver.setUserFriendlyName("Workspace - " + this.getName());
+    }
 }

@@ -134,9 +134,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     	
     	private boolean updateNeeded = true;
     	
-    	public OlapVariableResolver(String namespace) {
-			super(namespace);
-			this.setSnobbyResolver(false);
+    	public OlapVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
+			super(owner, namespace, userFriendlyName);
 		}
     	public void setUpdateNeeded(boolean updateNeeded) {
     		this.updateNeeded = updateNeeded;
@@ -332,6 +331,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 		}
     	
     };
+
+	private final boolean actsAsVariableProvider;
     
     /**
      * Creates a new, empty query with no set persistent object ID.
@@ -362,14 +363,12 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName, boolean actsAsVariableProvider) {
         super(uuid);
         this.olapMapping = olapMapping;
+		this.actsAsVariableProvider = actsAsVariableProvider;
         this.setName(name);
 		this.queryName = queryName;
 		this.catalogName = catalogName;
 		this.schemaName = schemaName;
 		this.cubeName = cubeName;
-		if (actsAsVariableProvider) {
-			this.variableProvider = new OlapVariableResolver(this.uuid);
-		}
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
@@ -801,6 +800,14 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     @Override
     public synchronized String toString() {
         return getName();
+    }
+    
+    @Override
+    public void setName(String name) {
+    	super.setName(name);
+    	if (this.variableProvider != null) {
+    		this.variableProvider.setUserFriendlyName("OLAP Query - " + name);
+    	}
     }
 
     public List<WabitObject> getDependencies() {
@@ -1562,6 +1569,15 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 
 	public SPVariableResolver getVariableResolver() {
 		return this.variableProvider;
+	}
+	
+	@Override
+	public void setParent(SPObject parent) {
+		super.setParent(parent);
+		// Initialize the variables provider once this object is hooked up to the tree only.
+		if (actsAsVariableProvider) {
+			this.variableProvider = new OlapVariableResolver(this, this.uuid, "OLAP Query - " + this.getName());
+		}
 	}
     
 }

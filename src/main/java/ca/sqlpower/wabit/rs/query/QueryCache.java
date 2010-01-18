@@ -230,13 +230,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * This is a variable resolver to allow this query to 
      * expose it's columns as variables to other objects.
      */
-    private final QueryVariableResolver variableProvider;
+    private QueryVariableResolver variableProvider = null;
     
     /**
      * This helps the query to resolve variable that
      * come from other objects.
      */
-    private final SPVariableHelper variableResolver;
+    private SPVariableHelper variableResolver = null;
     
     /**
      * Extends {@link SPSimpleVariableResolver} to make sure that we
@@ -244,9 +244,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
     	private boolean updateNeeded = true;
-    	public QueryVariableResolver(String namespace) {
-			super(namespace);
-			this.setSnobbyResolver(false);
+    	public QueryVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
+			super(owner, namespace, userFriendlyName);
 		}
     	public void setUpdateNeeded(boolean updateNeeded) {
     		this.updateNeeded = updateNeeded;
@@ -345,14 +344,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     public QueryCache(QueryCache q, boolean connectListeners) {
     	
-    	// Create a variable context.
-        this.variableProvider = new QueryVariableResolver(this.uuid);
-        
-        // Create a variable resolver and bind it to this node
-        this.variableResolver = new SPVariableHelper(this);
-        this.variableResolver.setWalkDown(true);
-        
-        this.query = new QueryImpl(q.query, connectListeners);
+    	this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());
         
@@ -415,13 +407,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public QueryCache(SQLDatabaseMapping dbMapping, boolean prepopulateConstants,
     		WabitConstantsContainer newConstantsContainer, JDBCDataSource dataSource) {
     	
-    	// Create a variable context.
-        this.variableProvider = new QueryVariableResolver(this.uuid);
-
-        // Create a variable resolver and bind it to this node
-        this.variableResolver = new SPVariableHelper(this);
-        this.variableResolver.setWalkDown(true);
-        
     	if (newConstantsContainer != null) {
     		query = new QueryImpl(dbMapping, prepopulateConstants, 
     				newConstantsContainer.getDelegate(), dataSource);
@@ -950,10 +935,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     public void setName(String string) {
         query.setName(string);
+        if (this.variableProvider != null) {
+        	this.variableProvider.setUserFriendlyName("Relational Query - " + string);
+        }
     }
     
     public String getName() {
-        return query.getName();
+        return query != null ? query.getName() : null;
     }
     
     public void setDBMapping(SQLDatabaseMapping dbMapping) {
@@ -1390,5 +1378,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 
     public SPVariableResolver getVariableResolver() {
     	return this.variableProvider;
+    }
+    
+    @Override
+    public void setParent(SPObject parent) {
+    	super.setParent(parent);
+    	
+    	// Create a variable context.
+        this.variableProvider = new QueryVariableResolver(this, this.uuid, "Relational Query - " + this.getName());
+        
+        // Create a variable resolver and bind it to this node
+        this.variableResolver = new SPVariableHelper(this);
     }
 }

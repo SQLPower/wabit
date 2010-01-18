@@ -61,8 +61,6 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         pageFormat.setOrientation(PageFormat.LANDSCAPE);
         page = new Page("Default Page", pageFormat);
         page.setParent(this);
-        this.variables = new SPSimpleVariableResolver(this.uuid);
-        this.variables.setSnobbyResolver(false);
 	}
 	
 	public Layout(Page page) {
@@ -73,12 +71,28 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 		super(uuid);
 		this.page = page;
 		page.setParent(this);
-		this.variables = new SPSimpleVariableResolver(this.uuid);
+	}
+	
+	@Override
+	public void setParent(SPObject parent) {
+		super.setParent(parent);
+		this.variables = new SPSimpleVariableResolver(this, this.uuid, getNameForVariables(this.getName()));
+		this.updateBuiltinVariables();
 	}
 	
 	public void setUUID(String uuid) {
 		super.setUUID(uuid);
-		this.variables.setNamespace(uuid);
+		if (this.variables != null) {
+			this.variables.setNamespace(uuid);
+		}
+	}
+	
+	@Override
+	public void setName(String name) {
+		super.setName(name);
+		if (this.variables != null) {
+			this.variables.setUserFriendlyName(getNameForVariables(name));
+		}
 	}
 	
 	/**
@@ -102,7 +116,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
      */
     private int zoomLevel;
     
-    protected final SPSimpleVariableResolver variables;
+    protected SPSimpleVariableResolver variables;
     
     /**
      * This will define if the layout is currently printing, which is also done by
@@ -112,13 +126,15 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     private AtomicBoolean currentlyPrinting = new AtomicBoolean(false);
 
     protected void updateBuiltinVariables() {
-    	// Make sure we operate under the right namespace
-    	this.variables.setNamespace(this.getUUID());
-        this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "now", new Date());
-        this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "system_user", System.getProperty("user.name"));
-        this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "wabit_version", WabitVersion.VERSION);
-        this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + PAGE_NUMBER, 0);
-        this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "page_count", 0);
+    	if (this.variables != null) {
+    		// Make sure we operate under the right namespace
+    		this.variables.setNamespace(this.getUUID());
+    		this.variables.update("now", new Date());
+    		this.variables.update("system_user", System.getProperty("user.name"));
+    		this.variables.update("wabit_version", WabitVersion.VERSION);
+    		this.variables.update(PAGE_NUMBER, 0);
+    		this.variables.update("page_count", 0);
+    	}
     }
     
     public Page getPage() {
@@ -182,8 +198,10 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         
         Graphics2D g2 = (Graphics2D) graphics;
         g2.setColor(Color.BLACK);
-        if (!((Boolean) this.variables.resolve(COUNTING_PAGES, false))) {
-        	this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + PAGE_NUMBER, pageIndex + 1);
+        if (this.variables != null) {
+        	if (!((Boolean) this.variables.resolve(COUNTING_PAGES, false))) {
+        		this.variables.update(PAGE_NUMBER, pageIndex + 1);
+        	}
         }
         boolean needMorePages = false;
         for (ContentBox cb : page.getContentBoxes()) {
@@ -211,7 +229,9 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     public int getNumberOfPages() {
     	try {
     		countPages();
-    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + "page_count", pageCount);
+    		if (this.variables != null) {
+    			this.variables.update("page_count", pageCount);
+    		}
     		return pageCount;
     	} catch (PrinterException ex) {
     		throw new RuntimeException("Print exception occured while counting pages", ex);
@@ -233,14 +253,18 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     	BufferedImage dummyImage = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
     	Graphics g = dummyImage.getGraphics();
     	try {
-    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + COUNTING_PAGES, true);
+    		if (this.variables != null) {
+    			this.variables.update(COUNTING_PAGES, true);
+    		}
 	    	while (!done) {
 	    		int result = print(g, getPageFormat(pageNum), pageNum);
 	    		if (result == Printable.NO_SUCH_PAGE) break;
 	    		pageNum++;
 	    	}
     	} finally {
-    		this.variables.update(this.getUUID() + SPVariableResolver.NAMESPACE_DELIMITER + COUNTING_PAGES, false);
+    		if (this.variables != null) {
+    			this.variables.update(COUNTING_PAGES, false);
+    		}
     		g.dispose();
     	}
     	return pageNum;
@@ -284,5 +308,13 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 
     public SPVariableResolver getVariableResolver() {
     	return this.variables;
+    }
+    
+    private String getNameForVariables(String baseName) {
+    	if (this instanceof Report) {
+    		return "Report - " + baseName;
+    	} else if (this instanceof Template) {
+    		return "Template - " + baseName;
+    	} else return baseName;
     }
 }
