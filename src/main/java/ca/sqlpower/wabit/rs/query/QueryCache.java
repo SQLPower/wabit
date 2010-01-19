@@ -59,6 +59,7 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.swingui.query.StatementExecutorListener;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitDataSource;
@@ -85,6 +86,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     @GuardedBy("rsps")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
+    
+    private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
     
     /**
      * The current position in the results if this is being iterated over. This
@@ -134,7 +137,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * Flag to indicate whether or not the query is currently running.
      */
     @GuardedBy("this")
-    private int currentExecutionCount = 0;
+    private boolean executionInProgress = false;
     
     /**
      * These are the listeners that want to listen directly to the query that
@@ -525,7 +528,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             
         } catch (SQLObjectException e) {
         	logger.error("Cannot execute query.", e);
+        	setRunning(false);
             throw new SQLObjectRuntimeException(e);
+        } catch (Exception t) {
+        	setRunning(false);
+        	SQLException ex = new SQLException(t.getMessage());
+        	ex.setStackTrace(t.getStackTrace());
+        	throw ex;
         } finally {
         	this.variableProvider.setUpdateNeeded(true);
             if (!query.isStreaming()) {
@@ -588,6 +597,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 logger.error("Exception while closing old streaming connection", e);
             }
         }
+        setRunning(false);
     }
 
     public ResultSet getResultSet() {
@@ -649,6 +659,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 exceptions.add(e);
             }
         }
+        setRunning(false);
         return exceptions;
     }
     
@@ -660,7 +671,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public synchronized boolean isRunning() {
-        return currentExecutionCount > 0;
+        return executionInProgress;
     }
 
     /**
@@ -674,17 +685,18 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *            false means a query execution has just completed.
      */
     private synchronized void setRunning(final boolean isRunning) {
-        Runnable runner = new Runnable() {
+    	final boolean wasRunning = executionInProgress;
+		executionInProgress = isRunning;
+    	Runnable runner = new Runnable() {
 			public void run() {
-				int prevExecCount;
-				if (isRunning) {
-					prevExecCount = currentExecutionCount++;
-				} else {
-					prevExecCount = currentExecutionCount--;
+				if (wasRunning != isRunning) {
+					firePropertyChange("running", wasRunning, isRunning);
+					if (isRunning) {
+						fireQueryExecutionStart();
+					} else {
+						fireQueryExecutionStop();
+					}
 				}
-				
-				final boolean wasRunning = prevExecCount > 0;
-				firePropertyChange("running", wasRunning, isRunning);
 			}
 		};
 		getSession().runInForeground(runner);
@@ -693,6 +705,18 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     public boolean allowsChildren() {
         return true;
     }
+    
+    private void fireQueryExecutionStart() {
+		for (StatementExecutorListener listener : this.executorListeners) {
+			listener.queryStarted();
+		}
+	}
+	
+	private void fireQueryExecutionStop() {
+		for (StatementExecutorListener listener : this.executorListeners) {
+			listener.queryStopped();
+		}
+	}
 
     public int childPositionOffset(Class<? extends SPObject> childType) {
         int offset = 0;
@@ -1390,4 +1414,14 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         // Create a variable resolver and bind it to this node
         this.variableResolver = new SPVariableHelper(this);
     }
+    
+    public void addStatementExecutorListener(
+			StatementExecutorListener qcl) {
+		this.executorListeners.add(qcl);
+	}
+	
+	public void removeStatementExecutorListener(
+			StatementExecutorListener qcl) {
+		this.executorListeners.remove(qcl);
+	}
 }
