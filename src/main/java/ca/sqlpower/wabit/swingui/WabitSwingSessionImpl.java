@@ -83,6 +83,8 @@ import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
+import ca.sqlpower.swingui.query.StatementExecutor;
+import ca.sqlpower.swingui.query.StatementExecutorListener;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
@@ -312,6 +314,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                 WabitObject responsibleObject = (WabitObject) worker.getResponsibleObject();
                 pathToResponsibleObject =
                     workspaceTreeModel.createTreePathForObject(responsibleObject);
+                
             } else {
                 pathToResponsibleObject = null;
             }
@@ -633,13 +636,41 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
     }
 
     /* docs inherited from interface */
-    public void removeSwingWorker(@NonNull SPSwingWorker worker) {
+    public void removeSwingWorker(@NonNull final SPSwingWorker worker) {
         synchronized (activeWorkers) {
             for (Iterator<ActiveWorker> it = activeWorkers.iterator(); it.hasNext(); ) {
                 ActiveWorker aw = it.next();
-                if (aw.getWorker().equals(worker)) {
-                    it.remove();
-                }
+            	if (aw.getWorker().equals(worker)) {
+            		if (aw.getWorker().getResponsibleObject() instanceof StatementExecutor) {
+            			StatementExecutor stmtEx = (StatementExecutor)aw.getWorker().getResponsibleObject();
+            			/*
+            			 * A special case exists for workers that are bound to queries. 
+            			 * We have to listen to the query and only remove the worker if 
+            			 * the query has stopped.
+            			 * 
+            			 * With streaming queries, although the worker has stopped, there
+            			 * remains a background thread that continues to pull results out
+            			 * of the result set.
+            			 * 
+            			 * In order to determine when it stops for real, we will put a listener 
+            			 * on the query's statement executor.
+            			 */
+                    	if (stmtEx.isRunning()) {
+                    		stmtEx.addStatementExecutorListener(new StatementExecutorListener() {
+								public void queryStopped() {
+									removeSwingWorker(worker);
+								}
+								public void queryStarted() {
+									// Ignore this event.
+								}
+							});
+                    	} else {
+                    		it.remove();
+                    	}
+                    } else {
+                    	it.remove();
+                    }
+            	}
             }
         }
     }

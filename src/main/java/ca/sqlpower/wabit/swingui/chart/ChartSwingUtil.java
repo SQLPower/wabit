@@ -150,7 +150,9 @@ public class ChartSwingUtil {
                     "Unknown chart dataset type " + chartType.getDatasetType());
         }
         
-        makeChartNice(chart);
+        if (chart != null) {
+        	makeChartNice(chart);
+        }
         
         return chart;
     }

@@ -299,6 +299,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			if (evt.getPropertyName().equals("name")) {
 				setName("Result Set: " + query.getName());
 			}
+			if (paintingRS != null) {
+				try {
+					initColumns(paintingRS);
+				} catch (Exception ex) {
+					executeException = ex;
+				}
+			}
 			if (getParent() != null) {
 			    getParent().repaint();
 			}
@@ -316,10 +323,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             }
             paintingRS = currentRowSet;
             if (paintingRS != null) {
-            	try {
-            		initColumns(paintingRS);
-            	} catch (Exception ex) {
-            		executeException = ex;
+            	// If we're dealing with a CachedRowSet and it's data is null
+            	// or simply empty, 
+            	// this means that it will be populated later on. we will know when
+            	// because we just registered a listener on it anyways.
+            	if (!(paintingRS instanceof CachedRowSet) || 
+            			((paintingRS instanceof CachedRowSet)
+            			&& ((CachedRowSet)paintingRS).getData() != null
+            			&& ((CachedRowSet)paintingRS).getData().size() > 0)) {
+	            	try {
+	            		initColumns(paintingRS);
+	            	} catch (Exception ex) {
+	            		executeException = ex;
+	            	}
             	}
             }
             if (getParent() != null) {

@@ -62,6 +62,8 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 	public Set<String> getPropertiesToIgnoreForEvents() {
 		Set<String> ignorable = super.getPropertiesToIgnoreForEvents();
 		ignorable.add("DBMapping");
+		ignorable.add("resultSet");
+		ignorable.add("statement");
 		return ignorable;
 	}
 	
