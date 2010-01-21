@@ -560,13 +560,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      */
     private ResultSetAndUpdateCountCollection fireResultSetEvent(
             CellSet cellSet) throws SQLException {
-        OlapResultSet results;
-        if (cellSet == null) {
-            results = null;
-        } else {
-            results = new OlapResultSet();
-            results.populate(cellSet);
-        }
+        OlapResultSet results = new OlapResultSet();
+        results.populate(cellSet);
         
         final ResultSetAndUpdateCountCollection rsCollection = 
             new ResultSetAndUpdateCountCollection(results, getSession());

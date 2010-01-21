@@ -162,7 +162,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         Font font = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()[0];
         renderer.setHeaderFont(font);
         renderer.setBodyFont(font);
-        renderer.createResultSetLayout((Graphics2D) graphics, cache.getCachedRowSet());
+        renderer.createResultSetLayout((Graphics2D) graphics, cache.getResultSet());
         List<List<ResultSetCell>> layoutCells = renderer.findCells();
         
         boolean foundATotal = false;

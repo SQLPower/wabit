@@ -23,7 +23,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -72,14 +71,7 @@ public class ResultSetAndUpdateCountCollection {
      * entry in each position where the statement returns an update count
      * but there is no result set associated for it as it was not a query.
      */
-    private final List<CachedRowSet> cachedRowSets = new ArrayList<CachedRowSet>();
-    
-    /**
-     * Contains an entry for each update count in the statement given to the
-     * constructor. These update counts will be in the order they are received
-     * from the statement.
-     */
-    private final List<Integer> updateCounts = new ArrayList<Integer>();
+    private CachedRowSet cachedRowSet = null;
     
     /**
      * All of the threads used in streaming result sets are stored here. This
@@ -91,13 +83,7 @@ public class ResultSetAndUpdateCountCollection {
      * as the foreground thread the application would block on the streaming
      * and never return for some streaming queries.
      */
-    private final List<Thread> streamingThreads = new ArrayList<Thread>();
-
-    /**
-     * This counts the number of streaming queries that are still streaming
-     * results in this collection.
-     */
-    private int activeStreamingQueryCount = 0;
+    private Thread streamingThread = null;
     
     /**
      * All of the listeners will be notified when all of the streaming result
@@ -144,49 +130,47 @@ public class ResultSetAndUpdateCountCollection {
 	 *            Uses the session to fire events in the appropriate foreground
 	 *            thread
 	 */
-    public ResultSetAndUpdateCountCollection(Statement statement, boolean isNextAResultSet, 
-            boolean isStreaming, final int streamingRowLimit, final WabitSession session) throws SQLException {
+    public ResultSetAndUpdateCountCollection(
+    		Statement statement, 
+            boolean isStreaming, 
+            final int streamingRowLimit, 
+            final WabitSession session) throws SQLException 
+    {
+    	
     	this.session = session;
-        boolean hasNext = true;
-        while (hasNext) {
-            if (isNextAResultSet) {
-                final CachedRowSet crs = new CachedRowSetWithForegroundEvents();
-                if (isStreaming) {
-                    final ResultSet streamingRS = statement.getResultSet();
-                    Thread t = new Thread() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
-                                crs.follow(streamingRS, streamingRowLimit);
-                            } catch (SQLException e) {
-                                logger.error("Exception while streaming result set", e);
-                            } finally {
-                                activeStreamingQueryCount--;
-                                if (activeStreamingQueryCount == 0) {
-                                    session.runInForeground(new Runnable() {
-                                        public void run() {
-                                            fireAllStreamingStopped();
-                                        }
-                                    });
-                                }
+    	
+    	final CachedRowSet crs = new CachedRowSetWithForegroundEvents();
+    	
+    	if (isStreaming) {
+            final ResultSet streamingRS = statement.getResultSet();
+            Thread t = new Thread() {
+                public void run() {
+                    try {
+                        Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
+                        crs.follow(streamingRS, streamingRowLimit);
+                    } catch (SQLException e) {
+                        logger.error("Exception while streaming result set", e);
+                    } finally {
+                        session.runInForeground(new Runnable() {
+                            public void run() {
+                                fireStreamingStopped();
                             }
-                        }
-                    };
-                    t.start();
-                    streamingThreads.add(t);
-                    activeStreamingQueryCount++;
-                } else {
-                    crs.populate(statement.getResultSet());
+                        });
+                    }
                 }
-                cachedRowSets.add(crs);
-            } else {
-                cachedRowSets.add(null);
+            };
+            
+            if (streamingThread != null) {
+            	streamingThread.interrupt();
             }
-            updateCounts.add(statement.getUpdateCount());
-            isNextAResultSet = statement.getMoreResults();
-            hasNext = !((isNextAResultSet == false) && (statement.getUpdateCount() == -1));
+            
+            t.start();
+            this.streamingThread = t;
+            
+        } else {
+        	crs.populate(statement.getResultSet());
         }
+    	this.cachedRowSet = crs;
     }
 
     /**
@@ -204,16 +188,18 @@ public class ResultSetAndUpdateCountCollection {
      */
     public ResultSetAndUpdateCountCollection(ResultSet rs, WabitSession session) 
             throws SQLException {
+    	if (rs == null) {
+    		throw new NullPointerException("RS cannot be null");
+    	}
     	this.session = session;
         if (rs instanceof CachedRowSet) {
-            cachedRowSets.add((CachedRowSet) rs);
-        } else if (rs != null) {
+            this.cachedRowSet = ((CachedRowSet) rs);
+        } else {
             CachedRowSet crs;
             crs = new CachedRowSet();
+            crs.setMakeUppercase(false);
             crs.populate(rs);
-            cachedRowSets.add(crs);
-        } else {
-            cachedRowSets.add(null);
+            this.cachedRowSet = crs;
         }
     }
 
@@ -225,22 +211,9 @@ public class ResultSetAndUpdateCountCollection {
      * a collection will stop the threads in all of the copies and the original
      * collection.
      */
-    public ResultSetAndUpdateCountCollection(
-            ResultSetAndUpdateCountCollection rsCollection) {
-        updateCounts.addAll(rsCollection.updateCounts);
-        for (CachedRowSet crs : rsCollection.cachedRowSets) {
-            if (crs != null) {
-                try {
-                    cachedRowSets.add(crs.createShared());
-                } catch (SQLException e) {
-                    throw new RuntimeException("Exception when creating a shared copy " +
-                            "of a cached row set.", e);
-                }
-            } else {
-                cachedRowSets.add(null);
-            }
-        }
-        streamingThreads.addAll(rsCollection.streamingThreads);
+    public ResultSetAndUpdateCountCollection(ResultSetAndUpdateCountCollection rsCollection) {
+    	this.cachedRowSet = rsCollection.cachedRowSet;
+    	this.streamingThread = rsCollection.streamingThread;
         this.session = rsCollection.session;
     }
 
@@ -268,7 +241,7 @@ public class ResultSetAndUpdateCountCollection {
      * This will fire an event to all listeners notifying them that all of the streaming
      * queries in this collection have stopped streaming.
      */
-    private void fireAllStreamingStopped() {
+    private void fireStreamingStopped() {
         final StreamingResultSetCollectionEvent evt = new StreamingResultSetCollectionEvent(this);
         synchronized(resultSetListeners) {
             for (int i = resultSetListeners.size() - 1; i >= 0; i--) {
@@ -283,62 +256,14 @@ public class ResultSetAndUpdateCountCollection {
      * statement and no result set was associated with it. Throws an index
      * out of bounds exception if there are no result sets in this collection.
      */
-    public CachedRowSet getFirstResultSet() {
-        return cachedRowSets.get(0);
+    public CachedRowSet getResultSet() {
+        return this.cachedRowSet;
     }
     
-    /**
-     * Returns the first non-null result set contained in this collection.
-     * If there are no non-null result sets in this collection it will return
-     * null. The result set returned will be a shared copy of the result
-     * set returned.
-     * @see CachedRowSet#createShared()
-     */
-    public CachedRowSet getFirstNonNullResultSet() {
-        for (CachedRowSet crs : cachedRowSets) {
-            if (crs != null) {
-                try {
-                    return crs.createShared();
-                } catch (SQLException e) {
-                    throw new AssertionError("This should not be possible");
-                }
-            } 
-        }
-        return null;
-    }
-    
-    /**
-     * Returns the number of null and non-null result set entries in this collection.
-     */
-    public int getResultSetCount() {
-        return cachedRowSets.size();
-    }
-    
-    /**
-     * Gets all of the result sets contained by this collection. This list will be 
-     * unmodifiable.
-     */
-    public List<CachedRowSet> getResultSets() {
-        return Collections.unmodifiableList(cachedRowSets);
-    }
-    
-    /**
-     * Returns the number of update counts in this collection.
-     */
-    public int getCountOfUpdateCounts() {
-        return updateCounts.size();
-    }
-    
-    /**
-     * Returns an unmodifiable list of the update counts.
-     */
-    public List<Integer> getUpdateCounts() {
-        return Collections.unmodifiableList(updateCounts);
-    }
     
     public void cleanup() throws SQLException {
-        for (Thread t : streamingThreads) {
-            t.interrupt();
-        }
+    	if (this.streamingThread != null){
+    		this.streamingThread.interrupt();
+    	}
     }
 }

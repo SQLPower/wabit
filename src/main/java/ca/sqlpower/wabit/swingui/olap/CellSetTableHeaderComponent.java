@@ -795,7 +795,9 @@ public class CellSetTableHeaderComponent extends JComponent {
 					JPopupMenu popUpMenu = new JPopupMenu();
 					popUpMenu.add(new RemoveHierarchyAction(session, query, hierarchy, CellSetTableHeaderComponent.this.axis));
 				    popUpMenu.add(new ClearExclusionsAction(session, query, hierarchy));
-				    popUpMenu.add(new ClearSortFromAxisAction(session, query, axis.getAxisOrdinal()));
+				    if (axis != null) {
+				    	popUpMenu.add(new ClearSortFromAxisAction(session, query, axis.getAxisOrdinal()));
+				    }
 				    if (clickedOnMember != null && 
 							!(clickedOnMember instanceof Measure)) {
 					    popUpMenu.addSeparator();

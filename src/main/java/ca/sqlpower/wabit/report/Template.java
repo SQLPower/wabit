@@ -49,9 +49,6 @@ public class Template extends Layout {
     public Template(Template template, WabitSession session) {
     	super(new Page(template.getPage()));
     	setName(template.getName());
-    	for (String key : template.getVariableResolver().keySet(null)) {
-    		this.variables.store(key, template.getVariableResolver().resolve(key));
-    	}
     	setZoomLevel(template.getZoomLevel());
 	}
 }

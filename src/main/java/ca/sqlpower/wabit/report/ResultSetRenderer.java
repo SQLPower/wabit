@@ -310,7 +310,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	    
         public void resultSetProduced(ResultSetProducerEvent evt) {
             cleanup();
-            currentRowSet = evt.getResults().getFirstNonNullResultSet();
+            currentRowSet = evt.getResults().getResultSet();
             if (currentRowSet != null) {
                 currentRowSet.addRowSetListener(rowSetChangeListener);
             }
@@ -376,12 +376,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	query.addResultSetListener(resultSetHandler);
     	
     	if (resultSetRenderer.resultSetHandler.currentRowSet != null) {
-    	    try {
-                resultSetHandler.currentRowSet =
-                    resultSetRenderer.resultSetHandler.currentRowSet.createShared();
-            } catch (SQLException wontHappen) {
-                throw new AssertionError(wontHappen);
-            }
+            resultSetHandler.currentRowSet =
+                resultSetRenderer.resultSetHandler.currentRowSet;
     	}
     	
     	setName(resultSetRenderer.getName());
@@ -445,7 +441,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			boolean hasNext = true;
 			while (hasNext) {
             	if (cachedQuery.getResultSet() != null) {
-            		executedRs = cachedQuery.getCachedRowSet();
+            		executedRs = cachedQuery.getResultSet();
             		break;
             	}
                 boolean sqlResult = cachedQuery.getMoreResults();
@@ -634,7 +630,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	    }
     	}
     	try {
-    	    rs = rs.createSharedSorted(comparator);
+    	    rs.sort(comparator);
     	    
     	    autosizeColumnInformation(g, contentBox, rs);
 

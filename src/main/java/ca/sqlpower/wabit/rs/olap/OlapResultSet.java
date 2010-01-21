@@ -132,15 +132,21 @@ public class OlapResultSet extends CachedRowSet {
      * @throws SQLException
      */
     public void populate(CellSet cellSet) throws SQLException {
+    	
+    	rsmd = new CachedResultSetMetaData();
+        data = new ArrayList<Object[]>();
+        
+    	if (cellSet == null) {
+    		// Nothing to populate.
+    		return;
+    	}
+    	
         List<CellSetAxis> axes = cellSet.getAxes();
         if (axes.size() != 2) {
             throw new IllegalArgumentException(
                     "Only 2-axis Cell Sets are convertible to Result Sets. " +
                     "The given Cell Set has " + axes.size() + " axes.");
         }
-        
-        rsmd = new CachedResultSetMetaData();
-        data = new ArrayList<Object[]>();
         
         // Rows axis: each represented level of each dimension is a column
         CellSetAxis rowsAxis = axes.get(Axis.ROWS.axisOrdinal());

@@ -90,12 +90,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
     
     /**
-     * The current position in the results if this is being iterated over. This
-     * is used by methods from the StatementExecutor interface.
-     */
-    private int resultPosition = 0;
-    
-    /**
      * This is the statement currently entering result sets into this query cache.
      * This lets the query cancel a running statement.
      * <p>
@@ -267,8 +261,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 		public void updateVars(boolean completeUpdate) {
 
 			try {
-				if (rsCollection == null) executeStatement(completeUpdate);
-				ResultSet rs = rsCollection.getFirstNonNullResultSet();
+				ResultSet rs = fetchResultSet().getResultSet();
 				variables.clear();
 				if (rs != null &&
 						rs.first()) {
@@ -487,7 +480,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     public boolean executeStatement(boolean fetchFullResults) throws SQLException {
         cancel();
-        resultPosition = 0;
         if (rsCollection != null) {
             setRsCollection(null);
         }
@@ -500,26 +492,22 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
             setRunning(true);
             currentConnection = query.getDatabase().getConnection();
             currentStatement = this.variableResolver.substituteForDb(currentConnection, sql);
-            if (!fetchFullResults) {
+            if (!query.isStreaming() && !fetchFullResults) {
                 currentStatement.setMaxRows(query.getRowLimit());
             }
             boolean initialResult = currentStatement.execute();
-            setRsCollection(new ResultSetAndUpdateCountCollection(currentStatement, initialResult, 
-                    isStreaming(), getStreamingRowLimit(), getSession()));
-            final ResultSetAndUpdateCountCollection resultsToFire;
-            if (rsCollection.getResultSetCount() > 0) {
-                // results will be null if the first statement produced an update count,
-                // but that's allowed by the ResultSetProducer interface.
-                resultsToFire = rsCollection;
-            } else {
-                // no statements were executed. ResultSetProducer promises to deliver a
-                // null result set in this case.
-                resultsToFire = null;
-            }
+            
+            setRsCollection(
+        		new ResultSetAndUpdateCountCollection(
+            		currentStatement, 
+                    isStreaming(), 
+                    getStreamingRowLimit(), 
+                    getSession()));
+            
             runInForeground(new Runnable() {
                 public void run() {
                     synchronized(rsps) {
-                        rsps.fireResultSetEvent(resultsToFire);
+                        rsps.fireResultSetEvent(rsCollection);
                     }
                 }
             });
@@ -600,33 +588,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         setRunning(false);
     }
 
-    public ResultSet getResultSet() {
-        return getCachedRowSet();
+    public CachedRowSet getResultSet() throws SQLException {
+        return fetchResultSet().getResultSet();
     }
     
-    public CachedRowSet getCachedRowSet() {
-        if (rsCollection == null || resultPosition >= rsCollection.getResultSetCount()) {
-            return null;
-        }
-        return rsCollection.getResultSets().get(resultPosition);
-    }
-    
-    protected List<CachedRowSet> getResultSets() {
-        return Collections.unmodifiableList(rsCollection.getResultSets());
-    }
-
     public int getUpdateCount() {
-        if (rsCollection == null || resultPosition >= rsCollection.getCountOfUpdateCounts()) {
-            return -1;
-        }
-        return rsCollection.getUpdateCounts().get(resultPosition);
+    	return -1;
     }
 
-    public boolean getMoreResults() {
-        if (rsCollection == null) return false;
-        resultPosition++;
-        return resultPosition < rsCollection.getResultSetCount() && 
-            rsCollection.getResultSets().get(resultPosition) != null;
+    public boolean getMoreResults() throws SQLException {
+        return false;
     }
 
     /**
@@ -634,10 +605,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * execute the query on the database.
      */
     private ResultSetAndUpdateCountCollection fetchResultSet() throws SQLException {
-        if (rsCollection != null && !rsCollection.getResultSets().isEmpty()) {
-            return rsCollection;
+        if (rsCollection == null) {
+        	try {
+				executeStatement();
+			} catch (SQLException e) {
+				return null;
+			}
         }
-        executeStatement();
         return rsCollection;
     }
     
@@ -670,7 +644,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         return new WabitDataSource(query.getDatabase().getDataSource());
     }
 
-    public synchronized boolean isRunning() {
+    public boolean isRunning() {
         return executionInProgress;
     }
 
