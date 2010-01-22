@@ -121,7 +121,7 @@ public class ReportPositionRenderer {
      *            graphics object is different the components may be laid out in
      *            a way that will have text clipped by the bounding
      *            {@link ContentBox}.
-     * @param rs
+     * @param rsCopy
      *            This result set will be iterated over to lay out the result
      *            set. If the result set pointer should not be changed a copy of
      *            the result set, using a CachedRowSet or calling createShared
@@ -136,7 +136,9 @@ public class ReportPositionRenderer {
         		"be done once per renderer. Create a new renderer if a new layout is needed");
         hasLayoutStarted = true;
         
-        rs.beforeFirst();
+        CachedRowSet rsCopy = new CachedRowSet();
+        rsCopy.populate(rs);
+        rsCopy.beforeFirst();
         
         List<BigDecimal> grandTotals = new ArrayList<BigDecimal>();
         for (ColumnInfo ci : columnInfoList) {
@@ -184,17 +186,17 @@ public class ReportPositionRenderer {
         List<ResultSetCell> currentColumnHeaders = null;
         
         //for each result set entry
-        while (rs.next()) {
+        while (rsCopy.next()) {
         
             //if new break header is needed create it
             //if new column header is needed create it
-            List<Object> newSectionKey = createRowSectionKey(rs, columnInfoList);
+            List<Object> newSectionKey = createRowSectionKey(rsCopy, columnInfoList);
             
-            if (!rs.isFirst() && sectionKey == null) 
+            if (!rsCopy.isFirst() && sectionKey == null) 
                 throw new IllegalStateException("The initial section key was undefined! " +
                         "Cannot start laying out the result set.");
-            if (!rs.isFirst() && !newSectionKey.equals(sectionKey)
-                    || rs.isFirst()) {
+            if (!rsCopy.isFirst() && !newSectionKey.equals(sectionKey)
+                    || rsCopy.isFirst()) {
                 sectionKey = newSectionKey;
                 
                 ResultSetCell cell = renderSectionHeader(
@@ -211,15 +213,15 @@ public class ReportPositionRenderer {
 
             
             //create a row of values, decide if we need to hide grouped columns
-            List<ResultSetCell> rowCells = renderRow(g, rs, columnInfoList, yPosition, false);
+            List<ResultSetCell> rowCells = renderRow(g, rsCopy, columnInfoList, yPosition, false);
             yPosition = addRowCells(rowCells, cellsGroupedPerPage, contentBox, yPosition, currentSectionHeaders,
-                    currentColumnHeaders, g, rs, columnInfoList);
+                    currentColumnHeaders, g, rsCopy, columnInfoList);
             
             //add to totals
             for (ColumnInfo ci : columnInfoList) {
                 final int colIndex = columnInfoList.indexOf(ci);
                 if (ci.getWillSubtotal()) {
-                    final BigDecimal valueToAdd = rs.getBigDecimal(colIndex + 1);
+                    final BigDecimal valueToAdd = rsCopy.getBigDecimal(colIndex + 1);
                     BigDecimal total = sectionTotals.get(colIndex);
                     total = total.add(valueToAdd);
                     sectionTotals.set(colIndex, total);
@@ -231,7 +233,7 @@ public class ReportPositionRenderer {
                     }
                 }
                 if (ci.getDataType() == DataType.NUMERIC) {
-                    final BigDecimal valueToAdd = rs.getBigDecimal(colIndex + 1);
+                    final BigDecimal valueToAdd = rsCopy.getBigDecimal(colIndex + 1);
                     BigDecimal total = grandTotals.get(colIndex);
                     BigDecimal cellValue = valueToAdd;
                     if (cellValue == null) {
@@ -243,24 +245,24 @@ public class ReportPositionRenderer {
             }
 
             //decide if we need to print subtotals for breaks
-            boolean hasNext = rs.next();
+            boolean hasNext = rsCopy.next();
             List<Object> nextSectionKey = null;
             if (hasNext) {
-                nextSectionKey = createRowSectionKey(rs, columnInfoList);
+                nextSectionKey = createRowSectionKey(rsCopy, columnInfoList);
             }
             List<Object> nextRowValues = new ArrayList<Object>();
             if (hasNext) {
                 for (int i = 0; i < columnInfoList.size(); i++) {
-                    nextRowValues.add(rs.getObject(i + 1));
+                    nextRowValues.add(rsCopy.getObject(i + 1));
                 }
             }
-            rs.previous();
+            rsCopy.previous();
 
             if (!hasNext || !nextSectionKey.equals(sectionKey)) { //look for breaks
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
                     if (groupingTotalMap.get(i) != null) {
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
-                        String groupingText = " " + rs.getString(i + 1);
+                        String groupingText = " " + rsCopy.getString(i + 1);
                         List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
                                 groupingText, i, yPosition);
                         yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
@@ -300,13 +302,13 @@ public class ReportPositionRenderer {
             } else if (hasNext) { //look for grouping changes
                 
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
-                    Object oldValue = rs.getObject(i + 1);
+                    Object oldValue = rsCopy.getObject(i + 1);
                     Object nextValue = nextRowValues.get(i);
                     if (groupingTotalMap.get(i) != null && 
                             ((oldValue != null && !oldValue.equals(nextValue))
                             || (oldValue == null && nextValue != null))) {
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
-                        String groupingText = " " + rs.getString(i + 1);
+                        String groupingText = " " + rsCopy.getString(i + 1);
                         List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
                                 groupingText, i, yPosition);
                         yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
