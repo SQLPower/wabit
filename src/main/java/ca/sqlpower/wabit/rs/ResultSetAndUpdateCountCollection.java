@@ -191,16 +191,13 @@ public class ResultSetAndUpdateCountCollection {
     	if (rs == null) {
     		throw new NullPointerException("RS cannot be null");
     	}
+    	
     	this.session = session;
-        if (rs instanceof CachedRowSet) {
-            this.cachedRowSet = ((CachedRowSet) rs);
-        } else {
-            CachedRowSet crs;
-            crs = new CachedRowSet();
-            crs.setMakeUppercase(false);
-            crs.populate(rs);
-            this.cachedRowSet = crs;
-        }
+
+        CachedRowSet crs = new CachedRowSet();
+        crs.setMakeUppercase(false);
+        crs.populate(rs);
+        this.cachedRowSet = crs;
     }
 
     /**
@@ -211,9 +208,11 @@ public class ResultSetAndUpdateCountCollection {
      * a collection will stop the threads in all of the copies and the original
      * collection.
      */
-    public ResultSetAndUpdateCountCollection(ResultSetAndUpdateCountCollection rsCollection) {
-    	this.cachedRowSet = rsCollection.cachedRowSet;
-    	this.streamingThread = rsCollection.streamingThread;
+    public ResultSetAndUpdateCountCollection(ResultSetAndUpdateCountCollection rsCollection)
+    		throws SQLException {
+    	this.cachedRowSet = new CachedRowSet();
+    	this.cachedRowSet.populate(rsCollection.cachedRowSet);
+    	this.streamingThread = null;
         this.session = rsCollection.session;
     }
 
