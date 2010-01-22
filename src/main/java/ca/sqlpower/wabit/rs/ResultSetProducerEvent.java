@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.rs;
 
+import java.sql.SQLException;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -72,6 +74,10 @@ public class ResultSetProducerEvent {
     @Nullable
     public ResultSetAndUpdateCountCollection getResults() {
         if (results == null) return null;
-        return new ResultSetAndUpdateCountCollection(results);
+        try {
+			return new ResultSetAndUpdateCountCollection(results);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
     }
 }

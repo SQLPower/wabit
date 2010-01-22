@@ -445,34 +445,40 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * This will execute the query contained in this result set and
      * set the result set to be a new result set.
      */
-	private void executeQueryForPrinting() {
+	private Exception executeQueryForPrinting() {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
         CachedRowSet executedRs = null;
-        executeException = null;
-        QueryCache cachedQuery = new QueryCache(query);
+        
 		try {
-			cachedQuery.executeStatement(true);
+			query.executeStatement(true);
 			boolean hasNext = true;
 			while (hasNext) {
-            	if (cachedQuery.getResultSet() != null) {
-            		executedRs = cachedQuery.getResultSet();
+            	if (query.getResultSet() != null) {
+            		executedRs = query.getResultSet();
             		break;
             	}
-                boolean sqlResult = cachedQuery.getMoreResults();
-                hasNext = !((sqlResult == false) && (cachedQuery.getUpdateCount() == -1));
+                boolean sqlResult = query.getMoreResults();
+                hasNext = !((sqlResult == false) && (query.getUpdateCount() == -1));
             }
 			if (executedRs == null) {
-				executeException = new SQLException("There are no results in the executed query.");
+				printingResultSet = null;
+				return new SQLException("There are no results in the executed query.");
+			} else {
+				CachedRowSet crs = new CachedRowSet();
+		        crs.populate(executedRs);
+		        printingResultSet = crs;
 			}
         } catch (Exception ex) {
-            executeException = ex;
+            return ex;
         }
-        printingResultSet = executedRs;
+        
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
 		}
+        
+        return null;
 	}
 	
 	/**
@@ -564,33 +570,38 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
     	if (printing && printingResultSet == null) {
-    		executeQueryForPrinting();
+    		Exception printingEx = executeQueryForPrinting();
+    		if (printingEx != null) {
+                return renderFailure(printingEx, g, contentBox, scaleFactor, pageIndex);
+            } else {
+                return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
+            }
     	} else if (!printing && paintingRS == null) {
     		executeQuery();
     	}
-        if (executeException != null) {
-            return renderFailure(g, contentBox, scaleFactor, pageIndex);
+    	if (executeException != null) {
+            return renderFailure(executeException, g, contentBox, scaleFactor, pageIndex);
         } else {
             return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
         }
     }
     
-    public boolean renderFailure(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    public boolean renderFailure(Exception failure, Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         List<String> errorMessage = new ArrayList<String>();
-        if (executeException instanceof QueryException) {
-            QueryException qe = (QueryException) executeException;
+        if (failure instanceof QueryException) {
+            QueryException qe = (QueryException) failure;
             Throwable cause = qe.getCause();
             errorMessage.add("Query failed: " + cause);
             errorMessage.addAll(Arrays.asList(qe.getQuery().split("\n")));
         } else {
-            errorMessage.add("Query failed: " + executeException);
-            Throwable cause = executeException.getCause();
+            errorMessage.add("Query failed: " + failure);
+            Throwable cause = failure.getCause();
             while (cause != null) {
                 errorMessage.add("Caused by: " + cause);
                 cause = cause.getCause();
             }
-            logger.debug("Exception on rendering " + executeException.getMessage());
-            for (StackTraceElement ste : executeException.getStackTrace()) {
+            logger.debug("Exception on rendering " + failure.getMessage());
+            for (StackTraceElement ste : failure.getStackTrace()) {
             	logger.debug(ste);
             }
         }

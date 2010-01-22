@@ -80,13 +80,11 @@ public class ResultSetProducerSupport {
      *            this method.
      */
     public void fireResultSetEvent(@Nullable ResultSetAndUpdateCountCollection results) {
-        eventsFired++;
-        ResultSetProducerEvent evt;
-        if (results == null) {
-            evt = new ResultSetProducerEvent(eventSource, null);
-        } else {
-            evt = new ResultSetProducerEvent(eventSource, results);
-        }
+        
+    	eventsFired++;
+        
+        ResultSetProducerEvent evt = new ResultSetProducerEvent(eventSource, results);
+        
         for (int i = listeners.size() - 1; i >= 0; i--) {
             listeners.get(i).resultSetProduced(evt);
         }

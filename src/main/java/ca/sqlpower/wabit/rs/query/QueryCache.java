@@ -36,7 +36,6 @@ import java.util.concurrent.FutureTask;
 import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
-
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPSimpleVariableResolver;
@@ -344,13 +343,13 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());
         
-        final ResultSetAndUpdateCountCollection newCollection;
-        if (q.rsCollection != null) {
-            newCollection = new ResultSetAndUpdateCountCollection(q.rsCollection);
-        } else {
-            newCollection = null;
-        }
         try {
+        	final ResultSetAndUpdateCountCollection newCollection;
+        	if (q.rsCollection != null) {
+        		newCollection = new ResultSetAndUpdateCountCollection(q.rsCollection);
+        	} else {
+        		newCollection = null;
+        	}
             setRsCollection(newCollection);
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -479,7 +478,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *             If the query fails to execute for any reason.
      */
     public boolean executeStatement(boolean fetchFullResults) throws SQLException {
-        cancel();
+    	
+    	if (isRunning()) {
+    		cancel();    		
+    	}
+    	
         if (rsCollection != null) {
             setRsCollection(null);
         }
