@@ -1,5 +1,19 @@
 Wabit Release Notes
 
+Noteworthy Changes in 1.1.1
+
+  New stuff:
+    * Uses the SQLP Library's variable insertion GUI
+    * Relational queries can expose variables to other objects.
+    * OLAP queries can expose variables to other objects
+
+  Fixes bugs:
+    * 2535 - Replacing data source when opening local workspace causes problem with SQL queries
+    * 2167 - Wabit deletes entire workspace file if it encounters an exception during save
+    * 2184 - The stop button on the query text editor is never becoming enabled.\
+	* Initial creation of report on trial server takes too much time
+	* Datasource copy issues between servers and clients
+
 Noteworthy Changes in 1.1.0
 
   SQL Power Library Support
