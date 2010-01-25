@@ -103,7 +103,12 @@ public class Chart extends AbstractWabitObject {
                 public void run() {
                     try {
                     	begin("Updating chart from GUI");
-                        setUnfilteredResultSet(evt.getResults().getResultSet());
+                    	if (evt.getResults() == null
+                    			|| evt.getResults().getResultSet() == null) {
+                    		setUnfilteredResultSet(null);
+                    	} else {
+                    		setUnfilteredResultSet(evt.getResults().getResultSet());
+                    	}
                     } catch (SQLException e) {
                         throw new RuntimeException(e);
                     } finally {
