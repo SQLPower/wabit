@@ -94,7 +94,7 @@ public class CountingWabitListener implements SPListener {
         lastTransactionEvent = e;
     }
 
-    public void propertyChange(PropertyChangeEvent evt) {
+    public void propertyChanged(PropertyChangeEvent evt) {
     	logger.debug("Received event for " + evt.getPropertyName() + " on " + 
     			evt.getSource() + " to value " + evt.getNewValue());
         propertyChangeCount++;

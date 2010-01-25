@@ -325,9 +325,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 			SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
 		}
 
-		public void propertyChange(PropertyChangeEvent evt) {
-			// TODO Auto-generated method stub
-			
+		public void propertyChanged(PropertyChangeEvent evt) {
+			// no op
 		}
     	
     };

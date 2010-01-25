@@ -260,7 +260,7 @@ public class GuideNode extends PNode implements WabitNode {
 			
 		}
 
-		public void propertyChange(PropertyChangeEvent evt) {
+		public void propertyChanged(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("offset")) {
                 adjustBoundsForParent();
             }

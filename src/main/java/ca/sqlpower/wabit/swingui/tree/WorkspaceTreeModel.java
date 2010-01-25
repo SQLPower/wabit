@@ -488,7 +488,7 @@ public class WorkspaceTreeModel implements TreeModel {
 	 */
     private class WabitTreeModelEventAdapter implements SPListener {
         
-		public void propertyChange(PropertyChangeEvent evt) {
+		public void propertyChanged(PropertyChangeEvent evt) {
 			SPObject node = (SPObject) evt.getSource();
 			if (!appearsInTree(node)) {
 			    return;

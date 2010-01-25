@@ -847,7 +847,7 @@ public class WorkspacePersisterListener implements SPListener {
 		this.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
 	}
 
-	public void propertyChange(PropertyChangeEvent evt) {
+	public void propertyChanged(PropertyChangeEvent evt) {
 		
 		if (wouldEcho()) return;
 		

@@ -154,7 +154,7 @@ public class UsersAndGroupsListModel implements ListModel, SPListener {
 		}
 	}
 
-	public void propertyChange(PropertyChangeEvent evt) {
+	public void propertyChanged(PropertyChangeEvent evt) {
 		// no op
 	}
 }

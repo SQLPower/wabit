@@ -247,7 +247,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
 		}
 
-        public void propertyChange(PropertyChangeEvent evt) {
+        public void propertyChanged(PropertyChangeEvent evt) {
             updateBoundsFromContentBox();
             repaint();
         }
