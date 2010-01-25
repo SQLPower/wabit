@@ -317,7 +317,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	    
         public void resultSetProduced(ResultSetProducerEvent evt) {
             cleanup();
-            currentRowSet = evt.getResults().getResultSet();
+            if (evt.getResults() != null &&
+            		evt.getResults().getResultSet() != null) {
+            	currentRowSet = evt.getResults().getResultSet();
+            }
             if (currentRowSet != null) {
                 currentRowSet.addRowSetListener(rowSetChangeListener);
             }
