@@ -128,11 +128,12 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.3 <dd>Added gratuitous animation flag to charts
      *  <dt>1.2.4 <dd>Put UUID attribute on every WabitObject element (especially workspace)
      *  <dt>1.2.5 <dd>Put UUID and name (mostly unused) attribute on OlapQuery child elements
+     *  <dt>1.2.6 <dd>Saves the grand-totals attribute of RS renderers
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.5"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.6"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -355,6 +356,7 @@ public class WorkspaceXMLDAO {
 						printAttribute("query-id", rsRenderer.getContent().getUUID());
 						printAttribute("null-string", rsRenderer.getNullString());
 						printAttribute("border", rsRenderer.getBorderType().name());
+						printAttribute("grand-totals", rsRenderer.isPrintingGrandTotals());
 						if (rsRenderer.getBackgroundColour() != null) {
 							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
 						}

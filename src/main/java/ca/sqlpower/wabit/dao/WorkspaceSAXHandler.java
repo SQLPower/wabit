@@ -1050,6 +1050,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			rsRenderer.setBackgroundColour(color);
         		} else if (aname.equals("border")) {
         			rsRenderer.setBorderType(BorderStyles.valueOf(aval));
+        		} else if (aname.equals("grand-totals")) {
+        			rsRenderer.setPrintingGrandTotals(Boolean.parseBoolean(aval));
         		} else {
         			logger.warn("Unexpected attribute of <content-result-set>: " + aname + "=" + aval);
         		}
