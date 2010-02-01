@@ -706,7 +706,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
     }
 
 	public void refresh() {
-		//TODO: Implement cellset refresh
+		try {
+			setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
+			this.modifiedOlapQuery.executeOlapQuery();
+		} catch (Exception e) {
+            logger.warn("Error while executing Olap Query", e);
+            errorMessage = "Error when executing query:\n" + e;
+        }
 	}
 
     @Override
