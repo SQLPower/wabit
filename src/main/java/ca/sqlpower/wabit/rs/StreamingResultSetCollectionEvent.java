@@ -26,13 +26,13 @@ package ca.sqlpower.wabit.rs;
  */
 public class StreamingResultSetCollectionEvent {
     
-    private final ResultSetAndUpdateCountCollection resultSetCollection;
+    private final ResultSetHandle resultSetCollection;
 
-    public StreamingResultSetCollectionEvent(ResultSetAndUpdateCountCollection rsCollection) {
+    public StreamingResultSetCollectionEvent(ResultSetHandle rsCollection) {
         this.resultSetCollection = rsCollection;
     }
     
-    public ResultSetAndUpdateCountCollection getResultSetCollection() {
+    public ResultSetHandle getResultSetCollection() {
         return resultSetCollection;
     }
     

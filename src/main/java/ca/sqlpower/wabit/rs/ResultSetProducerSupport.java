@@ -79,7 +79,7 @@ public class ResultSetProducerSupport {
      *            should be at the <i>beforeFirst</i> position prior to calling
      *            this method.
      */
-    public void fireResultSetEvent(@Nullable ResultSetAndUpdateCountCollection results) {
+    public void fireResultSetEvent(@Nullable ResultSetHandle results) {
         
     	eventsFired++;
         

@@ -41,9 +41,9 @@ import ca.sqlpower.wabit.swingui.ExceptionHandler;
  * Contains a set of result sets and update counts that are returned by
  * executing a query.
  */
-public class ResultSetAndUpdateCountCollection {
+public class ResultSetHandle {
     
-    private static final Logger logger = Logger.getLogger(ResultSetAndUpdateCountCollection.class);
+    private static final Logger logger = Logger.getLogger(ResultSetHandle.class);
 
     /**
      * This CachedRowSet extension fires events on the foreground thread of the
@@ -130,7 +130,7 @@ public class ResultSetAndUpdateCountCollection {
 	 *            Uses the session to fire events in the appropriate foreground
 	 *            thread
 	 */
-    public ResultSetAndUpdateCountCollection(
+    public ResultSetHandle(
     		Statement statement, 
             boolean isStreaming, 
             final int streamingRowLimit, 
@@ -175,7 +175,7 @@ public class ResultSetAndUpdateCountCollection {
 
     /**
      * This will wrap a given result set in a
-     * {@link ResultSetAndUpdateCountCollection}. The result set stored will be
+     * {@link ResultSetHandle}. The result set stored will be
      * scrollable and contain no resources back to the original result set.
      * 
      * @param rs
@@ -186,7 +186,7 @@ public class ResultSetAndUpdateCountCollection {
      * @throws SQLException
      *             Thrown if there are problems iterating over the result set.
      */
-    public ResultSetAndUpdateCountCollection(ResultSet rs, WabitSession session) 
+    public ResultSetHandle(ResultSet rs, WabitSession session) 
             throws SQLException {
     	if (rs == null) {
     		throw new NullPointerException("RS cannot be null");
@@ -208,7 +208,7 @@ public class ResultSetAndUpdateCountCollection {
      * a collection will stop the threads in all of the copies and the original
      * collection.
      */
-    public ResultSetAndUpdateCountCollection(ResultSetAndUpdateCountCollection rsCollection)
+    public ResultSetHandle(ResultSetHandle rsCollection)
     		throws SQLException {
     	this.cachedRowSet = new CachedRowSet();
     	this.cachedRowSet.populate(rsCollection.cachedRowSet);

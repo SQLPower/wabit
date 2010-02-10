@@ -34,7 +34,7 @@ import ca.sqlpower.sql.CachedRowSet;
 public class ResultSetProducerEvent {
 
     private final ResultSetProducer source;
-    private final ResultSetAndUpdateCountCollection results;
+    private final ResultSetHandle results;
 
     /**
      * Creates a new event with the given parameters.
@@ -46,7 +46,7 @@ public class ResultSetProducerEvent {
      *            listeners.
      */
     public ResultSetProducerEvent(ResultSetProducer source, 
-            ResultSetAndUpdateCountCollection results) {
+            ResultSetHandle results) {
         this.source = source;
         this.results = results;
     }
@@ -72,10 +72,10 @@ public class ResultSetProducerEvent {
      * @see CachedRowSet#createShared()
      */
     @Nullable
-    public ResultSetAndUpdateCountCollection getResults() {
+    public ResultSetHandle getResults() {
         if (results == null) return null;
         try {
-			return new ResultSetAndUpdateCountCollection(results);
+			return new ResultSetHandle(results);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}

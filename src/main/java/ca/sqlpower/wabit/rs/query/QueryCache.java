@@ -65,7 +65,7 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.rs.ResultSetAndUpdateCountCollection;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -200,7 +200,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * are no available result sets, which can occur at the start of the query
      * cache creation or if the cache has become stale and needs to re-execute.
      */
-    private ResultSetAndUpdateCountCollection rsCollection;
+    private ResultSetHandle rsCollection;
     
     /**
      * This listens to {@link #rsCollection} for an event that signals all of
@@ -267,7 +267,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 			}
 			this.isUpdating = true;
 			try {
-				ResultSetAndUpdateCountCollection rsucc = fetchResultSet(QueryCache.this.variableResolver);
+				ResultSetHandle rsucc = fetchResultSet(QueryCache.this.variableResolver);
 				
 				if (rsucc == null) {
 					return;
@@ -358,9 +358,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         query.setUUID(getUUID());
         
         try {
-        	final ResultSetAndUpdateCountCollection newCollection;
+        	final ResultSetHandle newCollection;
         	if (q.rsCollection != null) {
-        		newCollection = new ResultSetAndUpdateCountCollection(q.rsCollection);
+        		newCollection = new ResultSetHandle(q.rsCollection);
         	} else {
         		newCollection = null;
         	}
@@ -549,7 +549,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     		boolean initialResult = currentStatement.execute();
     		
     		setRsCollection(
-    				new ResultSetAndUpdateCountCollection(
+    				new ResultSetHandle(
     						currentStatement, 
     						isStreaming(), 
     						getStreamingRowLimit(), 
@@ -659,7 +659,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * Returns the most up to date result sets in the query cache. This may
      * execute the query on the database.
      */
-    private ResultSetAndUpdateCountCollection fetchResultSet(SPVariableResolver variableContext) throws SQLException {
+    private ResultSetHandle fetchResultSet(SPVariableResolver variableContext) throws SQLException {
         if (rsCollection == null
         		|| this.variableResolver != variableContext) {
         	try {
@@ -911,16 +911,16 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         }
     }
 
-    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException {
+    public Future<ResultSetHandle> execute() throws ResultSetProducerException {
     	return execute(this.variableResolver);
     }
     
-    public Future<ResultSetAndUpdateCountCollection> execute(final SPVariableResolver variablesContext) throws ResultSetProducerException {
-        Callable<ResultSetAndUpdateCountCollection> callable = new Callable<ResultSetAndUpdateCountCollection>() {
-            public ResultSetAndUpdateCountCollection call() throws Exception {
+    public Future<ResultSetHandle> execute(final SPVariableResolver variablesContext) throws ResultSetProducerException {
+        Callable<ResultSetHandle> callable = new Callable<ResultSetHandle>() {
+            public ResultSetHandle call() throws Exception {
                 try {
                     long eventCount = rsps.getEventsFired();
-                    final ResultSetAndUpdateCountCollection resultSets = fetchResultSet(variablesContext);
+                    final ResultSetHandle resultSets = fetchResultSet(variablesContext);
                     if (rsps.getEventsFired() == eventCount) {
                         runInForeground(new Runnable() {
                             public void run() {
@@ -934,8 +934,8 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
                 }
             }
         };
-        FutureTask<ResultSetAndUpdateCountCollection> futureTask = 
-            new FutureTask<ResultSetAndUpdateCountCollection>(callable);
+        FutureTask<ResultSetHandle> futureTask = 
+            new FutureTask<ResultSetHandle>(callable);
         runInBackground(futureTask);
         return futureTask;
     }
@@ -1184,7 +1184,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * Sets a new result set collection in this class. This will clean up the
      * previous result set collection which may throw a {@link SQLException}.
      */
-    private void setRsCollection(ResultSetAndUpdateCountCollection newCollection) throws SQLException {
+    private void setRsCollection(ResultSetHandle newCollection) throws SQLException {
         if (rsCollection != null) {
             rsCollection.cleanup();
             rsCollection.removeResultSetListener(rsCollectionListener);

@@ -22,13 +22,13 @@ package ca.sqlpower.wabit.rs;
 
 /**
  * This listener will be notified when all of the streaming result sets in a
- * {@link ResultSetAndUpdateCountCollection} have stopped streaming. 
+ * {@link ResultSetHandle} have stopped streaming. 
  */
 public interface StreamingResultSetCollectionListener {
 
     /**
      * Called when all of the streaming result sets in a
-     * {@link ResultSetAndUpdateCountCollection} have stopped streaming.
+     * {@link ResultSetHandle} have stopped streaming.
      */
     public void allStreamingStopped(StreamingResultSetCollectionEvent evt);
 }

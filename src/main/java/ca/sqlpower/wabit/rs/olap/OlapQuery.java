@@ -80,7 +80,7 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.ResultSetAndUpdateCountCollection;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
@@ -544,26 +544,26 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     }
 
     /**
-     * Creates a new {@link ResultSetAndUpdateCountCollection} based on the
+     * Creates a new {@link ResultSetHandle} based on the
      * given {@link CellSet} and fires a {@link ResultSetProducerEvent}
      * containing the new results.
      * 
      * @param cellSet
      *            The cell set to wrap in a
-     *            {@link ResultSetAndUpdateCountCollection} to notify listeners
+     *            {@link ResultSetHandle} to notify listeners
      *            of new results.
      * @return The result set collection that was sent to listeners.
      * @throws SQLException
      *             If the cellSet is not null and its values cannot be iterated
      *             over or retrieved.
      */
-    private ResultSetAndUpdateCountCollection fireResultSetEvent(
+    private ResultSetHandle fireResultSetEvent(
             CellSet cellSet) throws SQLException {
         OlapResultSet results = new OlapResultSet();
         results.populate(cellSet);
         
-        final ResultSetAndUpdateCountCollection rsCollection = 
-            new ResultSetAndUpdateCountCollection(results, getSession());
+        final ResultSetHandle rsCollection = 
+            new ResultSetHandle(results, getSession());
         
         runInForeground(new Runnable() {
             public void run() {
@@ -1529,15 +1529,15 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * {@link OlapResultSet} and notifies the ResultSetListeners with that
      * converted result.
      */
-    public Future<ResultSetAndUpdateCountCollection> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
+    public Future<ResultSetHandle> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
             InterruptedException {
-        Callable<ResultSetAndUpdateCountCollection> callable = 
-            new Callable<ResultSetAndUpdateCountCollection>() {
+        Callable<ResultSetHandle> callable = 
+            new Callable<ResultSetHandle>() {
         
-            public ResultSetAndUpdateCountCollection call() throws Exception {
+            public ResultSetHandle call() throws Exception {
                 try {
                     CellSet cellSet = executeOlapQuery();
-                    final ResultSetAndUpdateCountCollection rsCollection = fireResultSetEvent(cellSet);
+                    final ResultSetHandle rsCollection = fireResultSetEvent(cellSet);
                     
                     return rsCollection;
                     
@@ -1546,13 +1546,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
                 }
             }
         };
-        FutureTask<ResultSetAndUpdateCountCollection> futureTask = 
-            new FutureTask<ResultSetAndUpdateCountCollection>(callable);
+        FutureTask<ResultSetHandle> futureTask = 
+            new FutureTask<ResultSetHandle>(callable);
         runInBackground(futureTask);
         return futureTask;
     }
     
-    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+    public Future<ResultSetHandle> execute() throws ResultSetProducerException, 
     	InterruptedException {
     	return this.execute(new SPVariableHelper(this));
     }

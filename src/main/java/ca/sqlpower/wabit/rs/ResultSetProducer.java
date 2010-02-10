@@ -63,7 +63,7 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      *             If the calling thread is interrupted while blocked waiting
      *             for another call to execute() to complete.
      */
-    Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+    Future<ResultSetHandle> execute() throws ResultSetProducerException, 
         InterruptedException;
     
     /**
@@ -75,7 +75,7 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      * @throws ResultSetProducerException
      * @throws InterruptedException
      */
-    Future<ResultSetAndUpdateCountCollection> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
+    Future<ResultSetHandle> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
     	InterruptedException;
 
     /**
