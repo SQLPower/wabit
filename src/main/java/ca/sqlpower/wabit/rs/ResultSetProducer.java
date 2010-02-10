@@ -23,6 +23,7 @@ import java.util.concurrent.Future;
 
 import javax.annotation.Nonnull;
 
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.WabitBackgroundWorker;
 
 /**
@@ -64,6 +65,18 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      */
     Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
         InterruptedException;
+    
+    /**
+     * Extended version of the {@link ResultSetProducer#execute()} method that takes
+     * a variable context into which to execute this query in.
+     * 
+     * @param variablesContext The variables context to use
+     * @return 
+     * @throws ResultSetProducerException
+     * @throws InterruptedException
+     */
+    Future<ResultSetAndUpdateCountCollection> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
+    	InterruptedException;
 
     /**
      * Adds the given listener to this result set producer's list of interested

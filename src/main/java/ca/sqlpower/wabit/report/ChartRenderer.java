@@ -34,6 +34,8 @@ import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.chart.Chart;
@@ -48,7 +50,7 @@ import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
  * defined by the user.
  */
 public class ChartRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
-	
+		
 	private static final Logger logger = Logger.getLogger(ChartRenderer.class);
 
 	private final Chart chart;
@@ -82,7 +84,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
     // TODO we intend to remove this whole method into the SwingUI layer (SwingContentRenderer)
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-			double scaleFactor, int pageIndex, boolean printing) {
+			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
 	    if (!chart.getMissingIdentifiers().isEmpty()) {
 	        renderError(g, contentBox,
 	                "There are columns missing from the query but used in the chart.",
@@ -96,7 +98,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	    try {
 	        if (chart.getUnfilteredResultSet() == null && chart.getQuery() != null) {
 	            // TODO has to be on a background thread!
-	            chart.getQuery().execute();
+	            chart.getQuery().execute(variablesContext);
 	        }
 	    } catch (Exception ex) {
 	        logger.info("Chart data error", ex);
@@ -183,7 +185,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	public void refresh() {
 		try {
 		    if (chart.getQuery() != null) {
-		        chart.getQuery().execute();
+		        chart.getQuery().execute(new SPVariableHelper(this));
 		    }
 		} catch (InterruptedException e) {
 			throw new RuntimeException("Chart renderer was interrupted while refreshing data.", e);

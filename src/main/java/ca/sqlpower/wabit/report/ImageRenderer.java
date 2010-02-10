@@ -33,6 +33,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -133,7 +134,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 	}
 
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-			double scaleFactor, int pageIndex, boolean printing) {
+			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
 		if (image.getImage() == null) {
 			g.drawString("Empty image", 0, g.getFontMetrics().getHeight());
 			return false;

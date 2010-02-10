@@ -66,6 +66,7 @@ import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
@@ -380,7 +381,7 @@ public class ChartPanel implements WabitPanel {
         
 		try {
 			if (chart.getQuery() != null && !disableAutoExecute) {
-				chart.getQuery().execute();
+				chart.getQuery().execute(new SPVariableHelper(chart));
 			}
 			updateGUIFromChart();
 		} catch (Exception ex) {

@@ -508,6 +508,9 @@ public class LayoutPanel implements WabitPanel, MouseState {
         		zoomToFit();
         	}
         });
+        
+        // Refresh all content boxes.
+        refreshDataAction.actionPerformed(null);
     }
     
     /**

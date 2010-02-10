@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
@@ -155,7 +156,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         cb.setHeight(200);
         ResultSetRenderer renderer = new ResultSetRenderer(cache);
         renderer.setParent(cb);
-        renderer.executeQuery();
+        renderer.executeQuery(new SPVariableHelper(renderer));
         assertEquals(2, renderer.getColumnInfoList().size());
         renderer.getColumnInfoList().get(0).setWillGroupOrBreak(GroupAndBreak.GROUP);
         renderer.getColumnInfoList().get(1).setWillSubtotal(true);
@@ -286,7 +287,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
      
         assertNull(renderer.getExecuteException());
         
-        renderer.executeQuery();
+        renderer.executeQuery(new SPVariableHelper(renderer));
         
         System.out.println(renderer.getExecuteException());
         assertNull(renderer.getExecuteException());

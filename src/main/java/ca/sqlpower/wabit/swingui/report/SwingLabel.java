@@ -37,7 +37,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
+import javax.swing.JTextPane;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.text.BadLocationException;
@@ -50,6 +50,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.swingui.object.InsertVariableAction;
 import ca.sqlpower.swingui.object.VariableInserter;
+import ca.sqlpower.swingui.object.VariableLabel;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.VerticalAlignment;
@@ -77,7 +78,10 @@ public class SwingLabel implements SwingContentRenderer {
     public DataEntryPanel getPropertiesPanel() {
         final DefaultFormBuilder fb = new DefaultFormBuilder(new FormLayout("pref, 4dlu, 250dlu:grow"));
         
-        final JTextArea textArea = new JTextArea(renderer.getText());
+        final JTextPane textArea = new JTextPane();
+        textArea.setText(renderer.getText());
+        
+        VariableLabel.insertLabels(this.variablesHelper, textArea.getDocument(), textArea);
         
         Action insertVariableAction = new InsertVariableAction(
         		"Variables",
@@ -86,10 +90,12 @@ public class SwingLabel implements SwingContentRenderer {
 				new VariableInserter() {
 					public void insert(String variable) {
 						try {
-							textArea.getDocument().insertString(
-									textArea.getCaretPosition(), 
-									variable, 
-									null);
+							VariableLabel.insertLabel(
+									variable.replaceFirst("\\$", "").replaceFirst("\\{", "").replaceFirst("\\}", ""), 
+									SwingLabel.this.variablesHelper, 
+									textArea.getDocument(), 
+									textArea.getCaretPosition(),
+									textArea);
 						} catch (BadLocationException e) {
 							throw new IllegalStateException(e);
 						}
@@ -193,6 +199,7 @@ public class SwingLabel implements SwingContentRenderer {
                 fontSelector.applyChanges();
                 renderer.setFont(fontSelector.getSelectedFont());
 
+                VariableLabel.removeLabels(textArea.getDocument());
                 renderer.setText(textArea.getText());
                 
                 if (leftAlign.isSelected()) {

@@ -37,6 +37,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -117,6 +118,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     private int zoomLevel;
     
     protected SPSimpleVariableResolver variables;
+    
+    protected SPVariableHelper variableHelper = new SPVariableHelper(this);
     
     /**
      * This will define if the layout is currently printing, which is also done by
@@ -214,7 +217,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
             Graphics2D contentGraphics = (Graphics2D) g2.create(
                     (int) cb.getX(), (int) cb.getY(),
                     (int) cb.getWidth(), (int) cb.getHeight());
-            needMorePages |= r.renderReportContent(contentGraphics, cb, 1.0, pageIndex, currentlyPrinting.get());
+            needMorePages |= r.renderReportContent(contentGraphics, cb, 1.0, pageIndex, currentlyPrinting.get(), this.variableHelper);
+            r.refresh();
             contentGraphics.dispose();
         }
         if (!needMorePages) {

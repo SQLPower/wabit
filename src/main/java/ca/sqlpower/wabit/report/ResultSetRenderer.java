@@ -49,6 +49,8 @@ import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowSetChangeEvent;
@@ -332,8 +334,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             	// because we just registered a listener on it anyways.
             	if (!(paintingRS instanceof CachedRowSet) || 
             			((paintingRS instanceof CachedRowSet)
-            			&& ((CachedRowSet)paintingRS).getData() != null
-            			&& ((CachedRowSet)paintingRS).getData().size() > 0)) {
+            			&& ((CachedRowSet)paintingRS).getData() != null)) { 
 	            	try {
 	            		initColumns(paintingRS);
 	            	} catch (Exception ex) {
@@ -357,7 +358,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	}
 	
 	private final ResultSetHandler resultSetHandler = new ResultSetHandler();
-	
+
+	private SPVariableResolver lastContextUsed;
+
     public ResultSetRenderer(@Nonnull QueryCache query) {
     	this(query, new ArrayList<ColumnInfo>());
     }
@@ -410,6 +413,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     public CleanupExceptions cleanup() {
         query.removeResultSetListener(resultSetHandler);
     	query.removeSPListener(queryChangeListener);
+    	query.removeSPListener(columnInfoChangeListener);
     	resultSetHandler.cleanup();
     	return new CleanupExceptions();
     }
@@ -425,20 +429,19 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * <p>
 	 * Package private for testing.
 	 */
-	void executeQuery() {
+	void executeQuery(SPVariableResolver variablesContext) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
-        if (paintingRS == null) {
-        	paintingRS = null;
-        	executeException = null;
-        	try {
-        		query.execute();
-        	} catch (Exception ex) {
-        		executeException = ex;
-        	}
-        }
-        
+		
+    	paintingRS = null;
+    	executeException = null;
+    	try {
+    		query.execute(variablesContext);
+    	} catch (Exception ex) {
+    		executeException = ex;
+    	}
+    
         if (logger.isDebugEnabled()) {
 			logger.debug("Finished fetching results for query " + query.generateQuery());
 		}
@@ -448,14 +451,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * This will execute the query contained in this result set and
      * set the result set to be a new result set.
      */
-	private Exception executeQueryForPrinting() {
+	private Exception executeQueryForPrinting(SPVariableResolver variablesContext) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
 		}
         CachedRowSet executedRs = null;
         
 		try {
-			query.executeStatement(true);
+			query.executeStatement(true, variablesContext);
 			boolean hasNext = true;
 			while (hasNext) {
             	if (query.getResultSet() != null) {
@@ -571,16 +574,18 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         clearResultSetLayout();
     }
 
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
-    	if (printing && printingResultSet == null) {
-    		Exception printingEx = executeQueryForPrinting();
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+    	if ((printing && printingResultSet == null) || (printing && this.lastContextUsed != variablesContext)) {
+    		this.lastContextUsed = variablesContext;
+    		Exception printingEx = executeQueryForPrinting(variablesContext);
     		if (printingEx != null) {
                 return renderFailure(printingEx, g, contentBox, scaleFactor, pageIndex);
             } else {
                 return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
             }
-    	} else if (!printing && paintingRS == null) {
-    		executeQuery();
+    	} else if ((!printing && paintingRS == null) || (!printing && this.lastContextUsed != variablesContext)) {
+    		this.lastContextUsed = variablesContext;
+    		executeQuery(variablesContext);
     	}
     	if (executeException != null) {
             return renderFailure(executeException, g, contentBox, scaleFactor, pageIndex);
@@ -646,7 +651,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     		rs = printingResultSet;
     	}
     	
-    	if (rs == null) {
+    	if (rs == null || rs.getData().size() == 0) {
     	    renderMessage(g, contentBox, 
     	            Collections.singletonList("The result set from " 
     	                    + query.getName() + " is empty."));
@@ -999,7 +1004,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	public void refresh() {
 		try {
 			// Force the query to get a new result set
-			query.executeStatement();
+			query.executeStatement(new SPVariableHelper(this));
 		} catch (SQLException ex) {
 			executeException = ex;
 		}
@@ -1049,5 +1054,4 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	types.add(ColumnInfo.class);
     	return types;
     }
-
 }

@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.awt.Color;
 import java.awt.Graphics2D;
 
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -107,7 +108,7 @@ public interface ReportContentRenderer extends WabitObject {
 	 *         report to grow by another page. The final page of the report is
 	 *         the first one where all content renderers involved return false.
 	 */
-    boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing);
+    boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext);
 
     /**
      * Tells this content renderer that the next call to

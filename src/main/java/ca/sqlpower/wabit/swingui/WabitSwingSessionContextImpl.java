@@ -210,6 +210,7 @@ import ca.sqlpower.wabit.swingui.enterprise.UserPanel;
 import ca.sqlpower.wabit.swingui.enterprise.action.RefreshWorkspaceAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
+import ca.sqlpower.wabit.swingui.report.ReportPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -1786,6 +1787,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             currentEditorPanel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
         } else if (entryPanelModel instanceof WabitImage) {
             currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
+        // XXX Only activate this when the report parameters are completed.
+        //} else if (entryPanelModel instanceof Report) {
+        //    currentEditorPanel = new ReportPanel(getActiveSwingSession(), (Report) entryPanelModel);
         } else if (entryPanelModel instanceof Layout) {
             currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
         } else if (entryPanelModel instanceof ReportTask) {

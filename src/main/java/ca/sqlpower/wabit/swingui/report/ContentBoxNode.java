@@ -39,6 +39,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
@@ -315,6 +316,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
         addInputEventListener(inputHandler);
         updateBoundsFromContentBox();
 
+        this.helper = new SPVariableHelper(contentBox);
     }
     
     private void updateBoundsFromContentBox() {
@@ -333,6 +335,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
     }
     
     private boolean draggedOver = false;
+    
+    private SPVariableHelper helper;
     
     public void setDraggedOver(boolean draggedOver) {
     	this.draggedOver = draggedOver;
@@ -379,7 +383,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                     (int) getWidth(), (int) getHeight());
             contentGraphics.setFont(contentBox.getFont()); // XXX could use piccolo attribute to do this magically
             contentRenderer.resetToFirstPage();
-            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0, false);
+            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0, false, this.helper);
             contentGraphics.dispose();
             if (showDropInfo) {
             	g2.setColor(borderColor);

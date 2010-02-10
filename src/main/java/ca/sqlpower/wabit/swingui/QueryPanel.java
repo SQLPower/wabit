@@ -34,6 +34,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.event.MouseMotionListener;
@@ -69,6 +71,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
+import javax.swing.KeyStroke;
 import javax.swing.ListModel;
 import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
@@ -76,6 +79,7 @@ import javax.swing.event.ChangeListener;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.BadLocationException;
 import javax.swing.tree.TreePath;
 
 import net.miginfocom.swing.MigLayout;
@@ -87,6 +91,7 @@ import ca.sqlpower.architect.swingui.dbtree.DBTreeCellRenderer;
 import ca.sqlpower.architect.swingui.dbtree.DBTreeModel;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryChangeEvent;
 import ca.sqlpower.query.QueryChangeListener;
@@ -101,6 +106,9 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.sqlobject.SQLObjectRoot;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.dbtree.SQLObjectSelection;
+import ca.sqlpower.swingui.object.InsertVariableAction;
+import ca.sqlpower.swingui.object.VariableInserter;
+import ca.sqlpower.swingui.object.VariableLabel;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
@@ -856,6 +864,36 @@ public class QueryPanel implements WabitPanel {
     		queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
     	}
     	
+    	// We need to map the insert var action here.
+    	final SPVariableHelper helper = new SPVariableHelper(queryCache);
+    	Action insertVariableAction = new InsertVariableAction(
+        		"Variables",
+        		helper, 
+				null, 
+				new VariableInserter() {
+					public void insert(String variable) {
+						try {
+							queryUIComponents.getQueryArea().getDocument().insertString(
+									queryUIComponents.getQueryArea().getCaretPosition(), 
+									variable, 
+									null);
+						} catch (BadLocationException e) {
+							throw new AssertionError(e);
+						}
+					}
+				}, 
+				queryUIComponents.getQueryArea());
+
+        // Maps CTRL+SPACE to insert variable
+    	queryUIComponents.getQueryArea().getInputMap().put(
+				KeyStroke.getKeyStroke(
+						KeyEvent.VK_SPACE,
+						InputEvent.CTRL_MASK),
+						"insertVariable");
+    	queryUIComponents.getQueryArea().getActionMap().put(
+				"insertVariable", 
+				insertVariableAction);
+    	
     	final JLabel whereText = new JLabel("Where:");
     	
     	final JPanel topPanel = new JPanel(new BorderLayout());
@@ -900,6 +938,10 @@ public class QueryPanel implements WabitPanel {
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+					VariableLabel.insertLabels(
+							new SPVariableHelper(queryCache), 
+							queryUIComponents.getQueryArea().getDocument(), 
+							queryUIComponents.getQueryArea());
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);

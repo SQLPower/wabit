@@ -1529,7 +1529,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * {@link OlapResultSet} and notifies the ResultSetListeners with that
      * converted result.
      */
-    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+    public Future<ResultSetAndUpdateCountCollection> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
             InterruptedException {
         Callable<ResultSetAndUpdateCountCollection> callable = 
             new Callable<ResultSetAndUpdateCountCollection>() {
@@ -1550,6 +1550,11 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
             new FutureTask<ResultSetAndUpdateCountCollection>(callable);
         runInBackground(futureTask);
         return futureTask;
+    }
+    
+    public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException, 
+    	InterruptedException {
+    	return this.execute(new SPVariableHelper(this));
     }
 
     // -------------- end ResultSetProducer interface --------------

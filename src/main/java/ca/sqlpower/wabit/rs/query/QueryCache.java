@@ -240,6 +240,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
     	private boolean updateNeeded = true;
+    	private boolean isUpdating = false;
     	public QueryVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
 		}
@@ -248,19 +249,31 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	}
     	protected void beforeLookups(String key) {
     		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
-    				&& this.updateNeeded) {
+    				&& this.updateNeeded
+    				&& !isRunning()) {
     			this.updateVars(true);
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.updateNeeded) {
+    		if (this.updateNeeded
+    				&& !isRunning()) {
     			this.updateVars(false);
     		}
     	}
-		public void updateVars(boolean completeUpdate) {
-
+		private void updateVars(boolean completeUpdate) {
+			// Prevent recursive updates.
+			if (this.isUpdating) {
+				return;
+			}
+			this.isUpdating = true;
 			try {
-				ResultSet rs = fetchResultSet().getResultSet();
+				ResultSetAndUpdateCountCollection rsucc = fetchResultSet(QueryCache.this.variableResolver);
+				
+				if (rsucc == null) {
+					return;
+				}
+				
+				ResultSet rs = rsucc.getResultSet();
 				variables.clear();
 				if (rs != null &&
 						rs.first()) {
@@ -274,6 +287,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
 				logger.error("Failed to resolve available variables from a query.", e);
 			} finally {
 				this.updateNeeded = false;
+				this.isUpdating = false;
 			}
 		}
     }
@@ -454,7 +468,27 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *             If the query fails to execute for any reason.
      */
     public boolean executeStatement() throws SQLException {
-        return executeStatement(false);
+        return executeStatement(false, this.variableResolver);
+    }
+    
+    /**
+     * Executes the current SQL query, returning a cached copy of the result
+     * set. The returned copy of the result set is guaranteed to be scrollable.
+     * If the query is not streaming it does not hold any remote database
+     * resources. If the query is streaming then the connection and statement
+     * will be held open to continue streaming in values.
+     * 
+     * @param variableContext The variable context into which to execute this query.
+     * 
+     * @return an in-memory copy of the result set produced by this query
+     *         cache's current query. You are not required to close the returned
+     *         result set when you are finished with it, but you can if you
+     *         like.
+     * @throws SQLException
+     *             If the query fails to execute for any reason.
+     */
+    public boolean executeStatement(SPVariableResolver variableContext) throws SQLException {
+        return executeStatement(false, variableContext);
     }
 
     /**
@@ -477,7 +511,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * @throws SQLException
      *             If the query fails to execute for any reason.
      */
-    public boolean executeStatement(boolean fetchFullResults) throws SQLException {
+    public boolean executeStatement(boolean fetchFullResults, SPVariableResolver variableContext) throws SQLException {
     	
     	if (isRunning()) {
     		cancel();    		
@@ -489,72 +523,86 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         if (query.getDatabase() == null || query.getDatabase().getDataSource() == null) {
             throw new NullPointerException("Data source is null.");
         }
-        String sql = query.generateQuery();
-        ResultSet rs = null;
-        try {
-            setRunning(true);
-            currentConnection = query.getDatabase().getConnection();
-            currentStatement = this.variableResolver.substituteForDb(currentConnection, sql);
-            if (!query.isStreaming() && !fetchFullResults) {
-                currentStatement.setMaxRows(query.getRowLimit());
-            }
-            boolean initialResult = currentStatement.execute();
-            
-            setRsCollection(
-        		new ResultSetAndUpdateCountCollection(
-            		currentStatement, 
-                    isStreaming(), 
-                    getStreamingRowLimit(), 
-                    getSession()));
-            
-            runInForeground(new Runnable() {
-                public void run() {
-                    synchronized(rsps) {
-                        rsps.fireResultSetEvent(rsCollection);
-                    }
-                }
-            });
-            
-            return initialResult;
-            
-        } catch (SQLObjectException e) {
-        	logger.error("Cannot execute query.", e);
-        	setRunning(false);
-            throw new SQLObjectRuntimeException(e);
-        } catch (Exception t) {
-        	setRunning(false);
-        	SQLException ex = new SQLException(t.getMessage());
-        	ex.setStackTrace(t.getStackTrace());
-        	throw ex;
-        } finally {
-        	this.variableProvider.setUpdateNeeded(true);
-            if (!query.isStreaming()) {
-                if (rs != null) {
-                    try {
-                        rs.close();
-                    } catch (Exception ex) {
-                        logger.warn("Failed to close result set. Squishing this exception: ", ex);
-                    }
-                }
-                if (currentStatement != null) {
-                    try {
-                        currentStatement.close();
-                        currentStatement = null;
-                    } catch (Exception ex) {
-                        logger.warn("Failed to close statement. Squishing this exception: ", ex);
-                    }
-                }
-                if (currentConnection != null) {
-                    try {
-                        currentConnection.close();
-                        currentConnection = null;
-                    } catch (Exception ex) {
-                        logger.warn("Failed to close connection. Squishing this exception: ", ex);
-                    }
-                }
-                setRunning(false);
-            }
-        }
+        
+        
+        	
+    	String sql = query.generateQuery();
+    	ResultSet rs = null;
+    	
+    	try {
+    		setRunning(true);
+    		currentConnection = query.getDatabase().getConnection();
+        	
+    			
+    		if (variableContext != null 
+    				&& variableContext instanceof SPVariableHelper) {
+    			currentStatement = ((SPVariableHelper)variableContext).substituteForDb(currentConnection, sql);
+    		} else {
+    			SPVariableHelper adHodHelper = new SPVariableHelper(this);
+    			currentStatement = adHodHelper.substituteForDb(currentConnection, sql);
+    		}
+    		
+    		if (!query.isStreaming() && !fetchFullResults) {
+    			currentStatement.setMaxRows(query.getRowLimit());
+    		}
+    		
+    		boolean initialResult = currentStatement.execute();
+    		
+    		setRsCollection(
+    				new ResultSetAndUpdateCountCollection(
+    						currentStatement, 
+    						isStreaming(), 
+    						getStreamingRowLimit(), 
+    						getSession()));
+    		
+    		runInForeground(new Runnable() {
+    			public void run() {
+    				synchronized(rsps) {
+    					rsps.fireResultSetEvent(rsCollection);
+    				}
+    			}
+    		});
+    		
+    		return initialResult;
+        		
+    	} catch (SQLObjectException e) {
+    		logger.error("Cannot execute query.", e);
+    		setRunning(false);
+    		throw new SQLObjectRuntimeException(e);
+    	} catch (Exception t) {
+    		setRunning(false);
+    		SQLException ex = new SQLException(t.getMessage());
+    		ex.setStackTrace(t.getStackTrace());
+    		throw ex;
+    	} finally {
+    		this.variableProvider.setUpdateNeeded(true);
+    		if (!query.isStreaming()) {
+    			if (rs != null) {
+    				try {
+    					rs.close();
+    				} catch (Exception ex) {
+    					logger.warn("Failed to close result set. Squishing this exception: ", ex);
+    				}
+    			}
+    			if (currentStatement != null) {
+    				try {
+    					currentStatement.close();
+    					currentStatement = null;
+    				} catch (Exception ex) {
+    					logger.warn("Failed to close statement. Squishing this exception: ", ex);
+    				}
+    			}
+    			if (currentConnection != null) {
+    				try {
+    					currentConnection.close();
+    					currentConnection = null;
+    				} catch (Exception ex) {
+    					logger.warn("Failed to close connection. Squishing this exception: ", ex);
+    				}
+    			}
+    			setRunning(false);
+    		}
+    	}
     }
 
     /**
@@ -591,8 +639,12 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         setRunning(false);
     }
 
+    public CachedRowSet getResultSet(SPVariableHelper variablesContext) throws SQLException {
+        return fetchResultSet(variablesContext).getResultSet();
+    }
+    
     public CachedRowSet getResultSet() throws SQLException {
-        return fetchResultSet().getResultSet();
+        return fetchResultSet(this.variableResolver).getResultSet();
     }
     
     public int getUpdateCount() {
@@ -607,10 +659,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * Returns the most up to date result sets in the query cache. This may
      * execute the query on the database.
      */
-    private ResultSetAndUpdateCountCollection fetchResultSet() throws SQLException {
-        if (rsCollection == null) {
+    private ResultSetAndUpdateCountCollection fetchResultSet(SPVariableResolver variableContext) throws SQLException {
+        if (rsCollection == null
+        		|| this.variableResolver != variableContext) {
         	try {
-				executeStatement();
+				executeStatement(variableContext);
 			} catch (SQLException e) {
 				return null;
 			}
@@ -661,7 +714,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      *            An argument of true means a new query execution is beginning;
      *            false means a query execution has just completed.
      */
-    private synchronized void setRunning(final boolean isRunning) {
+    private void setRunning(final boolean isRunning) {
     	final boolean wasRunning = executionInProgress;
 		executionInProgress = isRunning;
     	Runnable runner = new Runnable() {
@@ -859,25 +912,25 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     }
 
     public Future<ResultSetAndUpdateCountCollection> execute() throws ResultSetProducerException {
+    	return execute(this.variableResolver);
+    }
+    
+    public Future<ResultSetAndUpdateCountCollection> execute(final SPVariableResolver variablesContext) throws ResultSetProducerException {
         Callable<ResultSetAndUpdateCountCollection> callable = new Callable<ResultSetAndUpdateCountCollection>() {
             public ResultSetAndUpdateCountCollection call() throws Exception {
-                synchronized(rsps) {
-                    try {
-                        long eventCount = rsps.getEventsFired();
-                        final ResultSetAndUpdateCountCollection resultSets = fetchResultSet();
-                        if (rsps.getEventsFired() == eventCount) {
-                            runInForeground(new Runnable() {
-                                public void run() {
-                                    synchronized(rsps) {
-                                        rsps.fireResultSetEvent(resultSets);
-                                    }
-                                }
-                            });
-                        }
-                        return resultSets;
-                    } catch (SQLException e) {
-                        throw new ResultSetProducerException(e);
+                try {
+                    long eventCount = rsps.getEventsFired();
+                    final ResultSetAndUpdateCountCollection resultSets = fetchResultSet(variablesContext);
+                    if (rsps.getEventsFired() == eventCount) {
+                        runInForeground(new Runnable() {
+                            public void run() {
+                                rsps.fireResultSetEvent(resultSets);
+                            }
+                        });
                     }
+                    return resultSets;
+                } catch (SQLException e) {
+                    throw new ResultSetProducerException(e);
                 }
             }
         };

@@ -31,6 +31,7 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -51,8 +52,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 
     private HorizontalAlignment hAlignment = HorizontalAlignment.LEFT;
     private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
-    
-    private final SPVariableHelper variableHelper;
     
     /**
      * The font that this label is using to display text. If null, getFont()
@@ -75,7 +74,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         this.text = text;
         setName("Label");
         setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
-        this.variableHelper = new SPVariableHelper(this);
     }
     
     /**
@@ -88,7 +86,6 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
     	this.backgroundColour = label.getBackgroundColour();
     	this.vAlignment = label.getVerticalAlignment();
     	setName(label.getName());
-    	this.variableHelper = new SPVariableHelper(this);
     }
     
     public Label() {
@@ -152,7 +149,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 	 * the content box. Note that specifying a pageIndex has no effect, since
 	 * Labels are intended to be the same on every page.
 	 */
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
+    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
         logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
         String[] textToRender = getVariableSubstitutedText();
@@ -180,7 +177,7 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
      * Return the Label text with variables substituted.
      */
     public String[] getVariableSubstitutedText() {
-    	return SPVariableHelper.substitute(text, this.variableHelper).split("\n");
+    	return SPVariableHelper.substitute(text, new SPVariableHelper(this)).split("\n");
 	}
 
     @Override

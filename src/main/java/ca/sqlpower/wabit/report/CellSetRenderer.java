@@ -52,6 +52,7 @@ import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -237,7 +238,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * This method renders the report content in the CellSetRenderer
      */
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-            double scaleFactor, int pageIndex, boolean printing) {
+            double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
     	init();
         if (getBodyFont() == null) {
             setBodyFont(g.getFont());

@@ -20,10 +20,10 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.text.Format;
@@ -36,34 +36,38 @@ import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
+import javax.swing.JSeparator;
 import javax.swing.JSpinner;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerNumberModel;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.swingui.ColorCellRenderer;
 import ca.sqlpower.swingui.DataEntryPanel;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportUtil;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
-import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
+import com.lowagie.text.Font;
 
 import edu.umd.cs.piccolo.event.PInputEvent;
 
@@ -106,75 +110,138 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
     }
 
     public DataEntryPanel getPropertiesPanel() {
-        FormLayout layout = new FormLayout("pref, 4dlu, fill:pref:grow, 4dlu, pref");
-        final DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
-        // TODO gap (padding) between columns
-        // TODO line under header?
+    	FormLayout layout = new FormLayout("20dlu, 4dlu, pref, 4dlu, 300dlu:grow, 4dlu, pref");
+        final DefaultFormBuilder fb = new DefaultFormBuilder(layout);
+       
+        
+        
+        final JLabel visOptionsLabel = new JLabel("Visual");
+        visOptionsLabel.setFont(visOptionsLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(visOptionsLabel,7);
+        fb.nextLine();
+        fb.append("");
+        
         
         final JLabel headerFontExample = new JLabel("Header Font Example");
         headerFontExample.setFont(renderer.getHeaderFont());
         fb.append("Header Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
+        fb.nextLine();
+        fb.append("");
         
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(renderer.getBodyFont());
         fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample));
         fb.nextLine();
-
-        final JTextField nullStringField = new JTextField(renderer.getNullString());
-        fb.append("Null string", nullStringField);
-        fb.nextLine();
+        fb.append("");
         
-        final JLabel colourLabel = new JLabel(" ");
-        colourLabel.setBackground(renderer.getBackgroundColour());
+
+
+        final JLabel colourLabel = new JLabel("  ");
+        final JButton colorPickerButton = new JButton("Choose...");
         colourLabel.setOpaque(true);
-        final JComboBox colourCombo = new JComboBox();
-        colourCombo.setRenderer(new ColorCellRenderer(85, 30));
-        for (BackgroundColours bgColour : BackgroundColours.values()) {
-            colourCombo.addItem(bgColour.getColour());
-        }
-        colourCombo.setSelectedItem(renderer.getBackgroundColour());
-        colourCombo.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Color colour = (Color) colourCombo.getSelectedItem();
-                colourLabel.setBackground(colour);
-            }
-        });
-        fb.append("Background", colourLabel, colourCombo);
+        colourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        colourLabel.setBackground(renderer.getBackgroundColour());
+        colourLabel.addMouseListener(new MouseListener() {
+			public void mouseReleased(MouseEvent e) {
+				// no op
+			}
+			public void mousePressed(MouseEvent e) {
+				// no op
+			}
+			public void mouseExited(MouseEvent e) {
+				// no op
+			}
+			public void mouseEntered(MouseEvent e) {
+				// no op
+			}
+			public void mouseClicked(MouseEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  colorPickerButton,
+		                  "Choose a background color", 
+		                  renderer.getBackgroundColour());
+		        if (c != null) {
+		        	colourLabel.setBackground(c);
+		        }
+			}
+		});
+        colorPickerButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  colorPickerButton,
+		                  "Choose a background color", 
+		                  colourLabel.getBackground());
+		        if (c != null) {
+		        	colourLabel.setBackground(c);
+		        }
+			}
+		});
+        
+        fb.append("Background", colourLabel, colorPickerButton);
+        fb.append("");
         fb.nextLine();
+        fb.append("");
+        
         final JComboBox borderComboBox = new JComboBox(BorderStyles.values());
         borderComboBox.setSelectedItem(renderer.getBorderType());
         fb.append("Border", borderComboBox);
         fb.nextLine();
-        final JCheckBox grandTotalsCheckBox = new JCheckBox("Grand totals");
+        fb.append("");
+        
+        
+        fb.appendUnrelatedComponentsGapRow();
+        fb.nextLine();
+        
+        final JLabel dataOptionsLabel = new JLabel("Data");
+        dataOptionsLabel.setFont(dataOptionsLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(dataOptionsLabel,7);
+        fb.nextLine();
+        fb.append("");
+        
+
+        final JTextField nullStringField = new JTextField(renderer.getNullString());
+        fb.append("Null string", nullStringField);
+        fb.nextLine();
+        fb.append("");
+        
+        final JCheckBox grandTotalsCheckBox = new JCheckBox("Add Grand totals");
         grandTotalsCheckBox.setSelected(renderer.isPrintingGrandTotals());
         fb.append("", grandTotalsCheckBox);
         fb.nextLine();
         
-        fb.appendRow("fill:pref");
-        Box box = Box.createVerticalBox();
-        final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
-        final FormLayout columnLayout = new FormLayout(
-                "min(pref; 100dlu):grow, 5dlu, min(pref; 100dlu):grow, 5dlu, pref:grow, 5dlu, pref:grow", 
-                "pref, pref, pref, pref");
-        for (ColumnInfo ci : renderer.getColumnInfoList()) {
-            DataEntryPanel columnPropsPanel = createColumnPropsPanel(columnLayout, ci);
-            columnPanels.add(columnPropsPanel);
-            box.add(columnPropsPanel.getPanel());
-            box.add(Box.createHorizontalStrut(5));
-        }
-        JScrollPane columnScrollPane = new JScrollPane(box,
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        columnScrollPane.setPreferredSize(new Dimension(columnScrollPane.getPreferredSize().width, 400));
-        fb.append("Column info", columnScrollPane, 3);
         
+        
+        fb.appendUnrelatedComponentsGapRow();
+        final JLabel columnOptionsLabel = new JLabel("Columns");
+        columnOptionsLabel.setFont(columnOptionsLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(columnOptionsLabel,7);
+        fb.nextLine();
+        fb.append("");
+        
+        
+        
+		JTabbedPane tabbedPane = new JTabbedPane();
+	    tabbedPane.setTabLayoutPolicy(JTabbedPane.SCROLL_TAB_LAYOUT);
+	    final List<DataEntryPanel> columnPanels = new ArrayList<DataEntryPanel>();
+		for (ColumnInfo ci : renderer.getColumnInfoList()) {
+			DataEntryPanel dep = createColumnPropsPanel(ci);
+			columnPanels.add(dep);
+			tabbedPane.add(ci.getName(), dep.getPanel());
+		}
+		
+		fb.append(tabbedPane, 5);
+		fb.nextLine();
+		fb.appendUnrelatedComponentsGapRow();
+	   
         return new DataEntryPanel() {
 
             public boolean applyChanges() {
                 renderer.setHeaderFont(headerFontExample.getFont());
                 renderer.setBodyFont(bodyFontExample.getFont());
                 renderer.setNullString(nullStringField.getText());
-                renderer.setBackgroundColour((Color) colourCombo.getSelectedItem());
+                renderer.setBackgroundColour(colourLabel.getBackground());
                 renderer.setBorderType((BorderStyles) borderComboBox.getSelectedItem());
                 renderer.setPrintingGrandTotals(grandTotalsCheckBox.isSelected());
                 
@@ -209,17 +276,43 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
     /**
      * Helper method for {@link #getPropertiesPanel()}.
      */
-    private DataEntryPanel createColumnPropsPanel(FormLayout layout, final ColumnInfo ci) {
+    private DataEntryPanel createColumnPropsPanel(final ColumnInfo ci) {
 
+    	final FormLayout layout = new FormLayout(
+                "min(pref; 100dlu):grow, 10dlu, min(pref; 100dlu):grow, 4dlu, pref:grow, 10dlu, pref:grow");
+    	
         DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
+        
         final JTextField columnLabel = new JTextField(ci.getName());
-        fb.append(columnLabel);
         
-        // TODO better UI (auto/manual, and manual is based on a jtable with resizable headers)
+        final JLabel widthLabel = new JLabel("Size");
         final JSpinner widthSpinner = new JSpinner(new SpinnerNumberModel(ci.getWidth(), 0, Integer.MAX_VALUE, 12));
-        fb.append(widthSpinner);
         
+        final JComboBox dataTypeComboBox = new JComboBox(DataType.values());
+        final JLabel dataTypeLabel = new JLabel("Type");
+        
+        final JComboBox formatComboBox = new JComboBox();
+        final JLabel formatLabel = new JLabel("Format");
+        
+        
+        final JCheckBox subtotalCheckbox = new JCheckBox("Print Subtotals");
+        
+        final JLabel linkingLabel = new JLabel("Link to report");
+        final JComboBox linkingBox = new JComboBox();
+        // XXX Enable only when this is working.
+        linkingBox.setEnabled(false);
+        
+        final ButtonGroup breakAndGroupButtons = new ButtonGroup();
+        final JRadioButton noBreakOrGroupButton = new JRadioButton("None");
+        breakAndGroupButtons.add(noBreakOrGroupButton);
+        final JRadioButton breakRadioButton = new JRadioButton("Break Into Sections");
+        breakAndGroupButtons.add(breakRadioButton);
+        final JRadioButton groupRadioButton = new JRadioButton("Group (Suppress Repeating Values)");
+        breakAndGroupButtons.add(groupRadioButton);
+        
+        
+        final JLabel alignmentLabel = new JLabel("Alignment");
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(
                 Icons.LEFT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.LEFT);
@@ -235,18 +328,116 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         alignmentBox.add(centreAlign);
         alignmentBox.add(rightAlign);
         alignmentBox.add(Box.createHorizontalGlue());
-        fb.append(alignmentBox);
-        fb.append(new JLabel("Breaking and Grouping"));
         
+        
+        
+        /*
+         * ROW 1 - Caption text field + two labels
+         */
+        JLabel captionLabel = new JLabel("Caption");
+        captionLabel.setFont(captionLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(captionLabel);
+        JLabel visLabel = new JLabel("Visual options");
+        visLabel.setFont(visLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(visLabel,3);
+        JLabel advLabel = new JLabel("Advanced options");
+        advLabel.setFont(advLabel.getFont().deriveFont(Font.BOLD));
+        fb.append(advLabel);
         fb.nextLine();
         
-        final JComboBox dataTypeComboBox = new JComboBox(DataType.values());
-        final JComboBox formatComboBox = new JComboBox();
+        
+        /*
+         * Separator row
+         */
+        fb.append(new JSeparator(), 7);
+        fb.nextLine();
+        
+        
+        /*
+         * Row 2
+         */
+        fb.append(columnLabel);
+        fb.append(widthLabel);
+        fb.append(widthSpinner);
+        fb.append(subtotalCheckbox);
+        subtotalCheckbox.setSelected(ci.getWillSubtotal());
+        if (ci.getDataType().equals(DataType.NUMERIC)) {
+        	subtotalCheckbox.setEnabled(true);
+        } else {
+        	subtotalCheckbox.setEnabled(false);
+        }
+        fb.nextLine();
+        
+        
+        
+        
+        /*
+         * Row 3
+         */
+        fb.append(new JLabel());
+        fb.append(dataTypeLabel);
+        fb.append(dataTypeComboBox);
+        fb.append(linkingLabel);
+        fb.nextLine();
+        
+
+        
+        /*
+         * Row 4
+         */
+        fb.append(new JLabel());
+        fb.append(formatLabel);
+        fb.append(formatComboBox);
+        fb.append(linkingBox);
+        fb.nextLine();
+        
+        
+        
+        /*
+         * Row 5
+         */
+        fb.append(new JLabel());
+        fb.append(alignmentLabel);
+        fb.append(alignmentBox);
+        fb.append(new JLabel("Breaking and Grouping"));
+        fb.nextLine();
+        
+        
+        
+        /*
+         * Row 6
+         */
+        fb.append(new JLabel(), 5);
+        fb.append(noBreakOrGroupButton);
+        fb.nextLine();
+        
+        
+        
+        /*
+         * Row 7
+         */
+        fb.append(new JLabel(), 5);
+        fb.append(breakRadioButton);
+        fb.nextLine();
+        
+        
+
+        /*
+         * Row 8
+         */
+        fb.append(new JLabel(), 5);
+        fb.append(groupRadioButton);
+        fb.nextLine();
+        
+        
+        /*
+         * spacer
+         */
+        fb.append(new JLabel(), 7);
+        fb.nextLine();
+        
         
         dataTypeComboBox.setSelectedItem(ci.getDataType());
-
-        fb.append(dataTypeComboBox);
-       
         if(dataTypeComboBox.getSelectedItem() == DataType.TEXT) {
             formatComboBox.setEnabled(false);
         } else {
@@ -261,33 +452,23 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 }
             }
         }
-        fb.append(formatComboBox);
+        
         dataTypeComboBox.addActionListener(new AbstractAction(){
-
             public void actionPerformed(ActionEvent e) {
                 if(((JComboBox)e.getSource()).getSelectedItem() == DataType.TEXT){
                     formatComboBox.setEnabled(false);
-                } else {
+                    subtotalCheckbox.setEnabled(false);
+                } else if(((JComboBox)e.getSource()).getSelectedItem() == DataType.DATE){
                     formatComboBox.setEnabled(true);
+                    subtotalCheckbox.setEnabled(false);
+                } else if(((JComboBox)e.getSource()).getSelectedItem() == DataType.NUMERIC){
+                	formatComboBox.setEnabled(true);
+                    subtotalCheckbox.setEnabled(true);
                 }
                 setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
             }
         });
-        final ButtonGroup breakAndGroupButtons = new ButtonGroup();
-        final JRadioButton noBreakOrGroupButton = new JRadioButton("None");
-        breakAndGroupButtons.add(noBreakOrGroupButton);
-        final JRadioButton breakRadioButton = new JRadioButton("Break Into Sections");
-        breakAndGroupButtons.add(breakRadioButton);
-        final JCheckBox subtotalCheckbox = new JCheckBox("Subtotal");
-        if (ci.getDataType().equals(DataType.NUMERIC)) {
-            fb.append(subtotalCheckbox);
-            subtotalCheckbox.setSelected(ci.getWillSubtotal());
-        } else {
-            fb.append("");
-        }
         
-        final JRadioButton groupRadioButton = new JRadioButton("Group (Suppress Repeating Values)");
-        breakAndGroupButtons.add(groupRadioButton);
         if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
             groupRadioButton.setSelected(true);
         } else if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
@@ -296,13 +477,15 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
             noBreakOrGroupButton.setSelected(true);
         }
         
-        fb.append(noBreakOrGroupButton);
-        fb.nextLine();
-        fb.append(new JLabel(), 5);
-        fb.append(breakRadioButton);
-        fb.nextLine();
-        fb.append(new JLabel(), 5);
-        fb.append(groupRadioButton);
+        // XXX Enable only when this is working
+//        for (Report report : WabitUtils.getWorkspace(ci).getReports()) {
+//        	linkingBox.addItem(report);
+//        }
+//        linkingBox.addActionListener(new ActionListener() {
+//			public void actionPerformed(ActionEvent e) {
+//				// TODO populate and add a listener to the linking box
+//			}
+//		});
         
         final JPanel panel = fb.getPanel();
         panel.setBorder(BorderFactory.createEmptyBorder(5, 3, 3, 5));
