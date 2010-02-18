@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.NumberFormat;
 import java.util.Date;
@@ -30,7 +29,7 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 
 import ca.sqlpower.wabit.report.chart.Chart;
-import ca.sqlpower.wabit.rs.olap.OlapResultSet;
+import ca.sqlpower.wabit.rs.OlapResultSet;
 import ca.sqlpower.wabit.rs.olap.RepeatedMember;
 
 /**
@@ -70,15 +69,6 @@ public class ChartTableCellRenderer extends DefaultTableCellRenderer {
         
         super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
         
-        // Remove the result set if the query is producing null
-        try {
-			if (chart.getUnfilteredResultSet() == null){
-				return null;
-			}
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-        
         if (value instanceof Number) {
             setText(numberFormat.format(value));
             setHorizontalAlignment(RIGHT);
@@ -97,20 +87,34 @@ public class ChartTableCellRenderer extends DefaultTableCellRenderer {
             }
             
             /*
+             * FIXME Deciding on the background required to access the Chart
+             * underlying data and it's filter. This needs reworking.
+             * I'll disable this for now but we need to figure out
+             * a way to put it back on.
+             */
+            
+            
+            /*
              * For posterity: it feels expensive to evaluate the row filter once for
              * every column, but it's really not an issue. Keep in mind the JTable is
              * only going to ask us to render the cells that are currently visible on
              * screen.
              */
-            try {
-                if (chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
+//            try {
+//            	
+//            	boolean pass = true;
+//            	if (chart.getResultSetFilter() != null
+//            			&& chart.getQuery().)
+//            	
+//            	
+//                if (chart.getUnfilteredResultSet().wouldPass(row + 1, chart.getResultSetFilter())) {
                     setBackground(defaultBackground);
-                } else {
-                    setBackground(filteredOutRowBackground);
-                }
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+//                } else {
+//                    setBackground(filteredOutRowBackground);
+//                }
+//            } catch (SQLException e) {
+//                throw new RuntimeException(e);
+//            }
         }
         
         return this;

@@ -83,8 +83,6 @@ import ca.sqlpower.swingui.db.DefaultDataSourceDialogFactory;
 import ca.sqlpower.swingui.db.DefaultDataSourceTypeDialogFactory;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
-import ca.sqlpower.swingui.query.StatementExecutor;
-import ca.sqlpower.swingui.query.StatementExecutorListener;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompterFactory;
@@ -96,6 +94,9 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.OpenWorkspaceXMLDAO;
 import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
+import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
 import ca.sqlpower.wabit.swingui.tree.FolderNode;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellEditor;
@@ -238,6 +239,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * Event handler that watches every WabitObject in this session's workspace
      * for property changes, and handles them appropriately (usually by setting
      * the session's dirty flag).
+     * 
+     * <p>
+     * This object is also resposible for listening added/removed instances
+     * of {@link ResultSetProducer} and bind a listener to it so we can update
+     * the throbber icon in the tree.
      */
 	private class WorkspaceWatcher extends AbstractSPListener {
 
@@ -257,12 +263,25 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         public void childAddedImpl(SPChildEvent e) {
         	SQLPowerUtils.listenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
+            
+            // Add a RS producer listener if necessary so we can
+            // show a throbber in the tree or not
+            if (e.getChild() instanceof ResultSetProducer) {
+            	((ResultSetProducer)e.getChild())
+            			.addResultSetProducerListener(rsProducerListener);
+            }
         }
 
         @Override
         public void childRemovedImpl(SPChildEvent e) {
         	SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
             unsavedChangesExist = true;
+            
+            // Add the RS producer listener
+            if (e.getChild() instanceof ResultSetProducer) {
+            	((ResultSetProducer)e.getChild())
+            			.removeResultSetProducerListener(rsProducerListener);
+            }
         }
 
         @Override
@@ -275,6 +294,64 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         }
 	    
 	}
+	
+	@GuardedBy("itself")
+    private final List<ActiveRsProducer> activeRsProducers =
+        Collections.synchronizedList(new ArrayList<ActiveRsProducer>());
+	
+	private class ActiveRsProducer {
+        private final TreePath pathToResponsibleObject;
+		private final ResultSetProducer rsProducer;
+        
+        ActiveRsProducer(@NonNull ResultSetProducer rsProducer) {
+			if (rsProducer == null) {
+                throw new NullPointerException("Null worker!");
+            }
+			if (!(rsProducer instanceof SPObject)) {
+				throw new AssertionError("Program error. Was expecting an instance of SPObject.");
+			}
+			this.rsProducer = rsProducer;
+            pathToResponsibleObject =
+                    workspaceTreeModel.createTreePathForObject((SPObject)this.rsProducer);
+        }
+
+        /**
+         * Repaints the responsible object's node in the workspace tree. This
+         * method has no effect if there is no responsible object defined for
+         * this worker, or the tree node for the responsible object is not
+         * currently visible.
+         */
+        public void repaintInTree() {
+            if (pathToResponsibleObject != null) {
+                Rectangle pathBounds = workspaceTree.getPathBounds(pathToResponsibleObject);
+                if (pathBounds != null) {
+                    workspaceTree.repaint(pathBounds);
+                }
+            }
+        }
+        
+        
+    }
+	
+	private ResultSetProducerListener rsProducerListener = new ResultSetProducerListener() {
+		
+		public void structureChanged(ResultSetProducerEvent evt) {
+			// Not interested in this
+		}
+		public void executionStopped(ResultSetProducerEvent evt) {
+			for (ActiveRsProducer activeRs : activeRsProducers) {
+				if (activeRs == evt.getSource()) {
+					// Trigger the repaint a last time so it shows it as stopped.
+					activeRs.repaintInTree();
+					WabitSwingSessionImpl.this.activeRsProducers.remove(activeRs);
+					break;
+				}
+			}
+		}
+		public void executionStarted(ResultSetProducerEvent evt) {
+			WabitSwingSessionImpl.this.activeRsProducers.add(new ActiveRsProducer(evt.getSource()));
+		}
+	};
 
 	/**
 	 * The model behind the workspace tree on the left side of Wabit.
@@ -502,6 +579,11 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                         worker.repaintInTree();
                     }
                 }
+                synchronized (activeRsProducers) {
+					for (ActiveRsProducer activeRs : activeRsProducers) {
+						activeRs.repaintInTree();
+					}
+				}
             }
         });
         busyBadgeTimer.start();
@@ -546,6 +628,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 	    getContext().removePropertyChangeListener(loadingContextListener);
 	    for (ActiveWorker worker : activeWorkers) {
 	        worker.getWorker().kill();
+	    }
+	    for (ActiveRsProducer activeRs : this.activeRsProducers) {
+	    	activeRs.rsProducer.cancel();
 	    }
 	    busyBadgeTimer.stop();
 
@@ -641,35 +726,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
             for (Iterator<ActiveWorker> it = activeWorkers.iterator(); it.hasNext(); ) {
                 ActiveWorker aw = it.next();
             	if (aw.getWorker().equals(worker)) {
-            		if (aw.getWorker().getResponsibleObject() instanceof StatementExecutor) {
-            			StatementExecutor stmtEx = (StatementExecutor)aw.getWorker().getResponsibleObject();
-            			/*
-            			 * A special case exists for workers that are bound to queries. 
-            			 * We have to listen to the query and only remove the worker if 
-            			 * the query has stopped.
-            			 * 
-            			 * With streaming queries, although the worker has stopped, there
-            			 * remains a background thread that continues to pull results out
-            			 * of the result set.
-            			 * 
-            			 * In order to determine when it stops for real, we will put a listener 
-            			 * on the query's statement executor.
-            			 */
-                    	if (stmtEx.isRunning()) {
-                    		stmtEx.addStatementExecutorListener(new StatementExecutorListener() {
-								public void queryStopped() {
-									removeSwingWorker(worker);
-								}
-								public void queryStarted() {
-									// Ignore this event.
-								}
-							});
-                    	} else {
-                    		it.remove();
-                    	}
-                    } else {
-                    	it.remove();
-                    }
+                	it.remove();
             	}
             }
         }

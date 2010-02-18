@@ -117,10 +117,22 @@ public abstract class AbstractWabitObjectTest extends TestCase {
      * A converter for use in tests involving persisting objects.
      */
 	private WabitSessionPersisterSuperConverter converterFactory;
+
+	private WabitWorkspace workspace;
+
+	private StubWabitSessionContext context;
     
     public WabitWorkspace getWorkspace() {
-    	return session.getWorkspace();
+    	return this.workspace;
     }
+    
+    public StubWabitSessionContext getContext() {
+		return context;
+	}
+    
+    public WabitSession getSession() {
+		return session;
+	}
     
     /**
      * Returns a list of JavaBeans property names that should be ignored when
@@ -157,6 +169,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("UUID");
     	ignore.add("session");
     	ignore.add("allowedChildTypes");
+    	ignore.add("magicEnabled");
     	return ignore;
     }
     
@@ -177,27 +190,32 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         });
     	
     	
-    	WabitSessionContext context = new StubWabitSessionContext() {
+    	this.context = new StubWabitSessionContext() {
     		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
     			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
     				return connectionPool.getConnection();
     		};
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
     	};
-    	session = new StubWabitSession(context) {
-    		
-    		private final WabitWorkspace workspace = new WabitWorkspace();
+    	
+    	this.session = new StubWabitSession(context) {
     		
     		@Override
     		public DataSourceCollection<SPDataSource> getDataSources() {
-    			return plIni;
+    			return getContext().getDataSources();
     		}
     		
     		@Override
     		public WabitWorkspace getWorkspace() {
-    			workspace.setSession(this);
     			return workspace;
     		}
     	};
+    	
+    	this.workspace = new WabitWorkspace();
+    	this.workspace.setSession(session);
+    	
     	
     	valueMaker = new WabitNewValueMaker(getWorkspace(), plIni);
     	
@@ -503,6 +521,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     public void testPersisterAddsNewObject() throws Exception {
     	
     	SPObject wo = getObjectUnderTest();
+    	wo.setMagicEnabled(false);
     	
     	WabitSessionPersister persister = new WabitSessionPersister("test persister", session, session.getWorkspace());
     	WorkspacePersisterListener listener = new WorkspacePersisterListener(session, persister);
@@ -558,6 +577,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         //the object must now be added to the super parent
         assertEquals(oldChildCount, parent.getChildren().size());
         SPObject persistedObject = parent.getChildren().get(parent.childPositionOffset(wo.getClass()));
+        persistedObject.setMagicEnabled(false);
         
         //check all the properties are what we expect on the new object
     	Set<String> ignorableProperties = getPropertiesToNotPersistOnObjectPersist();
@@ -574,6 +594,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     		for (PropertyDescriptor propertyDescriptor : settableProperties) {
     			if (propertyDescriptor.getName().equals(persistedPropertyName)) {
     				classType = propertyDescriptor.getPropertyType();
+    				break;
     			}
     		}
     		
@@ -661,6 +682,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	
     	WabitSessionPersisterSuperConverter factory = new WabitSessionPersisterSuperConverter(
     			new StubWabitSession(new StubWabitSessionContext()), new WabitWorkspace());
+    	
     	for (String descriptor : settablePropertyNames) {
     		PersistedSPOProperty foundChange = null;
     		for (PersistedSPOProperty propertyChange : changesOnObject) {

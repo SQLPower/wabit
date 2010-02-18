@@ -19,15 +19,6 @@
 
 package ca.sqlpower.wabit.rs;
 
-public class ResultSetProducerEvent {
-
-	private final ResultSetProducer source;
-
-	public ResultSetProducerEvent(ResultSetProducer source) {
-		this.source = source;
-	}
-	
-	public ResultSetProducer getSource() {
-		return source;
-	}
+public interface ResultSetProducerStatusInformant {
+	boolean isRunning();
 }

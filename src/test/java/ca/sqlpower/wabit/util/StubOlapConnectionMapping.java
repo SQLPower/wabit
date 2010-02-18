@@ -26,9 +26,9 @@ import javax.naming.NamingException;
 import org.olap4j.OlapConnection;
 
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.OlapConnectionProvider;
 
-public class StubOlapConnectionMapping implements OlapConnectionMapping {
+public class StubOlapConnectionMapping implements OlapConnectionProvider {
 
     public OlapConnection createConnection(Olap4jDataSource dataSource)
             throws SQLException, ClassNotFoundException, NamingException {

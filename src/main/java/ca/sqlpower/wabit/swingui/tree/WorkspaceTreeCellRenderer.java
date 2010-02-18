@@ -42,7 +42,6 @@ import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.swingui.ComposedIcon;
 import ca.sqlpower.swingui.table.Arrow;
-import ca.sqlpower.wabit.WabitBackgroundWorker;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
@@ -62,6 +61,7 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitIcons;
@@ -232,8 +232,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, (WabitImage) spo);
             }
 
-            if (spo instanceof WabitBackgroundWorker) {
-                if (((WabitBackgroundWorker) spo).isRunning()) {
+            if (spo instanceof WabitResultSetProducer) {
+                if (((WabitResultSetProducer) spo).isRunning()) {
                     r.setIcon(makeBusy(r.getIcon()));
                 }
             }

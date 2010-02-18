@@ -17,17 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.rs;
+package ca.sqlpower.wabit;
 
-public class ResultSetProducerEvent {
+import java.sql.Connection;
 
-	private final ResultSetProducer source;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
+import ca.sqlpower.sqlobject.SQLObjectException;
 
-	public ResultSetProducerEvent(ResultSetProducer source) {
-		this.source = source;
-	}
+public interface SqlConnectionProvider extends SQLDatabaseMapping {
+
+	/**
+	 * Creates a SQL connection.
+	 * @param dataSource The data source to use.
+	 */
+	public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException; 
 	
-	public ResultSetProducer getSource() {
-		return source;
-	}
 }

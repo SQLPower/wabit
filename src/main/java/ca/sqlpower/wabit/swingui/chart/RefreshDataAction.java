@@ -19,7 +19,6 @@
 
 package ca.sqlpower.wabit.swingui.chart;
 
-import java.awt.Component;
 import java.awt.event.ActionEvent;
 
 import javax.annotation.Nonnull;
@@ -27,7 +26,6 @@ import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.chart.Chart;
 
 /**
@@ -42,30 +40,16 @@ public class RefreshDataAction extends AbstractAction {
      * The chart to refresh every time this action is invoked.
      */
     private final Chart chart;
-
-    /**
-     * Owning component of any dialogs created by this action.
-     */
-    private final Component dialogOwner;
     
     /**
-     * 
-     * @param chart The chart to refresh. Must not be null.
+     * Creates an action to refresh a chart.
      */
-    public RefreshDataAction(@Nonnull Chart chart, Component dialogOwner) {
+    public RefreshDataAction(@Nonnull Chart chart) {
         super("Refresh", ICON);
         this.chart = chart;
-        this.dialogOwner = dialogOwner;
     }
 
     public void actionPerformed(ActionEvent e) {
-        try {
-            if (chart.getQuery() != null) {
-                chart.getQuery().execute();
-            }
-        } catch (Exception ex) {
-            SPSUtils
-            .showExceptionDialogNoReport(dialogOwner, "Refresh failed", ex);
-        }
+        chart.refresh();
     }
 }

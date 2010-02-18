@@ -23,6 +23,8 @@ import javax.annotation.Nonnull;
 
 import org.olap4j.metadata.Member;
 
+import ca.sqlpower.wabit.rs.OlapResultSet;
+
 /**
  * Wraps an Olap4j Member. Instances of this class are used by
  * {@link OlapResultSet} as markers for repeated instances of members. This

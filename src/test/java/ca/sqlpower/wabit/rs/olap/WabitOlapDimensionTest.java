@@ -19,34 +19,18 @@
 
 package ca.sqlpower.wabit.rs.olap;
 
-import java.io.File;
-import java.sql.SQLException;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import org.olap4j.Axis;
-import org.olap4j.OlapConnection;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Member;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
-import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
-import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
-import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
@@ -69,6 +53,7 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+        
         wabitDimension = new WabitOlapDimension("Dimension");
         OlapQuery query = new OlapQuery(new StubOlapConnectionMapping());
         WabitOlapAxis axis = new WabitOlapAxis(Axis.ROWS);
@@ -87,6 +72,7 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
      * initializing the dimension.
      */
     public void testAddAndRemoveInclusionChild() throws Exception {
+    	
         WabitOlapInclusion inclusion = new WabitOlapInclusion(Operator.CHILDREN, "Member");
         
         wabitDimension.addChild(inclusion, 0);
@@ -103,6 +89,7 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
      * initializing the dimension.
      */
     public void testAddAndRemoveExclusionChild() throws Exception {
+    	
         WabitOlapExclusion exclusion = new WabitOlapExclusion(Operator.MEMBER, "Member");
         
         wabitDimension.addChild(exclusion, 0);
@@ -120,13 +107,47 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
      * @throws Exception
      */
     public void testAddAndRemoveInclusionInitialized() throws Exception {
-        OlapQuery q = setupQuery();
-        System.out.println(q.getMdxText());
+    	
+    	OlapQuery query = new OlapQuery(
+				null, 
+				getContext(), 
+				"Life Expectancy And GNP Correlation", 
+				"GUI Query", 
+				"LOCALDB", 
+				"World", 
+				"World Countries",
+				null);
+        
+        getWorkspace().addOlapQuery(query);
+        
+        WabitOlapAxis rowAxis = new WabitOlapAxis(Axis.ROWS);
+        WabitOlapAxis colAxis = new WabitOlapAxis(Axis.COLUMNS);
+        query.addAxis(rowAxis);
+        query.addAxis(colAxis);
+        query.setOlapDataSource((Olap4jDataSource)getSession().getDataSources().getDataSource("World Facts OLAP Connection"));
+        
+        query.init();
+        query.updateAttributes();
+        
+        final Cube cube = query.getCurrentCube();
+        Dimension dimension = cube.getDimensions().get("Geography");
+        
+        //arbitrary measure to add
+        Member measure = cube.getDimensions().get("Measures").getDefaultHierarchy().getDefaultMember();
+        
+        //arbitrary member to exclude
+        Member excludedMember = dimension.getDefaultHierarchy().getLevels().get(1).getMembers().get(0);
+        
+        query.addToAxis(0, dimension.getDefaultHierarchy().getDefaultMember(), Axis.ROWS);
+        query.addToAxis(0, measure, Axis.COLUMNS);
+        query.excludeMember(dimension.getName(), excludedMember, Operator.MEMBER);
+        
+        this.wabitDimension = query.getDimension("Geography");
 
         //get the first included member on the rows axis to try and remove it
         WabitOlapDimension dimensionToRemoveFrom = null;
         WabitOlapInclusion inclusionToRemove = null;
-        for (WabitObject queryChild : q.getChildren()) {
+        for (WabitObject queryChild : query.getChildren()) {
             if (((WabitOlapAxis) queryChild).getOrdinal().equals(Axis.ROWS)) {
                 dimensionToRemoveFrom = ((WabitOlapAxis) queryChild).getDimensions().get(0);
                 inclusionToRemove = dimensionToRemoveFrom.getInclusions().get(0);
@@ -146,7 +167,6 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
         
         dimensionToRemoveFrom.removeChild(inclusionToRemove);
         
-        System.out.println(q.getMdxText());
         inclusionInDimension = false;
         for (Selection s : dimensionToRemoveFrom.getDimension().getInclusions()) {
             if (s.getMember().equals(inclusionToRemove.getSelection().getMember()) && 
@@ -158,7 +178,6 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
         
         dimensionToRemoveFrom.addChild(inclusionToRemove, 0);
         
-        System.out.println(q.getMdxText());
         inclusionInDimension = false;
         for (Selection s : dimensionToRemoveFrom.getDimension().getInclusions()) {
             if (s.getMember().equals(inclusionToRemove.getSelection().getMember()) && 
@@ -167,68 +186,5 @@ public class WabitOlapDimensionTest extends AbstractWabitObjectTest {
             }
         }
         assertTrue(inclusionInDimension);
-    }
-    
-    /**
-     * Helper method that creates a simple OlapQuery that is initialized and contains
-     * values on its axis.
-     */
-    private OlapQuery setupQuery() throws Exception {
-        PlDotIni plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
-        final Olap4jDataSource ds = plIni.getDataSource("World Facts OLAP Connection", Olap4jDataSource.class);
-        
-        final SQLDatabase db = new SQLDatabase(ds.getDataSource());
-        
-        final SQLDatabaseMapping dbMapping = new SQLDatabaseMapping() {
-            
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return db;
-            }
-        };
-        
-        OlapConnectionMapping connectionMapping = new OlapConnectionMapping() {
-            
-            public OlapConnection createConnection(Olap4jDataSource dataSource)
-                    throws SQLException, ClassNotFoundException,
-                    NamingException {
-                OlapConnectionPool pool = new OlapConnectionPool(ds, dbMapping);
-                return pool.getConnection();
-            }
-            
-        };
-        
-        OlapConnectionPool connectionPool = new OlapConnectionPool(ds, 
-                new SQLDatabaseMapping() {
-            private final SQLDatabase sqlDB = new SQLDatabase(ds.getDataSource());
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return sqlDB;
-            }
-        });
-        
-        final Cube cube = connectionPool.getConnection().getSchema().getCubes().get("World Countries");
-        Dimension dimension = cube.getDimensions().get("Geography");
-        
-        //arbitrary measure to add
-        Member measure = cube.getDimensions().get("Measures").getDefaultHierarchy().getDefaultMember();
-        
-        //arbitrary member to exclude
-        Member excludedMember = dimension.getDefaultHierarchy().getLevels().get(1).getMembers().get(0);
-        
-        OlapQuery query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
-        query.setOlapDataSource(ds);
-        WabitOlapAxis rowAxis = new WabitOlapAxis(Axis.ROWS);
-        WabitOlapAxis colAxis = new WabitOlapAxis(Axis.COLUMNS);
-        query.addAxis(rowAxis);
-        query.addAxis(colAxis);
-        query.addToAxis(0, dimension.getDefaultHierarchy().getDefaultMember(), Axis.ROWS);
-        query.addToAxis(0, measure, Axis.COLUMNS);
-        query.excludeMember(dimension.getName(), excludedMember, Operator.MEMBER);
-        
-        query.init();
-        
-        query.updateAttributes();
-        
-        return query;
     }
 }

@@ -19,10 +19,21 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
+import java.io.File;
+
 import junit.framework.TestCase;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.WorkspaceGraphModel;
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.util.DefaultUserPrompterFactory;
+import ca.sqlpower.wabit.StubWabitSession;
+import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -30,31 +41,73 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
-import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
-import ca.sqlpower.wabit.swingui.StubWabitSwingSessionContext;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 
 public class DeleteFromTreeActionTest extends TestCase {
 
+	private StubWabitSessionContext context;
+	private StubWabitSession session;
+	private WabitWorkspace workspace;
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		final PlDotIni plIni = new PlDotIni();
+    	plIni.read(new File("src/test/java/pl.regression.ini"));
+        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+        		Olap4jDataSource.class);
+        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
+        		new SQLDatabaseMapping() {
+        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return sqlDB;
+        	}
+        });
+    	
+    	
+    	this.context = new StubWabitSessionContext() {
+    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
+    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
+    				return connectionPool.getConnection();
+    		};
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    	};
+    	
+    	this.workspace = new WabitWorkspace();
+    	
+    	this.session = new StubWabitSession(context) {
+
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return getContext().getDataSources();
+    		}
+    		
+    		@Override
+    		public WabitWorkspace getWorkspace() {
+    			return workspace;
+    		}
+    	};
+    	
+    	this.workspace.setSession(session);
+	}
+	
     /**
      * This is a basic test that checks objects can be removed
      * from a workspace.
      */
     public void testRemoveNodes() throws Exception {
-        WabitSwingSessionContext context = new StubWabitSwingSessionContext();
-        WabitSwingSession session = new StubWabitSwingSession();
-        WabitWorkspace workspace = new WabitWorkspace();
-        workspace.setSession(session);
         
         QueryCache query = new QueryCache(context);
+        query.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
         workspace.addQuery(query, session);
         Chart chart = new Chart();
         chart.setName("chart");
-        chart.setQuery(query);
         workspace.addChart(chart);
+        chart.setQuery(query);
         Report report = new Report("report");
         workspace.addReport(report);
         ContentBox chartContentBox = new ContentBox();
@@ -101,12 +154,9 @@ public class DeleteFromTreeActionTest extends TestCase {
      * in the graph.
      */
     public void testRemoveNodesWithAddedDependencies() throws Exception {
-        WabitSwingSessionContext context = new StubWabitSwingSessionContext();
-        WabitSwingSession session = new StubWabitSwingSession();
-        WabitWorkspace workspace = new WabitWorkspace();
-        workspace.setSession(session);
         
         QueryCache query = new QueryCache(context);
+        query.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
         workspace.addQuery(query, session);
         Chart chart = new Chart();
         chart.setName("chart");

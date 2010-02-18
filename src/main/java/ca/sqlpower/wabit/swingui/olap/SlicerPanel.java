@@ -51,7 +51,6 @@ import org.olap4j.metadata.Member;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 import com.lowagie.text.Font;
 
@@ -85,14 +84,12 @@ public class SlicerPanel extends JPanel {
 	private static final Border DEFAULT_BORDER = BorderFactory.createEtchedBorder();
 	private static final Border DRAG_OVER_BORDER = BorderFactory.createLineBorder(Color.BLACK, 5);
 
-    private final WabitSwingSession session;
 	
 	/**
 	 * This panel is the slicer panel which shows at the bottom of the cell set viewer.
 	 */
-	public SlicerPanel(WabitSwingSession session, OlapQuery olapQuery) {
+	public SlicerPanel(OlapQuery olapQuery) {
 		super();
-        this.session = session;
 		this.olapQuery = olapQuery;
 		updatePanel();
 		repaint();
@@ -244,7 +241,6 @@ public class SlicerPanel extends JPanel {
                     	olapQuery.addToAxis(0, m, Axis.FILTER);
                     }
         			resetUI();
-        			OlapGuiUtil.asyncExecute(olapQuery, session);
                     return true;
 
                 } catch (Exception e) {
@@ -294,7 +290,6 @@ public class SlicerPanel extends JPanel {
 				public void actionPerformed(ActionEvent e) {
 					try {
 						olapQuery.removeHierarchy(slicerMember.getHierarchy(), Axis.FILTER);
-						OlapGuiUtil.asyncExecute(olapQuery, session);
 					} catch (QueryInitializationException e1) {
 						SPSUtils.showExceptionDialogNoReport(SlicerPanel.this, "Error occured while initializing " +
 								"the query to remove the item on the filter axis.", e1);

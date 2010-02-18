@@ -11,7 +11,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -57,7 +56,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         public void itemStateChanged(ItemEvent e) {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 JComboBox sourceCombo = (JComboBox) e.getSource();
-                ChartColumn identifier = chartColumns.get(
+                ChartColumn identifier = chartPanel.getChart().getColumns().get(
                         tableHeader.getColumnModel().getColumnIndexAtX(sourceCombo.getX()));
                 identifier.setRoleInChart((ColumnRole) e.getItem());
                 tableHeader.repaint();
@@ -104,7 +103,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
             }
-            final JComboBox rolePopupBox = makeRoleBox(column);
+            final JComboBox rolePopupBox = makeRoleBox(column, chartPanel.getChart().getColumns());
             tableHeader.add(rolePopupBox);
             rolePopupBox.setBounds(
                     chartPanel.getXPositionOfColumn(tableHeader.getColumnModel(), column),
@@ -131,7 +130,6 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         }
     };
 
-    private final List<ChartColumn> chartColumns;
     
     private final Color backgroundColour;
     
@@ -150,19 +148,26 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         }
         
         tableHeader.addMouseListener(comboBoxMouseListener);
-        
-        chartColumns = new ArrayList<ChartColumn>(chartPanel.getChart().getColumns());
     }
 
-    public Component getTableCellRendererComponent(JTable table,
-            Object value, boolean isSelected, boolean hasFocus, int row,
-            final int column) {
+    public Component getTableCellRendererComponent(
+    		JTable table,
+            Object value, 
+            boolean isSelected, 
+            boolean hasFocus, 
+            int row,
+            final int column) 
+    {
         Component defaultComponent = defaultTableCellRenderer.getTableCellRendererComponent(
                 table, value, isSelected, hasFocus, row, column);
         
         JPanel newHeader = new JPanel(new BorderLayout());
-        JComboBox roleBox = makeRoleBox(column);
-        newHeader.add(roleBox, BorderLayout.NORTH);
+        
+        if (chartPanel.getChart().getColumns().size() > 0) {
+        	JComboBox roleBox = makeRoleBox(column, chartPanel.getChart().getColumns());
+            newHeader.add(roleBox, BorderLayout.NORTH);
+        }
+        
         newHeader.add(defaultComponent, BorderLayout.SOUTH);
         return newHeader;
     }
@@ -180,7 +185,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      * @param chartColumn
      *            The chart column whose role should show as the selected item.
      */
-    private JComboBox makeRoleBox(final int column) {
+    private JComboBox makeRoleBox(final int column, List<ChartColumn> chartColumns) {
         final JComboBox roleBox = new JComboBox(ColumnRole.values());
         if (backgroundColour != null) {
             roleBox.setBackground(backgroundColour);
@@ -210,10 +215,6 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         tableHeader.removeMouseListener(comboBoxMouseListener);
     }
 
-    public List<ChartColumn> getChartColumns() {
-        return chartColumns;
-    }
-
     public JComponent getHeaderLegendComponent() {
         JPanel p = new JPanel(new BorderLayout());
         int comboBoxHeight = new JComboBox().getPreferredSize().height;
@@ -225,4 +226,8 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         
         return p;
     }
+
+	public List<ChartColumn> getChartColumns() {
+		return chartPanel.getChart().getColumns();
+	}
 }

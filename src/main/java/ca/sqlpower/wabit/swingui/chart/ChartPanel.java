@@ -56,7 +56,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
@@ -66,22 +65,18 @@ import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
-import ca.sqlpower.object.SPVariableHelper;
-import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
 import ca.sqlpower.wabit.report.chart.ChartDataListener;
 import ca.sqlpower.wabit.report.chart.ChartType;
-import ca.sqlpower.wabit.report.chart.ChartUtil;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
@@ -273,11 +268,7 @@ public class ChartPanel implements WabitPanel {
                     "Got chart property change: \""+evt.getPropertyName()+"\" " +
                     		evt.getOldValue() + " -> " + evt.getNewValue());
             
-            try {
-                updateGUIFromChart();
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
+            updateGUIFromChart();
         }
     };
 
@@ -289,15 +280,13 @@ public class ChartPanel implements WabitPanel {
      */
     private final ChartDataListener chartDataListener = new ChartDataListener() {
         public void chartDataChanged(ChartDataChangedEvent evt) {
-            try {
-				updateGUIFromChart();
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
             if (resultTable.getModel() instanceof ResultSetTableModel) {
                 ResultSetTableModel rstm = (ResultSetTableModel) resultTable.getModel();
+                logger.debug("Updating table model.");
                 rstm.dataChanged();
             }
+            updateGUIFromChart();
+            ChartPanel.this.chartPanel.repaint();
         }
     };
 
@@ -347,7 +336,7 @@ public class ChartPanel implements WabitPanel {
 		WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
         
-        refreshDataAction = new RefreshDataAction(chart, panel);
+        refreshDataAction = new RefreshDataAction(chart);
         revertToDefaultsAction = new RevertToDefaultsAction(this);
         
         resultTable.getTableHeader().setReorderingAllowed(false);
@@ -374,25 +363,11 @@ public class ChartPanel implements WabitPanel {
         buildUI();
 
         chart.addSPListener(chartListener);
-
-        boolean disableAutoExecute = isAutoExecuteDisabled();
-
-        chart.addChartDataListener(chartDataListener );
+        chart.addChartDataListener(chartDataListener);
         
-		try {
-			if (chart.getQuery() != null && !disableAutoExecute) {
-				chart.getQuery().execute(new SPVariableHelper(chart));
-			}
-			updateGUIFromChart();
-		} catch (Exception ex) {
-			showError(ex);
-		}
+        updateGUIFromChart();
+        chart.refresh();
     }
-
-	private boolean isAutoExecuteDisabled() {
-		// XXX: instead of grabbing the prefs, session context should have a method for retrieving this preference
-		return session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
-	}
 
     /**
      * Displays an error in the chart preview area. The given message replaces
@@ -405,7 +380,7 @@ public class ChartPanel implements WabitPanel {
      */
     private void showError(Exception ex) {
         if (ex != null) {
-            logger.info("Showing exception message in chart editor", ex);
+            logger.debug("Showing exception message in chart editor", ex);
             chartError.setText(
                     "<html><h2>Charting Failed</h2>" +
                     "<p>" + ex.getMessage());
@@ -414,6 +389,7 @@ public class ChartPanel implements WabitPanel {
             chartError.setText(null);
             chartError.setVisible(false);
         }
+        chartPanel.setChart(null);
     }
 
 	/**
@@ -443,106 +419,107 @@ public class ChartPanel implements WabitPanel {
      * the state of the editor. This will set up the correct result set as well
      * as display the correct editor in a new edit state.
      */
-    void updateGUIFromChart() throws SQLException {
+    void updateGUIFromChart() {
+    	
         if (updating) return;
-        try {
-            updating = true;
-            
-            if (!skipTextFieldRefresh) {
-                yaxisNameField.setText(chart.getYaxisName());
-                xaxisNameField.setText(chart.getXaxisName());
-            }
-            
-            xaxisLabelRotationSlider.setValue((int) chart.getXAxisLabelRotation());
-            
-            gratuitousAnimationCheckbox.setSelected(chart.isGratuitouslyAnimated());
-            
-            queryComboBox.setSelectedItem(chart.getQuery());
-            setSelectedChartType(chart.getType());
-            
-            if (currentHeaderCellRenderer != null) {
-                currentHeaderCellRenderer.cleanup();
-            }
-
-            if (chart.getType().getDatasetType() == DatasetType.CATEGORY) {
-                currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
-                resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-                
-                //Set control components visibility based on chart type
-                if (chart.getType() == ChartType.PIE){
-                	xaxisNameLabel.setVisible(false);
-                	xaxisNameField.setVisible(false);
-                	yaxisNameLabel.setVisible(false);
-                	yaxisNameField.setVisible(false);
-                	xaxisLabelRotationLabel.setVisible(false);
-                	xaxisLabelRotationSlider.setVisible(false);
-                }
-                else{
-                	xaxisNameLabel.setVisible(true);
-                	xaxisNameField.setVisible(true);
-                	yaxisNameLabel.setVisible(true);
-                	yaxisNameField.setVisible(true);
-                	xaxisLabelRotationLabel.setVisible(true);
-                	xaxisLabelRotationSlider.setVisible(true);
-                }
-                
-            } else if (chart.getType().getDatasetType() == DatasetType.XY) {
-                currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
-                resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
-                
-                xaxisNameLabel.setVisible(true);
-            	xaxisNameField.setVisible(true);
-            	yaxisNameLabel.setVisible(true);
-            	yaxisNameField.setVisible(true);
-                xaxisLabelRotationLabel.setVisible(false);
-                xaxisLabelRotationSlider.setVisible(false);
-            }
-
-            headerLegendContainer.removeAll();
-            headerLegendContainer.add(
-                    currentHeaderCellRenderer.getHeaderLegendComponent(), BorderLayout.NORTH);
-            headerLegendContainer.revalidate();
-            headerLegendContainer.repaint();
-            
-            resultTable.getTableHeader().repaint(); // XXX probably unnecessary now
-            
-            if(chart.getLegendPosition() != null) {
-                legendPositionComboBox.setSelectedItem(chart.getLegendPosition());
-            } else {
-                legendPositionComboBox.setSelectedItem(LegendPosition.BOTTOM);
-            }
-
-            CachedRowSet rs = chart.getUnfilteredResultSet();
-            if (rs == null) {
-            	if (isAutoExecuteDisabled()) {
-            		showMessage("Query auto-execute is disabled.",
-            		"Press the 'Refresh' button to query chart data.");
-            	} else {
-            		resultTable.repaint();
-                	updateChartPreview();
-                	resultTable.setModel(new DefaultTableModel());
-            		showError(new RuntimeException(
-                        "The selected query \"" + chart.getQuery() + "\" returns no results."));
-            	}
-                return;
-            }
-
-            showError(null);
-            
-            final ResultSetTableModel model = new ResultSetTableModel(rs);
-            resultTable.setModel(model);
-            ChartTableCellRenderer cellRenderer = new ChartTableCellRenderer(chart);
-            for (Enumeration<TableColumn> tableCols = resultTable.getColumnModel().getColumns();
-                    tableCols.hasMoreElements(); ) {
-                TableColumn tc = tableCols.nextElement();
-                tc.setCellRenderer(cellRenderer);
-            }
-
-            updateChartPreview();
-
-        } finally {
-            updating = false;
-        }
+        
+        
+    	try {
+    		updating = true;
+    		
+    		xaxisLabelRotationSlider.setValue((int) chart.getXAxisLabelRotation());
+    		
+    		gratuitousAnimationCheckbox.setSelected(chart.isGratuitouslyAnimated());
+    		
+    		queryComboBox.setSelectedItem(chart.getQuery());
+    		setSelectedChartType(chart.getType());
+    		
+    		
+    		if (!skipTextFieldRefresh) {
+    			yaxisNameField.setText(chart.getYaxisName());
+    			xaxisNameField.setText(chart.getXaxisName());
+    		}
+        
+    		if (chart.getQuery() != null &&
+    				chart.getUnfilteredResultSet() != null) {
+        			
+        		if (currentHeaderCellRenderer != null) {
+        			currentHeaderCellRenderer.cleanup();
+        		}
+        		
+        		if (chart.getType().getDatasetType() == DatasetType.CATEGORY) {
+        			currentHeaderCellRenderer = new CategoryChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
+        			resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
+        			
+        			//Set control components visibility based on chart type
+        			if (chart.getType() == ChartType.PIE){
+        				xaxisNameLabel.setVisible(false);
+        				xaxisNameField.setVisible(false);
+        				yaxisNameLabel.setVisible(false);
+        				yaxisNameField.setVisible(false);
+        				xaxisLabelRotationLabel.setVisible(false);
+        				xaxisLabelRotationSlider.setVisible(false);
+        			}
+        			else{
+        				xaxisNameLabel.setVisible(true);
+        				xaxisNameField.setVisible(true);
+        				yaxisNameLabel.setVisible(true);
+        				yaxisNameField.setVisible(true);
+        				xaxisLabelRotationLabel.setVisible(true);
+        				xaxisLabelRotationSlider.setVisible(true);
+        			}
+        			
+        		} else if (chart.getType().getDatasetType() == DatasetType.XY) {
+        			try {
+        				currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
+        			} catch (SQLException e) {
+        				showError(e);
+        				return;
+        			}
+        			resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
+        			
+        			xaxisNameLabel.setVisible(true);
+        			xaxisNameField.setVisible(true);
+        			yaxisNameLabel.setVisible(true);
+        			yaxisNameField.setVisible(true);
+        			xaxisLabelRotationLabel.setVisible(false);
+        			xaxisLabelRotationSlider.setVisible(false);
+        		}
+        		
+        		headerLegendContainer.removeAll();
+        		headerLegendContainer.add(
+        				currentHeaderCellRenderer.getHeaderLegendComponent(), BorderLayout.NORTH);
+        		headerLegendContainer.revalidate();
+        		headerLegendContainer.repaint();
+        		
+        		if(chart.getLegendPosition() != null) {
+        			legendPositionComboBox.setSelectedItem(chart.getLegendPosition());
+        		} else {
+        			legendPositionComboBox.setSelectedItem(LegendPosition.BOTTOM);
+        		}
+        		
+        		final ResultSetTableModel model = 
+        			new ResultSetTableModel(chart.getUnfilteredResultSet());
+        		resultTable.setModel(model);
+        		ChartTableCellRenderer cellRenderer = new ChartTableCellRenderer(chart);
+        		for (Enumeration<TableColumn> tableCols = resultTable.getColumnModel().getColumns();
+        				tableCols.hasMoreElements(); ) {
+        			TableColumn tc = tableCols.nextElement();
+        			tc.setCellRenderer(cellRenderer);
+        		}
+        		
+    		} else {
+    			if (currentHeaderCellRenderer != null) {
+        			currentHeaderCellRenderer.cleanup();
+        		}
+    			resultTable.getTableHeader().setDefaultRenderer(defaultHeaderCellRenderer);
+    		}
+    		
+    		updateChartPreview();
+    		
+    	} finally {
+    		updating = false;
+    	}
     }
 
     /**
@@ -553,28 +530,37 @@ public class ChartPanel implements WabitPanel {
      */
     private void updateChartPreview() {
         try {
+        	
+        	if (chart.getQuery() == null) {
+        		showError(new Exception("No query was selected to feed this chart."));
+        		return;
+        	}
+        	
+        	if (chart.getUnfilteredResultSet() == null) {
+        		showError(new Exception("The selected query does not return any data."));
+        		return;
+        	}
+        	
         	if (chart.findRoleColumns(ColumnRole.CATEGORY).isEmpty() && 
         			(chart.getType() == ChartType.BAR
         					|| chart.getType() == ChartType.PIE
         					|| chart.getType() == ChartType.CATEGORY_LINE)) {
-        		throw new RuntimeException("Chart has no category.");
+        		showError(new Exception("Chart has no category."));
+        		return;
         	}
         	if (chart.findRoleColumns(ColumnRole.SERIES).isEmpty()) {
-        		throw new RuntimeException("Chart has no series.");
+        		showError(new Exception("Chart has no series."));
+        		return;
         	}
         	
-        	//If the result set is null try to force the query to execute and wait for it.
-        	if (chart.getUnfilteredResultSet() == null) {
-        		chart.getQuery().execute().get();
-        	}
         	
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
+            showError(null);
             chartPanel.setChart(newJFreeChart);
             if (chart.isGratuitouslyAnimated()) {
                 ChartAnimation.animateIfPossible(newJFreeChart);
             }
-            showError(null);
         } catch (Exception ex) {
             if (ex.getMessage() == null){
             	showError(new RuntimeException("Unable to create chart " + chart.getName() + " from current settings.", ex));
@@ -763,19 +749,9 @@ public class ChartPanel implements WabitPanel {
         if (updating) return;
         try {
             updating = true;
-            if (queryComboBox.getSelectedItem() != chart.getQuery()) {
-                try {
-                    chart.setQuery((ResultSetProducer) queryComboBox.getSelectedItem());
-                    chart.getQuery().execute();
-                    ChartUtil.setDefaults(chart);
-                } catch (Exception ex) {
-                    showError(ex);
-                }
-            }
             
             if (getSelectedChartType() != chart.getType()) {
                 chart.setType(getSelectedChartType());
-                ChartUtil.setDefaults(chart);
             }
             
             chart.setLegendPosition((LegendPosition) legendPositionComboBox.getSelectedItem());
@@ -783,6 +759,10 @@ public class ChartPanel implements WabitPanel {
             chart.setXaxisName(xaxisNameField.getText());
             chart.setXAxisLabelRotation(xaxisLabelRotationSlider.getValue());
             chart.setGratuitouslyAnimated(gratuitousAnimationCheckbox.isSelected());
+            
+            if (queryComboBox.getSelectedItem() != chart.getQuery()) {
+               chart.setQuery((WabitResultSetProducer) queryComboBox.getSelectedItem());
+            }
             
         } finally {
             updating = false;
@@ -794,11 +774,7 @@ public class ChartPanel implements WabitPanel {
          * same interlock that prevented mutual recursion during the GUI->Chart update
          * prevents Chart->GUI updates from re-calling this method.
          */
-        try {
-            updateGUIFromChart();
-        } catch (SQLException ex) {
-            showError(ex);
-        }
+        updateGUIFromChart();
     }
 
     public String getTitle() {

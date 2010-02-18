@@ -42,10 +42,17 @@ import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 
 public class StubWabitSessionContext implements WabitSessionContext {
 	
 	private final Map<SPDataSource, SQLDatabase> databases = new HashMap<SPDataSource, SQLDatabase>();
+	
+	/**
+     * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
+     */
+    private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = 
+        new HashMap<Olap4jDataSource, OlapConnectionPool>();
 
 	public DataSourceCollection<SPDataSource> getDataSources() {
 		return null;
@@ -155,11 +162,22 @@ public class StubWabitSessionContext implements WabitSessionContext {
         return db;
     }
 
-    public OlapConnection createConnection(Olap4jDataSource dataSource)
-            throws SQLException, ClassNotFoundException, NamingException {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public OlapConnection createConnection(Olap4jDataSource dataSource) 
+		throws SQLException, ClassNotFoundException, NamingException 
+	{
+		if (dataSource == null) return null;
+		OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
+		if (olapConnectionPool == null) {
+		    olapConnectionPool = new OlapConnectionPool(dataSource, this);
+		    olapConnectionPools.put(dataSource, olapConnectionPool);
+		}
+		return olapConnectionPool.getConnection();
+	}
+	
+	public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException {
+		if (dataSource == null) return null;
+		return getDatabase(dataSource).getConnection();
+	}
 
 	public UserPrompter createDatabaseUserPrompter(String question,
 			List<Class<? extends SPDataSource>> dsTypes,

@@ -579,7 +579,9 @@ public class WorkspacePersisterListener implements SPListener {
 					converter.convertToBasicType(olapQuery.getSchemaName()));
 			this.persistProperty(uuid, "cubeName", DataType.STRING,
 					converter.convertToBasicType(olapQuery.getCubeName()));
-
+			this.persistProperty(uuid, "modifiedOlapQuery", DataType.STRING,
+					converter.convertToBasicType(olapQuery.getModifiedOlapQuery()));
+			
 			// Remaining properties
 			this.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
 					converter.convertToBasicType(olapQuery.isNonEmpty()));

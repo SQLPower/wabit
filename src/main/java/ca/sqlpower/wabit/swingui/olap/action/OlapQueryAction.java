@@ -26,7 +26,6 @@ import javax.swing.AbstractAction;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
-import ca.sqlpower.wabit.swingui.olap.OlapGuiUtil;
 
 /**
  * An abstract base action meant to be extended by actions that modify
@@ -64,8 +63,6 @@ public abstract class OlapQueryAction extends AbstractAction {
     public final void actionPerformed(ActionEvent e) {
     	try {
     		performOlapQueryAction(query);
-    		
-    		OlapGuiUtil.asyncExecute(query, session);
     	} catch (Exception ex) {
     		throw new RuntimeException(ex);
     	}

@@ -121,9 +121,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      * way cells will have a similar looking header to the default. 
      */
     private final TableCellRenderer defaultTableCellRenderer;
-
-    private List<ChartColumn> columnNamesInOrder;
-
+    
     /**
      * This gets set just before displaying a combo box. It's a reliable way for the
      * item listeners to figure out which chart column to modify.
@@ -138,27 +136,21 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         this.tableHeader = tableHeader;
         this.defaultTableCellRenderer = defaultTableCellRenderer;
 
-        columnNamesInOrder = new ArrayList<ChartColumn>();
+        //columnNamesInOrder = new ArrayList<ChartColumn>();
         
-        String[] colNames = new String[chartPanel.getChart().getColumns().size()];
-        for (int i = 0; i < chartPanel.getChart().getColumns().size(); i++) {
-            ChartColumn col = chartPanel.getChart().getColumns().get(i);
-            colNames[i] = col.getName();
-        }
+//        String[] colNames = new String[chartPanel.getChart().getColumns().size()];
+//        for (int i = 0; i < chartPanel.getChart().getColumns().size(); i++) {
+//            ChartColumn col = chartPanel.getChart().getColumns().get(i);
+//            colNames[i] = col.getName();
+//        }
         
-        for (ChartColumn col : chartPanel.getChart().getColumns()) {
-            columnNamesInOrder.add(col);
-        }
         tableHeader.addMouseListener(comboBoxMouseListener);
         
         columnRoleBox = new JComboBox(ColumnRole.values());
         columnRoleBox.removeItem(ColumnRole.CATEGORY); // not legal for XY charts
         
         xAxisBox = new JComboBox();
-        numericAndDateCols = findNumericAndDateCols();
-        for (String colName : numericAndDateCols) {
-            xAxisBox.addItem(colName);
-        }
+        
     }
 
     /**
@@ -190,7 +182,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
             } else {
-                chartColumn = columnNamesInOrder.get(column);
+                chartColumn = getChartColumns().get(column);
                 logger.debug("Making box for column " + column + " (" + chartColumn + ")");
             }
             
@@ -201,15 +193,19 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
             int yPosition;
             if (e.getY() < comboBoxHeight) {
                 yPosition = 0;
-                if (numericAndDateCols.contains(chartColumn.getName())) {
-                    clickedBox = columnRoleBox;
-                    clickedBox.setSelectedItem(chartColumn.getRoleInChart());
+                try {
+					if (findNumericAndDateCols().contains(chartColumn.getName())) {
+					    clickedBox = columnRoleBox;
+					    clickedBox.setSelectedItem(chartColumn.getRoleInChart());
 
-                    // this has to be attached after setting the selected item
-                    columnRoleBox.addItemListener(columnRoleChangeListener);
-                } else {
-                    return;
-                }
+					    // this has to be attached after setting the selected item
+					    columnRoleBox.addItemListener(columnRoleChangeListener);
+					} else {
+					    return;
+					}
+				} catch (SQLException e1) {
+					throw new RuntimeException(e1);
+				}
                 
             } else if (e.getY() < comboBoxHeight * 2) {
                 yPosition = comboBoxHeight;
@@ -261,21 +257,19 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         }
     };
 
-    /**
-     * All the columns of the result set whose SQL types can be considered are
-     * numeric or date.
-     */
-    private final List<String> numericAndDateCols;
-
     public Component getTableCellRendererComponent(JTable table,
             Object value, boolean isSelected, boolean hasFocus, int row,
             final int column) {
 	        Component defaultComponent = defaultTableCellRenderer.getTableCellRendererComponent(
 	                table, value, isSelected, hasFocus, row, column);
 	        final JPanel newHeader = new JPanel(new BorderLayout());
-	        ChartColumn chartColumn = columnNamesInOrder.get(column);
-	        newHeader.add(makeRoleBox(chartColumn), BorderLayout.NORTH);
-	        newHeader.add(makeXAxisBox(chartColumn), BorderLayout.CENTER);
+	        
+	        if (chartPanel.getChart().getColumns().size() > 0) {
+	        	ChartColumn chartColumn = getChartColumns().get(column);
+		        newHeader.add(makeRoleBox(chartColumn), BorderLayout.NORTH);
+		        newHeader.add(makeXAxisBox(chartColumn), BorderLayout.CENTER);
+	        }
+	        
 	        newHeader.add(defaultComponent, BorderLayout.SOUTH);
 	        return newHeader;
     }
@@ -294,14 +288,18 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      *            The chart column whose role should show as the selected item.
      */
     private JComponent makeRoleBox(ChartColumn chartColumn) {
-        if (numericAndDateCols.contains(chartColumn.getName())) { 
-            JComboBox box = new JComboBox();
-            box.addItem(chartColumn.getRoleInChart());
-            box.setSelectedItem(chartColumn.getRoleInChart());
-            return box;
-        } else {
-            return makePlaceholder();
-        }
+        try {
+			if (findNumericAndDateCols().contains(chartColumn.getName())) { 
+			    JComboBox box = new JComboBox();
+			    box.addItem(chartColumn.getRoleInChart());
+			    box.setSelectedItem(chartColumn.getRoleInChart());
+			    return box;
+			} else {
+			    return makePlaceholder();
+			}
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		}
     }
 
     /**
@@ -367,7 +365,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
     }
 
     public List<ChartColumn> getChartColumns() {
-        return columnNamesInOrder;
+        return chartPanel.getChart().getColumns();
     }
 
     public JComponent getHeaderLegendComponent() {

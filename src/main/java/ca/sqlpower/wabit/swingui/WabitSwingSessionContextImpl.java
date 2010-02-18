@@ -210,7 +210,6 @@ import ca.sqlpower.wabit.swingui.enterprise.UserPanel;
 import ca.sqlpower.wabit.swingui.enterprise.action.RefreshWorkspaceAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
-import ca.sqlpower.wabit.swingui.report.ReportPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -1777,41 +1776,48 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      */
     private WabitPanel createEditorPanel(SPObject entryPanelModel) {
         logger.debug("createEditorPanel() starting");
-        if (getActiveSession() == null) {
-            currentEditorPanel = welcomeScreen.getPanel();
-        } else if (entryPanelModel instanceof QueryCache) {
-            currentEditorPanel = new QueryPanel(getActiveSwingSession(), (QueryCache) entryPanelModel);
-        } else if (entryPanelModel instanceof OlapQuery) {
-            currentEditorPanel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
-        } else if (entryPanelModel instanceof Chart) {
-            currentEditorPanel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
-        } else if (entryPanelModel instanceof WabitImage) {
-            currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
-        // XXX Only activate this when the report parameters are completed.
-        //} else if (entryPanelModel instanceof Report) {
-        //    currentEditorPanel = new ReportPanel(getActiveSwingSession(), (Report) entryPanelModel);
-        } else if (entryPanelModel instanceof Layout) {
-            currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
-        } else if (entryPanelModel instanceof ReportTask) {
-            currentEditorPanel = new ReportTaskPanel((ReportTask) entryPanelModel);
-        } else if (entryPanelModel instanceof User) {
-            currentEditorPanel = new UserPanel((User) entryPanelModel);
-        } else if (entryPanelModel instanceof Group) {
-            currentEditorPanel = new GroupPanel((Group) entryPanelModel);
-        } else if (entryPanelModel instanceof WabitWorkspace) {
-            currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
-        } else {
-            if (entryPanelModel.getParent() != null) {
-                currentEditorPanel = createEditorPanel(entryPanelModel.getParent()); 
-            } else {
-                throw new IllegalStateException("Unknown model for the defined types of entry panels. " +
-                        "The type is " + entryPanelModel.getClass());
-            }
+        
+        // TODO show a loading throbber...
+        
+        try {
+        	if (getActiveSession() == null) {
+        		currentEditorPanel = welcomeScreen.getPanel();
+        	} else if (entryPanelModel instanceof QueryCache) {
+        		currentEditorPanel = new QueryPanel(getActiveSwingSession(), (QueryCache) entryPanelModel);
+        	} else if (entryPanelModel instanceof OlapQuery) {
+        		currentEditorPanel = new OlapQueryPanel(getActiveSwingSession(), wabitPane, (OlapQuery) entryPanelModel);
+        	} else if (entryPanelModel instanceof Chart) {
+        		currentEditorPanel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
+        	} else if (entryPanelModel instanceof WabitImage) {
+        		currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
+        		// XXX Only activate this when the report parameters are completed.
+        		//} else if (entryPanelModel instanceof Report) {
+        		//    currentEditorPanel = new ReportPanel(getActiveSwingSession(), (Report) entryPanelModel);
+        	} else if (entryPanelModel instanceof Layout) {
+        		currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
+        	} else if (entryPanelModel instanceof ReportTask) {
+        		currentEditorPanel = new ReportTaskPanel((ReportTask) entryPanelModel);
+        	} else if (entryPanelModel instanceof User) {
+        		currentEditorPanel = new UserPanel((User) entryPanelModel);
+        	} else if (entryPanelModel instanceof Group) {
+        		currentEditorPanel = new GroupPanel((Group) entryPanelModel);
+        	} else if (entryPanelModel instanceof WabitWorkspace) {
+        		currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
+        	} else {
+        		if (entryPanelModel.getParent() != null) {
+        			currentEditorPanel = createEditorPanel(entryPanelModel.getParent()); 
+        		} else {
+        			throw new IllegalStateException("Unknown model for the defined types of entry panels. " +
+        					"The type is " + entryPanelModel.getClass());
+        		}
+        	}
+        	
+        	sourceListStyle.apply(this, currentEditorPanel);
+        	
+        	return currentEditorPanel;
+        } finally {
         }
         
-        sourceListStyle.apply(this, currentEditorPanel);
-        
-        return currentEditorPanel;
     }
     
     /**
@@ -2138,6 +2144,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     public OlapConnection createConnection(Olap4jDataSource dataSource)
             throws SQLException, ClassNotFoundException, NamingException {
         return delegateContext.createConnection(dataSource);
+    }
+    
+    public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException {
+    	return delegateContext.createConnection(dataSource);
     }
  
     /**

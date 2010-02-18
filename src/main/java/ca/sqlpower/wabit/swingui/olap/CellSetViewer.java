@@ -48,7 +48,6 @@ import org.olap4j.metadata.Hierarchy;
 import ca.sqlpower.swingui.table.TableUtils;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
-import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.CellSetTableCornerComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
 
@@ -79,17 +78,12 @@ public class CellSetViewer {
     
     private final JScrollPane slicerScrollPane;
 
-    /**
-     * The session this cell set viewer belongs to.
-     */
-    private final WabitSwingSession session;
-
 	/**
 	 * Creates a CellSetViewer on the given {@link OlapQuery} and by default
 	 * allows Member modification
 	 */
-    public CellSetViewer(WabitSwingSession session, OlapQuery query) {
-        this(session, query, true);
+    public CellSetViewer(OlapQuery query) {
+        this(query, true);
     }
     
 	/**
@@ -102,8 +96,7 @@ public class CellSetViewer {
 	 *            Whether or not the CellSetViewer GUI will allow modification
 	 *            of the members of the Query.
 	 */
-    public CellSetViewer(WabitSwingSession session, OlapQuery query, boolean allowMemberModification) {
-    	this.session = session;
+    public CellSetViewer(OlapQuery query, boolean allowMemberModification) {
         this.allowMemberModification = allowMemberModification;
     	viewerComponent.setPreferredSize(new Dimension(640, 480));
     	slicerScrollPane = new JScrollPane();
@@ -131,7 +124,7 @@ public class CellSetViewer {
         viewerComponent.add(slicerScrollPane, BorderLayout.SOUTH);
     }
 
-    public void showCellSet(OlapQuery query, CellSet cellSet) {
+    private void showCellSet(OlapQuery query, CellSet cellSet) {
         if (logger.isDebugEnabled()) {
             logger.debug("Showing cell set:");
             RectangularCellSetFormatter f = new RectangularCellSetFormatter(true);
@@ -152,7 +145,7 @@ public class CellSetViewer {
         final CellSetTableHeaderComponent columnHeader = new CellSetTableHeaderComponent(query, cellSet, Axis.COLUMNS, table);
         columnHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.WHITE));
         
-        SlicerPanel slicerPanel = new SlicerPanel(session, query);
+        SlicerPanel slicerPanel = new SlicerPanel(query);
         slicerPanel.setVisible(true);
         slicerScrollPane.setViewportView(slicerPanel);
         
@@ -238,7 +231,7 @@ public class CellSetViewer {
             logger.error("Exception while creating row header.", e);
         }
         
-        SlicerPanel slicerPanel = new SlicerPanel(session, query);
+        SlicerPanel slicerPanel = new SlicerPanel(query);
         slicerScrollPane.setPreferredSize(new Dimension(slicerScrollPane.getPreferredSize().height + 10, slicerPanel.getPreferredSize().height + 10));
 		slicerScrollPane.setViewportView(slicerPanel);
 	}
@@ -267,10 +260,6 @@ public class CellSetViewer {
         this.cellSet = cellSet;
     }
     
-    /**
-     * Executes the containing OlapQuery and updates the results in the
-     * CellSetViewer.
-     */
     public void updateCellSetViewer(OlapQuery query, CellSet cellSet) {
         try {
             if (query.getCurrentCube() == null) {
@@ -278,26 +267,23 @@ public class CellSetViewer {
                 return;
             }
             
-            if (cellSet == null) {
-                List<Hierarchy> rowHierarchies;
-                List<Hierarchy> columnHierarchies;
-                try {
-                    rowHierarchies = query.getRowHierarchies();
-                    columnHierarchies = query.getColumnHierarchies();
-                } catch (QueryInitializationException e) {
-                    throw new RuntimeException(e);
-                }
-                
-                if (rowHierarchies.isEmpty() && !columnHierarchies.isEmpty()) {
-                    showMessage(query, "Rows axis is empty--please drop something on it");
-                } else if (columnHierarchies.isEmpty() && !rowHierarchies.isEmpty()) {
-                    showMessage(query, "Columns axis is empty--please drop something on it");
-                } else {
-                    showMessage(query, "No query defined");
-                }
-                return;
+            List<Hierarchy> rowHierarchies;
+            List<Hierarchy> columnHierarchies;
+            try {
+                rowHierarchies = query.getRowHierarchies();
+                columnHierarchies = query.getColumnHierarchies();
+            } catch (QueryInitializationException e) {
+                throw new RuntimeException(e);
             }
             
+            if (rowHierarchies.isEmpty()) {
+                showMessage(query, "Rows axis is empty--please drop something on it");
+                return;
+            } else if (columnHierarchies.isEmpty()) {
+                showMessage(query, "Columns axis is empty--please drop something on it");
+                return;
+            }
+                
             showCellSet(query, cellSet);
         } catch (Exception e) {
             showMessage(query, "Could not execute the query due to the following error: \n" + e.getClass().getName() + ":" + e.getMessage());

@@ -24,7 +24,6 @@ import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
 import java.io.InputStream;
-import java.text.Format;
 
 import org.olap4j.Axis;
 import org.olap4j.metadata.Cube;
@@ -63,8 +62,6 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 	private final ContainerConverter containerConverter;
 	
 	private final PNGImageConverter pngImageConverter = new PNGImageConverter();
-	
-	private final FormatConverter formatConverter = new FormatConverter();
 	
 	private final Olap4JAxisConverter olap4jAxisConverter = new Olap4JAxisConverter();
 
@@ -127,9 +124,6 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 		} else if (convertFrom instanceof Image) {
 			return pngImageConverter.convertToSimpleType((Image) convertFrom);
 			
-		} else if (convertFrom instanceof Format) {
-			return formatConverter.convertToSimpleType((Format) convertFrom);
-			
 		} else if (convertFrom instanceof Axis) {
 			return olap4jAxisConverter.convertToSimpleType((Axis) convertFrom);
 			
@@ -179,9 +173,6 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 			//TODO we should pass this the data type to know that we want a PNG 
 			//in case other formats are supported in the future
 			return pngImageConverter.convertToComplexType((InputStream) o);
-			
-		} else if (Format.class.isAssignableFrom(type)) {
-			return formatConverter.convertToComplexType((String) o);
 			
 		} else if (Axis.class.isAssignableFrom(type)) {
 			return olap4jAxisConverter.convertToComplexType((String) o);

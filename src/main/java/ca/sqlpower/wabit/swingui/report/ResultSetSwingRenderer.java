@@ -54,11 +54,9 @@ import javax.swing.SpinnerNumberModel;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
-import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportUtil;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
@@ -522,7 +520,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 }
                 ci.setWillSubtotal(subtotalCheckbox.isSelected());
                 
-                renderer.clearResultSetLayout();
+                renderer.refresh();
                 
                 return true;
             }

@@ -32,23 +32,24 @@ import javax.annotation.Nullable;
 
 import org.apache.log4j.Logger;
 import org.jfree.data.general.Dataset;
-import org.olap4j.CellSet;
 
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
-import ca.sqlpower.sql.RowSetChangeEvent;
-import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.rs.olap.RepeatedMember;
 
 public class Chart extends AbstractWabitObject {
@@ -84,7 +85,7 @@ public class Chart extends AbstractWabitObject {
     /**
      * The source of results this chart uses to create its dataset.
      */
-    private ResultSetProducer query;
+    private WabitResultSetProducer query;
 
     /**
      * Keeps track of all the columns in the result set, along with the role
@@ -92,33 +93,7 @@ public class Chart extends AbstractWabitObject {
      * list constitutes the child list of this WabitObject.
      */
     private final List<ChartColumn> chartColumns = new ArrayList<ChartColumn>();
-
-    /**
-     * This is a listener placed on the ResultSetProducer to find if columns removed from
-     * a query were in use in this chart.
-     */
-    private final ResultSetListener resultSetListener = new ResultSetListener() {
-        public void resultSetProduced(final ResultSetProducerEvent evt) {
-            runInForeground(new Runnable() {
-                public void run() {
-                    try {
-                    	begin("Updating chart from GUI");
-                    	if (evt.getResults() == null
-                    			|| evt.getResults().getResultSet() == null) {
-                    		setUnfilteredResultSet(null);
-                    	} else {
-                    		setUnfilteredResultSet(evt.getResults().getResultSet());
-                    	}
-                    } catch (SQLException e) {
-                        throw new RuntimeException(e);
-                    } finally {
-                    	commit();
-                    }
-                }
-            });
-        }
-    };
-
+    
     /**
      * This list tracks all of the column identifiers currently in use in the
      * query but cannot be found in the actual query object that backs this
@@ -133,6 +108,23 @@ public class Chart extends AbstractWabitObject {
      */
     private final List<ChartColumn> missingColumns = new ArrayList<ChartColumn>();
 
+
+    /**
+     * This is a listener placed on the ResultSetProducer to find if columns removed from
+     * a query were in use in this chart.
+     */
+    private final ResultSetProducerListener resultSetProducerListener = new ResultSetProducerListener() {
+		public void structureChanged(ResultSetProducerEvent evt) {
+			refresh();
+		}
+		public void executionStopped(ResultSetProducerEvent evt) {
+			// not interested
+		}
+		public void executionStarted(ResultSetProducerEvent evt) {
+			// not interested
+		}
+    };
+
     /**
      * Filter that accepts or rejects rows from the result set that underlies
      * the chart data. This is applied to the result set before creating the
@@ -144,7 +136,7 @@ public class Chart extends AbstractWabitObject {
      * The current result set (not filtered). Gets updated by refreshData(), and
      * can be retrieved by {@link #getUnfilteredResultSet()}.
      */
-    private CachedRowSet unfilteredResults;
+    private ResultSetHandle resultSetHandle;
 
     /**
      * Rotation amount, in degrees, of the text along the X axis. 0 means
@@ -159,6 +151,14 @@ public class Chart extends AbstractWabitObject {
      * applied to this chart when it is displayed.
      */
     private boolean gratuitouslyAnimated;
+    
+    /**
+     * Keeps a ref to the source object from which to resolve
+     * variables. If a chart is embeded in a report, it is necessary
+     * to create a copy of the chart and then inject a different
+     * context source, in that case, the content box.
+     */
+    private SPObject variablesContextSource = this;
 
     /**
      * List of currently-registered data listeners. This list contains no nulls.
@@ -166,21 +166,30 @@ public class Chart extends AbstractWabitObject {
     private final List<ChartDataListener> dataListeners = new ArrayList<ChartDataListener>();
 
     /**
-     * Fires a ChartDataChangedEvent whenever the current unfiltered result set
-     * notifies us about new data. The hooked-upedness of this listener is managed
-     * by {@link #setUnfilteredResultSet(CachedRowSet)}.
+     * Listens to the current ResultSetHandle and updates the chart
+     * as data comes in.
      */
-    private final RowSetChangeListener rowSetListener = new RowSetChangeListener() {
-        public void rowAdded(RowSetChangeEvent e) {
-            fireDataChangedEvent();
-        }
-    };
+    private final ResultSetListener resultSetListener = new ResultSetListener() {
+		public void newData(ResultSetEvent evt) {
+			logger.debug("Obtained new data for chart");
+			syncWithRs(evt.getSourceHandle().getResultSet());
+			fireDataChangedEvent();
+		}
+		public void executionComplete(ResultSetEvent evt) {
+			logger.debug("Obtained new data for chart");
+			syncWithRs(evt.getSourceHandle().getResultSet());
+			fireDataChangedEvent();
+		}
+		public void executionStarted(ResultSetEvent evt) {
+			// don't care.
+		};
+	};
 
     /**
      * Creates a new chart with a new unique ID.
      */
     public Chart() {
-        this(null);
+        this((String)null);
     }
 
     /**
@@ -195,46 +204,34 @@ public class Chart extends AbstractWabitObject {
         setName("New chart");
     }
     
-    // TODO copy constructor
+    /**
+     * Creates a new chart, based on another one, but sets it's context
+     * at the same time. Used to report renderers.
+     * @param chartToCopy The original chart to copy.
+     * @param variablesContextSource The source of variables to use.
+     */
+    public Chart(Chart chartToCopy, SPObject variablesContextSource) {
+    	this(chartToCopy);
+		this.variablesContextSource = variablesContextSource;
+    }
     
     /**
-     * Resets the missing identifiers list. This list contains all of the
-     * column identifiers that are defined in the chart but do not exist in the
-     * query that is being used to get values for this chart. The reason why
-     * some of the columns are missing is usually due to the query being modified.
+     * Copy constructor.
      */
-    public void clearMissingIdentifiers() {
-        missingColumns.clear();
-    }
-
-    /**
-     * Returns an unmodifiable view of the missing identifiers list. The missing
-     * identifiers are the parts of the chart's underlying data set which the
-     * chart refers to but can no longer find (probably because the data set's
-     * structure has changed since the chart was originally configured).
-     * 
-     * @return the current missing identifier list. It is not modifiable by you,
-     *         but it may appear to change.
-     */
-    public List<ChartColumn> getMissingIdentifiers() {
-        return Collections.unmodifiableList(missingColumns);
-    }
-
-    /**
-     * Adds the given column identifier to the end of the missing identifiers list.
-     * This method is only of practical use for code that's restoring the state
-     * of a chart that's being read from a file.
-     * 
-     * @param ci The column identifier to add. Must not be null.
-     */
-    public void addMissingIdentifier(@Nonnull ChartColumn ci) {
-        if (ci == null) {
-            throw new NullPointerException("null column identifier");
-        }
-        missingColumns.add(ci);
-        ci.setParent(this);
-        fireChildAdded(ChartColumn.class, ci, missingColumns.indexOf(ci));
-    }
+    public Chart(Chart chartToCopy) {
+		super(null);
+    	setName(chartToCopy.getName());
+    	this.backgroundColour = chartToCopy.backgroundColour;
+    	this.xaxisName = chartToCopy.xaxisName;
+    	this.yaxisName = chartToCopy.yaxisName;
+    	this.type = chartToCopy.type;
+    	this.legendPosition = chartToCopy.legendPosition;
+    	this.chartColumns.addAll(chartToCopy.chartColumns);
+    	this.resultSetFilter = chartToCopy.resultSetFilter;
+    	this.xAxisLabelRotation = chartToCopy.xAxisLabelRotation;
+    	this.gratuitouslyAnimated = chartToCopy.gratuitouslyAnimated;
+    	this.setQuery(chartToCopy.query);
+	}
 
     public Color getBackgroundColour() {
         return backgroundColour;
@@ -248,25 +245,22 @@ public class Chart extends AbstractWabitObject {
 
     /**
      * Returns the current result set of the query that supplies data to this
-     * chart. If the query is an OlapQuery, its CellSet will be converted to a
-     * ResultSet by calling {@link OlapUtil#toResultSet(CellSet)}.
+     * chart.
      * <p>
      * No matter how the result set was obtained, it will be filtered through
      * the current {@link #resultSetFilter} before being returned.
      * 
      * @return The current result set that should be charted, filtered through
-     *         {@link #resultSetFilter}. If {@link #refreshData()} has not been
-     *         called on this chart instance since its creation or since the
-     *         most recent call to {@link #defineQuery(WabitObject)}, this
-     *         method returns null.
+     *         {@link #resultSetFilter}.
+     *         
      * @see #getUnfilteredResultSet()
      */
-    public ResultSet getResultSet()
-        throws SQLException, QueryInitializationException, InterruptedException {
+    private ResultSet getResultSet() throws SQLException {
         
         ResultSet rs = getUnfilteredResultSet();
+        
         if (rs == null) {
-            return null;
+        	return null;
         }
         
         if (resultSetFilter == null) {
@@ -274,15 +268,13 @@ public class Chart extends AbstractWabitObject {
         } else {
             CachedRowSet filteredRs = new CachedRowSet();
             filteredRs.populate(rs, resultSetFilter);
-            rs.close();
             return filteredRs;
         }
     }
 
     /**
      * Returns the current result set of the query that supplies data to this
-     * chart. If the query is an OlapQuery, its CellSet will be converted to a
-     * ResultSet by calling {@link OlapUtil#toResultSet(CellSet)}.
+     * chart. 
      * <p>
      * The result set returned will contain all the rows supplied by the current
      * query. Specifically, it will not be subject to the
@@ -290,25 +282,24 @@ public class Chart extends AbstractWabitObject {
      * show all the rows and visually indicate which ones are being used in the
      * chart and which are not.
      * 
-     * @return The unfiltered version of the current result set. If
-     *         {@link #refreshData()} has not been called on this chart instance
-     *         since its creation or since the most recent call to
-     *         {@link #defineQuery(WabitObject)}, this method returns null.
-     * @throws SQLException
+     * @return The unfiltered version of the current result set.
+     * 
      * @see #getResultSet()
      */
-    public CachedRowSet getUnfilteredResultSet() throws SQLException {
-        if (unfilteredResults == null) {
-            return null;
-        } else {
-            return unfilteredResults;
-        }
+    public ResultSet getUnfilteredResultSet() {
+    	if (resultSetHandle == null) {
+    		refresh();
+    	}
+    	if (resultSetHandle == null) {
+    		return null;
+    	} else {
+    		return resultSetHandle.getResultSet();
+    	}
     }
     
     /**
      * This ultimately the correct and lowest-level way to update the result set
-     * that this chart is based on. However, it is easier and more convenient to
-     * call {@link #getQuery()}.execute().
+     * that this chart is based on.
      * <p>
      * This method fires a property change event for the property
      * "unfilteredResultSet". The result sets it passes around are not recreated
@@ -319,53 +310,61 @@ public class Chart extends AbstractWabitObject {
      *            the new unfiltered result set to base the chart data on.
      * @throws SQLException 
      */
-    private void setUnfilteredResultSet(CachedRowSet rs) throws SQLException {
-        if (unfilteredResults != null) {
-            unfilteredResults.removeRowSetListener(rowSetListener );
+    private void setResultSetHandle(ResultSetHandle rs) {
+    	
+        if (resultSetHandle != null) {
+            resultSetHandle.removeResultSetListener(resultSetListener);
+            resultSetHandle.cancel();
         }
-        unfilteredResults = rs;
+        resultSetHandle = rs;
         
-        // synchronize chart columns with new result set
-        List<ChartColumn> oldCols = new ArrayList<ChartColumn>(chartColumns);
-        List<ChartColumn> newCols = new ArrayList<ChartColumn>();
-        if (rs != null) {
-            ResultSetMetaData rsmd = rs.getMetaData();
-            // The meta data object might be null because of streaming queries.
-            if (rsmd != null) {
-	            for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-	                String columnName = rsmd.getColumnName(i);
-	                ChartColumn existing = findByName(oldCols, columnName);
-	                if (existing != null) {
-	                    newCols.add(existing);
-	                } else {
-	                    int columnType = rsmd.getColumnType(i);
-	                    newCols.add(new ChartColumn(columnName, columnType));
-	                }
-	            }
-            }
+        if (resultSetHandle != null) {
+            resultSetHandle.addResultSetListener(resultSetListener);
         }
-        
-        // this part fires childRemoved and childAdded events
-        for (int i =  chartColumns.size() - 1; i >= 0; i--) {
-        	ChartColumn col = chartColumns.get(i);
-        	if (!newCols.contains(col)) {
-        		removeColumnIdentifier(col);
-        	}
-        }
-        for (ChartColumn col : newCols) {
-        	if (!chartColumns.contains(col)) {
-        		addChartColumn(col);
-        	}
-        }
-        
-        if (unfilteredResults != null) {
-            unfilteredResults.addRowSetListener(rowSetListener);
-        }
-        
-        fireDataChangedEvent();
     }
     
-    private static ChartColumn findByName(List<ChartColumn> cols, String name) {
+    private void syncWithRs(ResultSet rs) {
+    	try {
+        	synchronized (chartColumns) {
+        		
+        		// synchronize chart columns with new result set
+        		List<ChartColumn> oldCols = new ArrayList<ChartColumn>(chartColumns);
+        		List<ChartColumn> newCols = new ArrayList<ChartColumn>();
+        		if (rs != null) {
+        			ResultSetMetaData rsmd = rs.getMetaData();
+        			// The meta data object might be null because of streaming queries.
+        			if (rsmd != null) {
+        				for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+        					String columnName = rsmd.getColumnName(i);
+        					ChartColumn existing = findByName(oldCols, columnName);
+        					if (existing != null) {
+        						newCols.add(existing);
+        					} else {
+        						int columnType = rsmd.getColumnType(i);
+        						newCols.add(new ChartColumn(columnName, columnType));
+        					}
+        				}
+        			}
+        		}
+        		// this part fires childRemoved and childAdded events
+        		for (int i =  chartColumns.size() - 1; i >= 0; i--) {
+        			ChartColumn col = chartColumns.get(i);
+        			if (!newCols.contains(col)) {
+        				removeColumnIdentifier(col);
+        			}
+        		}
+        		for (ChartColumn col : newCols) {
+        			if (!chartColumns.contains(col)) {
+        				addChartColumn(col);
+        			}
+        		}
+			}
+        } catch (SQLException e) {
+        	throw new RuntimeException(e);
+        }
+	}
+
+	private static ChartColumn findByName(List<ChartColumn> cols, String name) {
         for (ChartColumn col : cols) {
             if (col.getName().equals(name)) {
                 return col;
@@ -416,14 +415,7 @@ public class Chart extends AbstractWabitObject {
             default :
                 throw new IllegalStateException("Unknown chart type " + type);
             }
-        } catch (InterruptedException e) {
-            // query run must have been interrupted; restore interrupted state of thread
-            logger.debug("Returning null data set because thread was interrupted");
-            Thread.currentThread().interrupt();
-            return null;
         } catch (SQLException e) {
-            throw new RuntimeException(e);
-        } catch (QueryInitializationException e) {
             throw new RuntimeException(e);
         }
     }
@@ -458,11 +450,7 @@ public class Chart extends AbstractWabitObject {
     
     public void removeDependency(SPObject dependency) {
         if (dependency.equals(query)) {
-            try {
-                setQuery(null);
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            setQuery(null);
         }
         for (WabitObject child : getChildren()) {
             child.removeDependency(dependency);
@@ -538,14 +526,16 @@ public class Chart extends AbstractWabitObject {
      * @param newQuery
      * @throws IllegalArgumentException if the query is not of a supported type.
      */
-    public void setQuery(@Nullable ResultSetProducer newQuery) throws SQLException {
+    public void setQuery(@Nullable WabitResultSetProducer newQuery) {
         
+    	logger.debug("Setting chart's query to " + newQuery);
+    	
         // remove old listeners
         if (query != null) {
-            query.removeResultSetListener(resultSetListener);
+            query.removeResultSetProducerListener(resultSetProducerListener);
         }
 
-        ResultSetProducer oldQuery = query;
+        WabitResultSetProducer oldQuery = query;
         query = newQuery;
 
         if (newQuery instanceof OlapQuery) {
@@ -556,10 +546,13 @@ public class Chart extends AbstractWabitObject {
         
         // attach new listeners
         if (query != null) {
-            query.addResultSetListener(resultSetListener);
+            query.addResultSetProducerListener(resultSetProducerListener);
         }
         
-        firePropertyChange("query", oldQuery, newQuery);
+        if (isMagicEnabled()) {
+        	refresh();
+        }
+        firePropertyChange("query", oldQuery, newQuery);        	
     }
 
     private void setResultSetFilter(RowFilter resultSetFilter) {
@@ -574,7 +567,7 @@ public class Chart extends AbstractWabitObject {
      * Returns the current query that this chart gets its datasets from. Can be
      * null.
      */
-    public ResultSetProducer getQuery() {
+    public WabitResultSetProducer getQuery() {
         return query;
     }
 
@@ -614,7 +607,7 @@ public class Chart extends AbstractWabitObject {
      *            The index to add the chart column at. Cannot be greater than
      *            the current number of identifiers in the chart.
      */
-    public void addChartColumn(@Nonnull ChartColumn newColumnIdentifier, int index) {
+    private void addChartColumn(@Nonnull ChartColumn newColumnIdentifier, int index) {
         if (newColumnIdentifier == null) {
             throw new NullPointerException("Null column identifier");
         }
@@ -661,7 +654,7 @@ public class Chart extends AbstractWabitObject {
             int repeatedMembers = 0;
             
             for (ChartColumn catCol : categoryColumns) {
-                int idx = unfilteredResults.findColumn(catCol.getName());
+                int idx = resultSetHandle.getResultSet().findColumn(catCol.getName());
                 Object val = row[idx - 1];
                 
                 if (val == null) {
@@ -768,31 +761,26 @@ public class Chart extends AbstractWabitObject {
      * Delivers a data change notification to all registered listeners.
      */
     private void fireDataChangedEvent() {
-        ChartDataChangedEvent evt = new ChartDataChangedEvent(this);
-        for (int i = dataListeners.size() - 1; i >= 0; i--) {
-            dataListeners.get(i).chartDataChanged(evt);
-        }
+        final ChartDataChangedEvent evt = new ChartDataChangedEvent(this);
+		synchronized (dataListeners) {
+			for (int i = dataListeners.size() - 1; i >= 0; i--) {
+				dataListeners.get(i).chartDataChanged(evt);
+			}
+		}
     }
     
     @Override
     public CleanupExceptions cleanup() {
-        CleanupExceptions exceptions = new CleanupExceptions();
-        try {
-        	if (query != null) {
-        		query.removeResultSetListener(resultSetListener);
-        	}
-        } catch (Exception e) {
-            exceptions.add(e);
-        }
-        try {
-        	if (unfilteredResults != null) {
-        		unfilteredResults.removeRowSetListener(rowSetListener);
-        	}
-        } catch (Exception e) {
-            exceptions.add(e);
-        }
         
-        return exceptions;
+        if (query != null) {
+    		query.removeResultSetProducerListener(resultSetProducerListener);
+    	}
+        
+        if (resultSetHandle != null) {
+    		resultSetHandle.removeResultSetListener(resultSetListener);
+    	}
+        
+        return new CleanupExceptions();
     }
     
     
@@ -801,5 +789,65 @@ public class Chart extends AbstractWabitObject {
     	types.add(ChartColumn.class);
     	return types;
     }
+    
+    public void refresh() {
+    	logger.debug("Refreshing chart");
+    	try {
+        	begin("Updating chart data because source query structure changed");
+        	if (query == null) {
+        		setResultSetHandle(null);
+        	} else {
+        		if (Chart.this.variablesContextSource == null) {
+        			throw new AssertionError("Program error. Chart objects need a variables context defined.");
+        		}
+        		setResultSetHandle(
+            			query.execute(
+            					new SPVariableHelper(Chart.this.variablesContextSource), 
+            					Chart.this.resultSetListener));
+        	}
+        } catch (ResultSetProducerException e) {
+            throw new RuntimeException(e);
+        } finally {
+        	commit();
+        }
+    }
+    
+    /**
+     * Resets the missing identifiers list. This list contains all of the
+     * column identifiers that are defined in the chart but do not exist in the
+     * query that is being used to get values for this chart. The reason why
+     * some of the columns are missing is usually due to the query being modified.
+     */
+    public void clearMissingIdentifiers() {
+        missingColumns.clear();
+    }
 
+    /**
+     * Returns an unmodifiable view of the missing identifiers list. The missing
+     * identifiers are the parts of the chart's underlying data set which the
+     * chart refers to but can no longer find (probably because the data set's
+     * structure has changed since the chart was originally configured).
+     * 
+     * @return the current missing identifier list. It is not modifiable by you,
+     *         but it may appear to change.
+     */
+    public List<ChartColumn> getMissingIdentifiers() {
+        return Collections.unmodifiableList(missingColumns);
+    }
+
+    /**
+     * Adds the given column identifier to the end of the missing identifiers list.
+     * This method is only of practical use for code that's restoring the state
+     * of a chart that's being read from a file.
+     * 
+     * @param ci The column identifier to add. Must not be null.
+     */
+    public void addMissingIdentifier(@Nonnull ChartColumn ci) {
+        if (ci == null) {
+            throw new NullPointerException("null column identifier");
+        }
+        missingColumns.add(ci);
+        ci.setParent(this);
+        fireChildAdded(ChartColumn.class, ci, missingColumns.indexOf(ci));
+    }
 }

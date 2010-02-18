@@ -19,24 +19,80 @@
 
 package ca.sqlpower.wabit;
 
+import java.io.File;
 import java.util.Collection;
 
 import junit.framework.TestCase;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.WorkspaceGraphModel;
 import ca.sqlpower.object.WorkspaceGraphModelEdge;
+import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class WorkspaceGraphModelTest extends TestCase {
     
-    private StubWabitSessionContext context = new StubWabitSessionContext();
+	private StubWabitSession session;
+	private StubWabitSessionContext context;
+	private WabitWorkspace workspace;
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		
+		final PlDotIni plIni = new PlDotIni();
+    	plIni.read(new File("src/test/java/pl.regression.ini"));
+        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+        		Olap4jDataSource.class);
+        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
+        		new SQLDatabaseMapping() {
+        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return sqlDB;
+        	}
+        });
+    	
+    	
+        this.context = new StubWabitSessionContext() {
+    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
+    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
+    				return connectionPool.getConnection();
+    		};
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    	};
+    	
+    	this.workspace = new WabitWorkspace();
+    	
+    	this.session = new StubWabitSession(context) {
+    		
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return getContext().getDataSources();
+    		}
+    		
+    		@Override
+    		public WabitWorkspace getWorkspace() {
+    			return workspace;
+    		}
+    	};
+    	
+    	this.workspace.setSession(session);
+	}
 
     /**
      * This test confirms that getNodes in the graph model of the workspaceXMLDAO
@@ -44,9 +100,9 @@ public class WorkspaceGraphModelTest extends TestCase {
      * @throws Exception
      */
     public void testGetGraphNodes() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
+        cache.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
+        workspace.addQuery(cache, session);
         
         OlapQuery query = new OlapQuery(context);
         workspace.addOlapQuery(query);
@@ -60,7 +116,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, workspace, false, false);
         Collection<SPObject> nodes = graphModel.getNodes();
-        assertEquals(15, nodes.size());
+        assertEquals(16, nodes.size());
         assertTrue(nodes.contains(workspace));
         assertTrue(nodes.contains(cache));
         assertTrue(nodes.contains(query));
@@ -78,9 +134,9 @@ public class WorkspaceGraphModelTest extends TestCase {
      * @throws Exception
      */
     public void testGetGraphNodesForChart() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
+        cache.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
+        workspace.addQuery(cache, session);
         
         Chart chart = new Chart();
         workspace.addChart(chart);
@@ -88,7 +144,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         
         WorkspaceGraphModel graphModel = new WorkspaceGraphModel(workspace, chart, false, false);
         Collection<SPObject> nodes = graphModel.getNodes();
-        assertEquals(7, nodes.size());
+        assertEquals(8, nodes.size());
         assertTrue(nodes.contains(cache));
         assertTrue(nodes.contains(chart));
     }
@@ -100,9 +156,9 @@ public class WorkspaceGraphModelTest extends TestCase {
      * @throws Exception
      */
     public void testGetOutboundEdgesForChart() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
+        cache.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
+        workspace.addQuery(cache, session);
         
         Chart chart = new Chart();
         workspace.addChart(chart);
@@ -118,7 +174,6 @@ public class WorkspaceGraphModelTest extends TestCase {
     }
     
     public void testReportChildrenInGraph() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         Report report = new Report("Report");
         workspace.addReport(report);
         ContentBox cb1 = new ContentBox();
@@ -165,9 +220,9 @@ public class WorkspaceGraphModelTest extends TestCase {
      * Tests a basic dependency graph can be created.
      */
     public void testGetDependencyGraph() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
+        cache.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
+        workspace.addQuery(cache, session);
         Chart chart = new Chart();
         chart.setName("chart");
         workspace.addChart(chart);
@@ -189,7 +244,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         chart.setQuery(cache);
         graphModel = new WorkspaceGraphModel(workspace, report, true, false);
         nodes = graphModel.getNodes();
-        assertEquals(3, nodes.size());
+        assertEquals(4, nodes.size());
         assertTrue(nodes.contains(report));
         assertTrue(nodes.contains(chart));
         assertTrue(nodes.contains(cache));
@@ -199,9 +254,9 @@ public class WorkspaceGraphModelTest extends TestCase {
      * Tests a basic inverted dependency graph can be created.
      */
     public void testGetInvertedDependencyGraph() throws Exception {
-        WabitWorkspace workspace = new WabitWorkspace();
         QueryCache cache = new QueryCache(context);
-        workspace.addQuery(cache, new StubWabitSession(context));
+        cache.setDataSource((JDBCDataSource)session.getDataSources().getDataSource("regression_test"));
+        workspace.addQuery(cache, session);
         Chart chart = new Chart();
         chart.setName("chart");
         workspace.addChart(chart);

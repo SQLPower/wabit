@@ -46,7 +46,6 @@ import java.awt.event.MouseMotionListener;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -343,7 +342,6 @@ public class CellSetTableHeaderComponent extends JComponent {
                     	query.addToAxis(calcDropInsertIndex(p), m, axis);
                     }
                     logger.debug("  -- import complete");
-                    execute(query);
                     return true;
 
                 } catch (Exception e) {
@@ -568,16 +566,9 @@ public class CellSetTableHeaderComponent extends JComponent {
     			for (Hierarchy h: hierarchies) {
     				try {
     					query.clearExclusions(h);
-    					execute(query);
     				} catch (QueryInitializationException ex) {
     					throw new RuntimeException("Error while clearing all exclusions", ex);
-    				} catch (OlapException ex) {
-    					throw new RuntimeException("Error while clearing all exclusions", ex);
-    				} catch (SQLException ex) {
-    				    throw new RuntimeException("Error while clearing all exclusions", ex);
-    				} catch (InterruptedException ex) {
-    				    logger.info("OlapQuery execution was canceled before it took place", ex);
-                    }
+    				}
     			}
     		}
     	});
@@ -763,7 +754,6 @@ public class CellSetTableHeaderComponent extends JComponent {
             			} else {
             				query.toggleMember(selectedMember);
             			}
-            			OlapGuiUtil.asyncExecute(query, evilDigUpSession());
             		} catch (Exception ex) {
 	            		throw new RuntimeException("Database error while trying to execute the OLAP query", ex);
             		}
@@ -1242,29 +1232,6 @@ public class CellSetTableHeaderComponent extends JComponent {
 		}
 		return cornerComponent;
 	}
-
-    /**
-     * Executes the given query in the background if it belongs to a
-     * WabitSwingSession (which is a worker registry). Otherwise, just executes
-     * the query on the current thread.
-     * 
-     * @param query
-     *            The query to execute
-     * @throws InterruptedException
-     *             if the current thread is interrupted while waiting for its
-     *             turn to execute the given OlapQuery.
-     * @throws SQLException
-     *             If there is a problem iterating over the results when
-     *             converting the CellSet to a ResultSet.
-     */
-    private void execute(OlapQuery query) throws QueryInitializationException, InterruptedException, SQLException {
-        WabitSwingSession session = evilDigUpSession();
-        if (session != null) {
-            OlapGuiUtil.asyncExecute(query, session);
-        } else {
-            query.executeOlapQuery();
-        }
-    }
 
     /**
      * The following code is evil, and intended to be temporary. It would be

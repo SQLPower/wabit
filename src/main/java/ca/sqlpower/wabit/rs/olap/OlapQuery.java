@@ -19,9 +19,7 @@
 
 package ca.sqlpower.wabit.rs.olap;
 
-import java.beans.PropertyChangeEvent;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,25 +27,16 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.Semaphore;
 
-import javax.naming.NamingException;
+import javax.annotation.Nullable;
 
 import net.jcip.annotations.GuardedBy;
 import net.jcip.annotations.ThreadSafe;
 
 import org.apache.log4j.Logger;
 import org.olap4j.Axis;
-import org.olap4j.CellSet;
-import org.olap4j.CellSetAxis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
-import org.olap4j.OlapStatement;
-import org.olap4j.Position;
-import org.olap4j.mdx.ParseTreeWriter;
 import org.olap4j.mdx.SelectNode;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
@@ -66,26 +55,24 @@ import org.olap4j.query.SortOrder;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 import org.olap4j.query.Selection.Operator;
 
-import ca.sqlpower.object.SPChildEvent;
-import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPSimpleVariableResolver;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.util.SQLPowerUtils;
-import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
-import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
 
 /**
  * This is the model of an OLAP query. This will store all values that need to
@@ -115,7 +102,7 @@ import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
  * been added.
  */
 @ThreadSafe
-public class OlapQuery extends AbstractWabitObject implements ResultSetProducer, SPVariableResolverProvider {
+public class OlapQuery extends AbstractWabitObject implements WabitResultSetProducer, SPVariableResolverProvider {
     
     private static final Logger logger = Logger.getLogger(OlapQuery.class);
     
@@ -143,27 +130,44 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     	protected void beforeLookups(String key) {
     		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
     				&& this.updateNeeded) {
-    			this.updateVars(true);
+    			this.updateVars();
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
     		if (this.updateNeeded) {
-    			this.updateVars(false);
+    			this.updateVars();
     		}
     	}
-		public void updateVars(boolean completeUpdate) {
-
+		public void updateVars() {
 			try {
-				OlapResultSet rs = new OlapResultSet();
-		        rs.populate( executeOlapQuery() );
-		        rs.first();
-		        variables.clear();
-		        do {
-					for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-						this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-					}
-				} while (rs.next());
-			} catch (Exception e) {
+				execute(
+						new SPVariableHelper(OlapQuery.this),
+						new ResultSetListener() {
+							public void newData(ResultSetEvent evt) {
+								// not interested
+							}
+							public void executionStarted(ResultSetEvent evt) {
+								// don't care.
+							};
+							public void executionComplete(ResultSetEvent evt) {
+								try {
+									variables.clear();
+									ResultSet rs = evt.getResults();
+									if (rs != null &&
+											rs.first()) {
+								        do {
+											for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+												store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+											}
+										} while (rs.next());
+									}
+								} catch (SQLException e) {
+									logger.error("Failed to resolve available variables from a query.", e);
+								}
+							}
+						});
+				
+			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
 			} finally {
 				this.updateNeeded = false;
@@ -184,9 +188,20 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     public static OlapQuery copyOlapQuery(OlapQuery oldOlapQuery) throws SQLException, 
             QueryInitializationException {
         synchronized (oldOlapQuery) {
-            OlapQuery newQuery = new OlapQuery(null, oldOlapQuery.olapMapping, oldOlapQuery.getName(), oldOlapQuery.getQueryName(), oldOlapQuery.getCatalogName(), oldOlapQuery.getSchemaName(), oldOlapQuery.getCubeName());
+            OlapQuery newQuery = 
+            		new OlapQuery(
+            				null, 
+            				oldOlapQuery.olapMapping, 
+            				oldOlapQuery.getName(), 
+            				oldOlapQuery.getQueryName(), 
+            				oldOlapQuery.getCatalogName(), 
+            				oldOlapQuery.getSchemaName(), 
+            				oldOlapQuery.getCubeName(),
+            				oldOlapQuery.getModifiedOlapQuery());
+            
             newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
             newQuery.setName(oldOlapQuery.getName());
+            newQuery.setNonEmpty(oldOlapQuery.isNonEmpty());
             
             oldOlapQuery.updateAttributes();
             for (WabitOlapAxis axis : oldOlapQuery.getAxes()) {
@@ -204,6 +219,11 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * calls init() and this would cause an infinite loop.
      */
     private Query mdxQuery = null;
+    
+    /**
+     * Custom MDX query that the user has constructed / modified
+     */
+    private String modifiedOlapQuery = null;
     
     private boolean initDone = false;
     
@@ -226,29 +246,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * reduced the number of times an object gets cached. The connections in
      * this mapping should not be closed as they may be used by other objects.
      */
-    private final OlapConnectionMapping olapMapping;
-    
-    /**
-     * A List of {@link OlapQueryListener} objects that will be listening to
-     * changes to this OlapQuery instance. Currently, it is primarily used
-     * to notify listeners when the query has been executed.
-     * <p>
-     * Although this appears to overlap somewhat with the PropertyChangeEvent
-     * for "running" which indicates to the session that this WabitObject is
-     * doing work in the background, it serves a slightly different purpose
-     * since it actually delivers the new successful result to the listener.
-     * All the "running" property change does is notify listeners of the state
-     * transitions themselves. 
-     */
-    @GuardedBy("itself")
-    private final List<OlapQueryListener> listeners =
-        Collections.synchronizedList(new ArrayList<OlapQueryListener>());
-
-    /**
-     * A semaphore with one permit. This is the mechanism by which we serialize
-     * calls to {@link #executeOlapQuery()}.
-     */
-    private final Semaphore executionSemaphore = new Semaphore(1);
+    private final OlapConnectionProvider olapMapping;
     
     /**
      * Name of the Query object, used for loading
@@ -290,54 +288,19 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * Helps with the ResultSetProducer implementation.
      */
     @GuardedBy("this")
-    private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
+    private ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
     
-    private SPListener childListener = new SPListener(){
-    	private int transactionCount;
-    	
-		public void transactionEnded(TransactionEvent e) {
-			transactionCount--;
-			if (transactionCount <= 0){
-				transactionCount = 0;
-				try {
-					logger.debug("Auto Executing OLAP Query");
-					executeOlapQuery();
-				} catch (Exception ex) {
-					logger.error("Error auto-executing OLAP Query", ex);
-				}
-			}
-		}
-		
-		public void transactionRollback(TransactionEvent e) {
-			// no-op
-		}
-		public void transactionStarted(TransactionEvent e) {
-			transactionCount++;
-		}
-		
-		public void childAdded(SPChildEvent e) {
-			logger.debug("Listening to child " + e.getChild().getName());
-			SQLPowerUtils.listenToHierarchy(e.getChild(), this);
-		}
-
-		public void childRemoved(SPChildEvent e) {
-			logger.debug("Removing child " + e.getChild().getName());
-			SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
-		}
-
-		public void propertyChanged(PropertyChangeEvent evt) {
-			// no op
-		}
-    	
-    };
-
+    /**
+     * Because reports nest their own version of the OLAP query,
+     * we have to prevent those nested ones form exposing variables.
+     */
 	private final boolean actsAsVariableProvider;
     
     /**
      * Creates a new, empty query with no set persistent object ID.
      */
-    public OlapQuery(OlapConnectionMapping olapMapping) {
-        this(null, olapMapping, "", OLAP4J_QUERY_NAME, null, null, null);
+    public OlapQuery(OlapConnectionProvider olapMapping) {
+        this(null, olapMapping, "", OLAP4J_QUERY_NAME, null, null, null, null);
     }
     
     /**
@@ -345,8 +308,17 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * when it's saved. This constructor is only of particular use to the
      * persistence layer.
      */
-    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName) {
-    	this(uuid, olapMapping, name, queryName, catalogName, schemaName, cubeName, true);
+    public OlapQuery(
+    		String uuid, 
+    		OlapConnectionProvider olapMapping, 
+    		String name, 
+    		String queryName, 
+    		String catalogName, 
+    		String schemaName, 
+    		String cubeName, 
+    		String modifiedOlapQuery) 
+    {
+    	this(uuid, olapMapping, name, queryName, catalogName, schemaName, cubeName, modifiedOlapQuery, true);
     }
     
     /**
@@ -359,7 +331,17 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * act as variable providers.
      * 
      */
-    public OlapQuery(String uuid, OlapConnectionMapping olapMapping, String name, String queryName, String catalogName, String schemaName, String cubeName, boolean actsAsVariableProvider) {
+    public OlapQuery(
+    		String uuid, 
+    		OlapConnectionProvider olapMapping, 
+    		String name, 
+    		String queryName, 
+    		String catalogName, 
+    		String schemaName, 
+    		String cubeName, 
+    		String modifiedOlapQuery, 
+    		boolean actsAsVariableProvider) 
+    {
         super(uuid);
         this.olapMapping = olapMapping;
 		this.actsAsVariableProvider = actsAsVariableProvider;
@@ -368,6 +350,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 		this.catalogName = catalogName;
 		this.schemaName = schemaName;
 		this.cubeName = cubeName;
+		this.modifiedOlapQuery = modifiedOlapQuery;
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {
@@ -393,187 +376,14 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
         }
         
         firePropertyChange("currentCube", oldCube, currentCube);
+        rsps.fireStructureChanged();
     }
 
     public synchronized Cube getCurrentCube() {
         return currentCube;
     }
-
-    /**
-     * Executes the current MDX query represented by this object, returning the
-     * cell set that results from the query's execution.
-     * <p>
-     * Every call to this method results in a CellSetEvent and a
-     * ResultSetProducerEvent being fired.
-     * 
-     * @throws SQLException
-     *             If the cell set cannot be iterated over or its values cannot
-     *             be retrieved to create a result set based off of the cell
-     *             set.
-     * 
-     * @see #innerExecuteOlapQuery()
-     */
-    public CellSet executeOlapQuery() throws QueryInitializationException, InterruptedException, SQLException {
-        CellSet cellSet = innerExecuteOlapQuery();
-        if (logger.isDebugEnabled() && cellSet != null) {
-        	for (CellSetAxis cellSetAxis : cellSet.getAxes()) {
-        		logger.debug("Axis " + cellSetAxis.getAxisOrdinal() + " contains:");
-        		for (Position position : cellSetAxis.getPositions()) {
-        			logger.debug("Position " + position.getOrdinal());
-        			for (Member member : position.getMembers()) {
-        				logger.debug("Member " + member.getUniqueName());
-        			}
-        		}
-        	}
-        }
-        fireResultSetEvent(cellSet);
-        return cellSet;
-    }
-
-    /**
-     * Executes the current MDX query represented by this object, returning the
-     * cell set that results from the query's execution.
-     * <p>
-     * If this query has not been modified at all since it was last executed,
-     * this method may return a cached reference to the same cell set as the
-     * last one it returned. Olap4j CellSet instances can be safely used from
-     * multiple threads.
-     * <p>
-     * Every call to this method results in a CellSetEvent being fired. If the
-     * query is in a state where it can't be executed (because one or more axes
-     * is empty), the event will still be fired, but it will deliver a null
-     * CellSet to listeners. <b>The CellSetEvent is fired while this query is still
-     * locked against execution, so it is vitally important that CellSetListeners
-     * do not attempt to re-execute the query in response to any CellSetEvent.</b>
-     * Such behaviour by CellSetListeners is guaranteed to cause deadlock.
-     * 
-     * <h2>Thread safety</h2>
-     * When the query begins to execute, it obtains this OlapQuery instance's
-     * monitor, takes a snapshot of the current query state, then releases the
-     * monitor. Query execution then proceeds while the OlapQuery instance
-     * itself remains unlocked. This allows other threads (especially the Swing
-     * GUI) to continue to modify the query while waiting for the results of the
-     * previous execution.
-     * <p>
-     * However, each OlapQuery instance does prevent itself from making
-     * overlapping execution requests. Calls to execute() are serialized using
-     * an internal synchronization mechanism. Each call to execute() does not
-     * take its snapshot of the query state until any previously in-flight
-     * execution has completed. This increases the chances that several blocked
-     * calls to execute() will end up executing the same MDX query and will
-     * therefore return the same cached CellSet rather than each wasting a
-     * potentially large amount of time executing a query that is no longer
-     * desired.
-     * 
-     * <h2>The name of this method</h2>
-     * This method has a silly name in order for it not to collide with its
-     * companion method, {@link #execute()}, whose name was specified in an interface.
-     *  
-     * @return The {@link CellSet} result of the execution of the query. If the
-     *         query has no dimensions in either it's row or column axis
-     *         however, it will not be able to execute, in which case it returns
-     *         null and no OlapQueryEvent is fired.
-     * @throws OlapException
-     *             If there was a database error
-     * @throws QueryInitializationException
-     *             If this query has not yet been initialized and the attempted
-     *             initialization fails.
-     * @throws InterruptedException
-     *             If the calling thread is interrupted while blocked waiting
-     *             for another call to execute() to complete.
-     */
-    private CellSet innerExecuteOlapQuery() throws OlapException, QueryInitializationException, InterruptedException {
-        try {
-            executionSemaphore.acquire();
-            try {
-                setRunning(true);
-
-                // take the snapshot
-                SelectNode mdx;
-                synchronized (this) {
-                	// TODO if there is one, execute the textual query instead
-                    if (getRowHierarchies().isEmpty() || getColumnHierarchies().isEmpty()) {
-                        mdx = null;
-                    } else {
-                    	mdx = getMDXQuery().getSelect();
-                    }
-                }
-                
-                // now run the query (while holding the semaphore but not the OlapQuery monitor)
-                CellSet cellSet;
-                if (mdx != null) {
-                	// The following code looks like it leaks an OlapConnection and an OlapStatement,
-                	// but both the connection and statement are actually just "retrieved"; not
-                	// "created" as their method names suggest
-                	OlapStatement olapStatement = createOlapConnection().createStatement();
-					cellSet = olapStatement.executeOlapQuery(mdx);
-                } else {
-                	// still need to notify listeners about the lack of a cell set
-                	cellSet = null;
-                }
-                
-                fireQueryExecuted(cellSet);
-                return cellSet;
-                
-            } catch (SQLException e) {
-                throw new OlapException("Couldn't create database connection for Olap query", e);
-            } catch (ClassNotFoundException e) {
-                throw new OlapException("Couldn't create database connection for Olap query", e);
-            } catch (NamingException e) {
-                throw new OlapException("Couldn't create database connection for Olap query", e);
-            } finally {
-                setRunning(false);
-            }
-        } finally {
-        	if (this.variableProvider!=null) {
-        		this.variableProvider.setUpdateNeeded(true);
-            }
-            executionSemaphore.release();
-        }
-    }
     
-    private void fireQueryExecuted(CellSet cellSet) {
-        final OlapQueryEvent e = new OlapQueryEvent(this, cellSet);
-        runInForeground(new Runnable() {
-            public void run() {
-                for (int i = listeners.size() - 1; i >= 0; i--) {
-                    listeners.get(i).queryExecuted(e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Creates a new {@link ResultSetHandle} based on the
-     * given {@link CellSet} and fires a {@link ResultSetProducerEvent}
-     * containing the new results.
-     * 
-     * @param cellSet
-     *            The cell set to wrap in a
-     *            {@link ResultSetHandle} to notify listeners
-     *            of new results.
-     * @return The result set collection that was sent to listeners.
-     * @throws SQLException
-     *             If the cellSet is not null and its values cannot be iterated
-     *             over or retrieved.
-     */
-    private ResultSetHandle fireResultSetEvent(
-            CellSet cellSet) throws SQLException {
-        OlapResultSet results = new OlapResultSet();
-        results.populate(cellSet);
-        
-        final ResultSetHandle rsCollection = 
-            new ResultSetHandle(results, getSession());
-        
-        runInForeground(new Runnable() {
-            public void run() {
-                synchronized (this) {
-                    rsps.fireResultSetEvent(rsCollection);
-                }
-            }
-        });
-        return rsCollection;
-    }
+    
 
 	/**
 	 * Removes the given {@link Hierarchy} from the given {@link Axis} in the
@@ -631,14 +441,15 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
         mdxQuery.getAxis(Axis.ROWS).setNonEmpty(nonEmpty);
         this.currentCube = mdxQuery.getCube();
         
-        childListener.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Updating OLAP Attributes"));
         clearAxes();
         for (QueryAxis axis : mdxQuery.getAxes().values()) {
         	if (axis.getLocation() != null) {
         		addAxis(new WabitOlapAxis(axis));
         	}
         }
-    	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
+        if (isMagicEnabled()){
+			this.setModifiedOlapQuery(null);
+		}
     }
 
 	/**
@@ -734,11 +545,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
         
         updateAttributes();
         return true;
-    }
-
-    public synchronized OlapConnection createOlapConnection()
-    throws SQLException, ClassNotFoundException, NamingException {
-        return olapMapping.createConnection(getOlapDataSource());
     }
 
     /**
@@ -839,7 +645,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 		}
 		try {
 			logger.debug("Creating cube with catalog=" + catalogName + ", schema=" + schemaName + ", cube=" + cubeName);
-			OlapConnection createOlapConnection = createOlapConnection();
+			OlapConnection createOlapConnection = this.getSession().getContext().createConnection(getOlapDataSource());
 			Catalog catalog = createOlapConnection.getCatalogs().get(catalogName);
 			Schema schema = catalog.getSchemas().get(schemaName);
 			Cube cube = schema.getCubes().get(cubeName);
@@ -874,14 +680,13 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 	 * call.
 	 */
     public void updateAttributes() {
-    	childListener.transactionStarted(TransactionEvent.createStartTransactionEvent(this, "Updating OLAP Attributes"));
     	for (WabitOlapAxis axis :  axes) {
     		axis.updateChildren();
     	}
     	if (this.variableProvider!=null) {
     		this.variableProvider.setUpdateNeeded(true);
     	}
-    	childListener.transactionEnded(TransactionEvent.createEndTransactionEvent(this));
+    	rsps.fireStructureChanged();
     }
 
     /**
@@ -892,7 +697,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 		wasLoadedFromDao = true;
 		axes.add(axis);
 		axis.setParent(this);
-		SQLPowerUtils.listenToHierarchy(axis, childListener);
 		fireChildAdded(WabitOlapAxis.class, axis, axes.size() - 1);
 	}
 	
@@ -1024,7 +828,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      * Tells if the connection was initialized.
      */
     public synchronized boolean hasCachedAttributes() {
-        // Create a copy of the init flag so the object is immutable.
         return (!this.initDone && this.wasLoadedFromDao);
     }
     
@@ -1047,11 +850,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      */
     public synchronized String getMdxText() throws QueryInitializationException {
     	if (getMDXQuery() == null) return null;
-        StringWriter sw = new StringWriter();
-        ParseTreeWriter ptw = new ParseTreeWriter(new PrintWriter(sw));
-        
-        getMDXQuery().getSelect().unparse(ptw);
-        return sw.toString();
+        return getMDXQuery().getSelect().toString();
     }
 
 	/**
@@ -1158,7 +957,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      */
     void addDimensionToAxis(int ordinal, Axis axis, QueryDimension qd) throws QueryInitializationException {
         QueryAxis qa = getMDXQuery().getAxis(axis);
-//        logger.debug("Moving dimension " + qd.getName() + " to Axis " + qa.getName() + "(" + qa.getLocation().axisOrdinal() + ")" + " in ordinal " + ordinal);
         if (!qa.equals(qd.getAxis())) {
         	qd.clearInclusions();
         	qa.addDimension(ordinal, qd);
@@ -1275,6 +1073,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 	 */
     public synchronized void sortBy(Axis axis, SortOrder order, Measure measure) throws QueryInitializationException {
     	getMDXQuery().getAxis(axis).sort(order, measure);
+    	if (isMagicEnabled()){
+			this.setModifiedOlapQuery(null);
+		}
+    	rsps.fireStructureChanged();
     }
     
 	/**
@@ -1286,6 +1088,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 	 */
 	public synchronized void clearSort(Axis axis) throws QueryInitializationException {
 		getMDXQuery().getAxis(axis).clearSort();
+		if (isMagicEnabled()){
+			this.setModifiedOlapQuery(null);
+		}
+		rsps.fireStructureChanged();
 	}
     
 	/**
@@ -1381,6 +1187,7 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
     		logger.debug("Query has rows non-empty? " + mdxQuery.getAxis(Axis.ROWS).isNonEmpty());
     	}
     	firePropertyChange("nonEmpty", oldVal, nonEmpty);
+    	rsps.fireStructureChanged();
     }
 
     /**
@@ -1390,20 +1197,6 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
      */
     public synchronized boolean isNonEmpty() {
     	return nonEmpty;
-    }
-    
-    /* (non-Javadoc)
-     * @see ca.sqlpower.wabit.olap.ResultSetProducer#addOlapQueryListener(ca.sqlpower.wabit.olap.OlapQueryListener)
-     */
-    public void addOlapQueryListener(OlapQueryListener listener) {
-    	listeners.add(listener);
-    }
-    
-    /* (non-Javadoc)
-     * @see ca.sqlpower.wabit.olap.ResultSetProducer#removeOlapQueryListener(ca.sqlpower.wabit.olap.OlapQueryListener)
-     */
-    public void removeOlapQueryListener(OlapQueryListener listener) {
-    	listeners.remove(listener);
     }
 
     /**
@@ -1427,8 +1220,8 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 	    if (axes.contains(child)) {
 	        int index = axes.indexOf(child);
 	        axes.remove(child);
-	        SQLPowerUtils.unlistenToHierarchy((WabitObject) child, childListener);
 	        fireChildRemoved(child.getClass(), child, index);
+	        rsps.fireStructureChanged();
 	    }
 	    return false;
 	}
@@ -1449,10 +1242,10 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 	    }
 	    
 	    axes.add(index, axis);
-	    SQLPowerUtils.listenToHierarchy(axis, childListener);
 	    axis.setParent(this);
 	    wasLoadedFromDao = true;
 	    fireChildAdded(child.getClass(), child, index);
+	    rsps.fireStructureChanged();
 	}
 	
 	public synchronized String getQueryName() {
@@ -1486,75 +1279,84 @@ public class OlapQuery extends AbstractWabitObject implements ResultSetProducer,
 			return cubeName;
 		}
 	}
+	
+	public String getModifiedOlapQuery() {
+		return modifiedOlapQuery;
+	}
+	
+	public void setModifiedOlapQuery(String modifiedOlapQuery) {
+		String oldMdx = this.getModifiedOlapQuery();
+		this.modifiedOlapQuery = modifiedOlapQuery;
+		firePropertyChange("modifiedOlapQuery", oldMdx, modifiedOlapQuery);
+	}
 
 	// -------------- WabitBackgroundWorker interface --------------
 	
-	private volatile boolean backgroundWorkerRunning;
 
     public void cancel() {
-        // TODO
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    private void setRunning(final boolean running) {
-        
-        Runnable runner = new Runnable() {
-			public void run() {
-				final boolean oldValue = backgroundWorkerRunning;
-				backgroundWorkerRunning = running;
-				firePropertyChange("running", oldValue, running);
-			}
-		};
-		runInForeground(runner);
+        rsps.cancel();
+        // TODO cancel any internal running queries as well.
     }
     
     public boolean isRunning() {
-        return backgroundWorkerRunning;
+        return rsps.isRunning();
     }
+    
     // -------------- End of WabitBackgroundWorker interface --------------
 
     // -------------- ResultSetProducer interface --------------
 
-    public synchronized void addResultSetListener(ResultSetListener listener) {
+    public synchronized void addResultSetProducerListener(ResultSetProducerListener listener) {
         rsps.addResultSetListener(listener);
     }
 
-    public synchronized void removeResultSetListener(ResultSetListener listener) {
+    public synchronized void removeResultSetProducerListener(ResultSetProducerListener listener) {
         rsps.removeResultSetListener(listener);
     }
 
-    /**
-     * Executes the underlying MDX query, causing all the side effects described
-     * in {@link #executeOlapQuery()}, then converts those results to an
-     * {@link OlapResultSet} and notifies the ResultSetListeners with that
-     * converted result.
-     */
-    public Future<ResultSetHandle> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
-            InterruptedException {
-        Callable<ResultSetHandle> callable = 
-            new Callable<ResultSetHandle>() {
-        
-            public ResultSetHandle call() throws Exception {
-                try {
-                    CellSet cellSet = executeOlapQuery();
-                    final ResultSetHandle rsCollection = fireResultSetEvent(cellSet);
-                    
-                    return rsCollection;
-                    
-                } catch (Exception e) {
-                    throw new ResultSetProducerException(e);
-                }
+    public ResultSetHandle execute(
+    		@Nullable SPVariableHelper variablesContext,
+    		@Nullable ResultSetListener listener) throws ResultSetProducerException
+	{
+        try {
+        	
+        	String textualQuery;
+        	if (this.modifiedOlapQuery == null) {
+        		// take the snapshot
+        		SelectNode mdx;
+        		synchronized (this) {
+        			if (getRowHierarchies().isEmpty() || getColumnHierarchies().isEmpty()) {
+        				return null;
+        			} else {
+        				mdx = getMDXQuery().getSelect();
+        			}
+        		}
+        		
+        		textualQuery = mdx.toString();
+        	
+        	} else {
+        	
+        		textualQuery = this.getModifiedOlapQuery();
+        		
+        	}
+        	
+        	return 
+        		rsps.execute(
+        				this.getSession().getContext(),
+        				getOlapDataSource(),
+        				textualQuery,
+        				variablesContext,
+        				ResultSetType.OLAP, 
+	        			0, 
+	        			listener);	
+            
+        } catch (Exception e) {
+            throw new ResultSetProducerException("Couldn't create database connection for Olap query", e);
+        } finally {
+        	if (this.variableProvider!=null) {
+        		this.variableProvider.setUpdateNeeded(true);
             }
-        };
-        FutureTask<ResultSetHandle> futureTask = 
-            new FutureTask<ResultSetHandle>(callable);
-        runInBackground(futureTask);
-        return futureTask;
-    }
-    
-    public Future<ResultSetHandle> execute() throws ResultSetProducerException, 
-    	InterruptedException {
-    	return this.execute(new SPVariableHelper(this));
+        }
     }
 
     // -------------- end ResultSetProducer interface --------------

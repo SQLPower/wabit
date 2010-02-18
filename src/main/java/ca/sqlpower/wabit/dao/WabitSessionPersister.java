@@ -104,7 +104,7 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
@@ -772,9 +772,11 @@ public class WabitSessionPersister implements SPPersister {
 					getPropertyAndRemove(uuid, "schemaName"), String.class);
 			String cubeName = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "cubeName"), String.class);
+			String modifiedOlapQuery = (String) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "modifiedOlapQuery"), String.class);
 
 			spo = new OlapQuery(uuid, session.getContext(), name, queryName,
-					catalogName, schemaName, cubeName);
+					catalogName, schemaName, cubeName, modifiedOlapQuery);
 
 		} else if (type.equals(Page.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
@@ -2341,6 +2343,9 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (propertyName.equals("cubeName")) {
 			return converter.convertToBasicType(olapQuery.getCubeName());
 
+		} else if (propertyName.equals("modifiedOlapQuery")) {
+			return converter.convertToBasicType(olapQuery.getModifiedOlapQuery());
+
 		} else if (propertyName.equals("currentCube")) {
 			return converter.convertToBasicType(olapQuery.getCurrentCube(),
 					olapQuery.getOlapDataSource());
@@ -2391,6 +2396,10 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (propertyName.equals("nonEmpty")) {
 			olapQuery.setNonEmpty((Boolean) converter.convertToComplexType(
 					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("modifiedOlapQuery")) {
+			olapQuery.setModifiedOlapQuery((String) converter.convertToComplexType(
+					newValue, String.class));
 
 		} else {
 			throw new SPPersistenceException(
@@ -2677,17 +2686,9 @@ public class WabitSessionPersister implements SPPersister {
 					.convertToComplexType(newValue, LegendPosition.class));
 
 		} else if (propertyName.equals("query")) {
-			ResultSetProducer rsProducer = (ResultSetProducer) converter
-					.convertToComplexType(newValue, ResultSetProducer.class);
-			try {
-				chart.setQuery(rsProducer);
-			} catch (SQLException e) {
-				throw new SPPersistenceException(uuid,
-						"Cannot commit property query on Chart with name \""
-								+ chart.getName() + "\" and UUID \""
-								+ chart.getUUID() + "\" for value \""
-								+ newValue.toString() + "\"", e);
-			}
+			WabitResultSetProducer rsProducer = (WabitResultSetProducer) converter
+					.convertToComplexType(newValue, WabitResultSetProducer.class);
+			chart.setQuery(rsProducer);
 
 		} else if (propertyName.equals("backgroundColour")) {
 			chart.setBackgroundColour((Color) converter.convertToComplexType(

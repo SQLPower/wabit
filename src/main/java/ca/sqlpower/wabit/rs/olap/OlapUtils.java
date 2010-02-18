@@ -33,6 +33,8 @@ import org.olap4j.query.QueryAxis;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 
+import ca.sqlpower.wabit.rs.OlapResultSet;
+
 /**
  * This is a class full of static helper methods to assist with the execution of
  * olap queries

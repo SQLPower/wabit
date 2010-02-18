@@ -217,8 +217,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
             Graphics2D contentGraphics = (Graphics2D) g2.create(
                     (int) cb.getX(), (int) cb.getY(),
                     (int) cb.getWidth(), (int) cb.getHeight());
-            needMorePages |= r.renderReportContent(contentGraphics, cb, 1.0, pageIndex, currentlyPrinting.get(), this.variableHelper);
-            r.refresh();
+            needMorePages |= r.renderReportContent(contentGraphics, cb, 1.0, pageIndex, true, this.variableHelper);
             contentGraphics.dispose();
         }
         if (!needMorePages) {

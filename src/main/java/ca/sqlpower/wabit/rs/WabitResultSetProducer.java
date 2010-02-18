@@ -19,15 +19,19 @@
 
 package ca.sqlpower.wabit.rs;
 
-public class ResultSetProducerEvent {
+import ca.sqlpower.wabit.WabitObject;
 
-	private final ResultSetProducer source;
+public interface WabitResultSetProducer extends ResultSetProducer, WabitObject {
 
-	public ResultSetProducerEvent(ResultSetProducer source) {
-		this.source = source;
-	}
-	
-	public ResultSetProducer getSource() {
-		return source;
-	}
+	/**
+     * Returns a user friendly name for this RS producer.
+     */
+    String getName();
+    
+    /**
+     * Returns a unique UUID for this RS producer so we can use it
+     *  in complex object trees.
+     */
+    String getUUID();
+    
 }

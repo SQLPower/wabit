@@ -437,7 +437,8 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     }
 
     public OlapConnection createConnection(Olap4jDataSource dataSource) 
-    throws SQLException, ClassNotFoundException, NamingException {
+    		throws SQLException, ClassNotFoundException, NamingException 
+	{
         if (dataSource == null) return null;
         OlapConnectionPool olapConnectionPool = olapConnectionPools.get(dataSource);
         if (olapConnectionPool == null) {
@@ -445,6 +446,11 @@ public class WabitSessionContextImpl implements WabitSessionContext {
             olapConnectionPools.put(dataSource, olapConnectionPool);
         }
         return olapConnectionPool.getConnection();
+    }
+    
+    public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException {
+    	if (dataSource == null) return null;
+    	return getDatabase(dataSource).getConnection();
     }
     
     public UserPrompter createDatabaseUserPrompter(String question,

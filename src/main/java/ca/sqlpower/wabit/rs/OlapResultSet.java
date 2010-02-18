@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit.rs.olap;
+package ca.sqlpower.wabit.rs;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -42,6 +42,7 @@ import org.olap4j.metadata.Member;
 
 import ca.sqlpower.sql.CachedResultSetMetaData;
 import ca.sqlpower.sql.CachedRowSet;
+import ca.sqlpower.wabit.rs.olap.RepeatedMember;
 
 
 /**
@@ -118,7 +119,7 @@ public class OlapResultSet extends CachedRowSet {
      */
     private List<Level> rowAxisColumns;
     
-    public OlapResultSet() throws SQLException {
+    public OlapResultSet() {
         super();
     }
 

@@ -70,6 +70,7 @@ import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
@@ -135,8 +136,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             
         } else if (valueType.equals(QueryCache.class)) {
             QueryCache query = new QueryCache(new SQLDatabaseMapping() {
-                public SQLDatabase getDatabase(JDBCDataSource ds) {
-                    return null;
+            	public SQLDatabase getDatabase(JDBCDataSource ds) {
+                    return (SQLDatabase) makeNewValue(SQLDatabase.class, null, "parent of table");
                 }
             });
             
@@ -145,6 +146,17 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
             }
             
             newValue = query;
+            
+        } else if (valueType.equals(WabitResultSetProducer.class)) {
+        	QueryCache cache = new QueryCache(workspace.getSession().getContext());
+            cache.setDataSource((JDBCDataSource)workspace.getSession().getDataSources().getDataSource("regression_test"));
+            
+            
+            if (!propName.equals("addQuery")) {
+            	workspace.addQuery(cache, workspace.getSession());
+            }
+            
+            newValue = cache;
             
         } else if (valueType.equals(Report.class)) {
         	Report report = new Report("testing layout");

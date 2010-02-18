@@ -30,7 +30,6 @@ import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.util.UserPrompterFactory;
 
@@ -47,7 +46,7 @@ import ca.sqlpower.util.UserPrompterFactory;
  * questions and warnings that arise during application startup as well as when
  * in the process of opening a Wabit workspace file.
  */
-public interface WabitSessionContext extends UserPrompterFactory, SQLDatabaseMapping, OlapConnectionMapping {
+public interface WabitSessionContext extends UserPrompterFactory, SqlConnectionProvider, OlapConnectionProvider {
 
     /**
      * The service type to look for when discovering enterprise servers on the

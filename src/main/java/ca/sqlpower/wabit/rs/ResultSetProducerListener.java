@@ -17,28 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>. 
  */
 
-package ca.sqlpower.wabit;
+package ca.sqlpower.wabit.rs;
 
-import java.sql.SQLException;
+public interface ResultSetProducerListener {
 
-import javax.naming.NamingException;
-
-import org.olap4j.OlapConnection;
-
-import ca.sqlpower.sql.Olap4jDataSource;
-
-/**
- * This interface maps an {@link Olap4jDataSource} to an open
- * {@link OlapConnection}.
- */
-public interface OlapConnectionMapping {
-
+	/**
+	 * Gets called when a first {@link ResultSetHandle}
+	 *  of this {@link ResultSetProducer}
+	 * has started it's execution.
+	 */
+	void executionStarted(ResultSetProducerEvent evt);
+    
+	/**
+	 * Gets called when all the distributed {@link ResultSetHandle} of this
+	 * {@link ResultSetProducer} have finished running.
+	 */
+    void executionStopped(ResultSetProducerEvent evt);
+    
     /**
-     * This method returns an {@link OlapConnection} that has been mapped to an
-     * {@link Olap4jDataSource}. This connection should not be closed as other
-     * objects may be using it to access the data source.
+     * Gets fired to notify listeners that the structure of the
+     * supplied data has changed.
      */
-    public OlapConnection createConnection(Olap4jDataSource dataSource) 
-    throws SQLException, ClassNotFoundException, NamingException;
-
+    void structureChanged(ResultSetProducerEvent evt);
 }

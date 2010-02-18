@@ -39,13 +39,14 @@ import org.olap4j.metadata.Schema;
 import org.olap4j.query.Selection;
 import org.olap4j.query.Selection.Operator;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
@@ -73,7 +74,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	}
     };
     
-    private OlapConnectionMapping connectionMapping = new OlapConnectionMapping() {
+    private OlapConnectionProvider connectionMapping = new OlapConnectionProvider() {
     	
 		public OlapConnection createConnection(Olap4jDataSource dataSource)
 				throws SQLException, ClassNotFoundException,
@@ -111,7 +112,16 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
         
 
         
-        query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
+        query = new OlapQuery(
+        				null, 
+        				connectionMapping, 
+        				"Life Expectancy And GNP Correlation", 
+        				"GUI Query", 
+        				"LOCALDB", 
+        				"World", 
+        				"World Countries",
+        				null);
+        
         query.setOlapDataSource(ds);
         
         connectionPool = new OlapConnectionPool(ds, 
@@ -182,7 +192,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	query.addAxis(rowsAxis);
     	
     	//This should not throw an exception
-    	query.executeOlapQuery();
+    	query.execute(new SPVariableHelper(query), null);
     	
     	assertNotNull(rowsAxis.getQueryAxis());
     	assertTrue(rowsAxis.getQueryAxis().getDimensions().contains(rowsDimension.getDimension()));
@@ -226,7 +236,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	
     	assertEquals("World", worldMember.getName());
     	
-    	query.execute();
+    	query.execute(new SPVariableHelper(query), null);
     	query.toggleMember(worldMember);
 
     	WabitOlapAxis afterRowsAxis = null;
@@ -294,7 +304,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     		System.out.println(sel.getUniqueMemberName());
     	}
     	
-    	query.execute();
+    	query.execute(new SPVariableHelper(query), null);
     	
     	System.out.println("After execution");
     	
@@ -379,7 +389,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
         query.addAxis(rowsAxis);
         
         //This should not throw an exception
-        query.executeOlapQuery();
+        query.execute(new SPVariableHelper(query), null);
         
         assertEquals(2, query.getChildren().size());
         

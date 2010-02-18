@@ -19,29 +19,15 @@
 
 package ca.sqlpower.wabit.rs.olap;
 
-import java.io.File;
-import java.sql.SQLException;
 import java.util.Set;
 
-import javax.naming.NamingException;
-
 import org.olap4j.Axis;
-import org.olap4j.OlapConnection;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.metadata.Member;
 
-import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
-import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.OlapConnectionMapping;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
-import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
 import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class WabitOlapAxisTest extends AbstractWabitObjectTest {
@@ -89,50 +75,29 @@ public class WabitOlapAxisTest extends AbstractWabitObjectTest {
     }
     
     public void testAddAndRemoveChildAfterInit() throws Exception {
-        PlDotIni plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
-        final Olap4jDataSource ds = plIni.getDataSource("World Facts OLAP Connection", Olap4jDataSource.class);
         
-        final SQLDatabase db = new SQLDatabase(ds.getDataSource());
+        OlapQuery query = new OlapQuery(
+        						null, 
+        						getContext(), 
+        						"Life Expectancy And GNP Correlation", 
+        						"GUI Query", 
+        						"LOCALDB", 
+        						"World", 
+        						"World Countries",
+        						null);
         
-        final SQLDatabaseMapping dbMapping = new SQLDatabaseMapping() {
-            
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return db;
-            }
-        };
-        
-        OlapConnectionMapping connectionMapping = new OlapConnectionMapping() {
-            
-            public OlapConnection createConnection(Olap4jDataSource dataSource)
-                    throws SQLException, ClassNotFoundException,
-                    NamingException {
-                OlapConnectionPool pool = new OlapConnectionPool(ds, dbMapping);
-                return pool.getConnection();
-            }
-            
-        };
-        
-        OlapConnectionPool connectionPool = new OlapConnectionPool(ds, 
-                new SQLDatabaseMapping() {
-            private final SQLDatabase sqlDB = new SQLDatabase(ds.getDataSource());
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return sqlDB;
-            }
-        });
-        
-        Dimension dimension = connectionPool.getConnection().getSchema().getCubes().get("World Countries").getDimensions().get("Geography");
-        
-        OlapQuery query = new OlapQuery(null, connectionMapping, "Life Expectancy And GNP Correlation", "GUI Query", "LOCALDB", "World", "World Countries");
-        query.setOlapDataSource(ds);
         WabitOlapAxis rowAxis = new WabitOlapAxis(Axis.ROWS);
         WabitOlapAxis colAxis = new WabitOlapAxis(Axis.COLUMNS);
         query.addAxis(rowAxis);
         query.addAxis(colAxis);
         
-        query.init();
+        query.setOlapDataSource((Olap4jDataSource)getSession().getDataSources().getDataSource("World Facts OLAP Connection"));
         
+        getWorkspace().addOlapQuery(query);
+        query.init();
         query.updateAttributes();
+        
+        Dimension dimension = query.getCurrentCube().getDimensions().get("Geography");
         
         final Member defaultMember = dimension.getDefaultHierarchy().getDefaultMember();
         query.addToAxis(0, defaultMember, rowAxis.getOrdinal());

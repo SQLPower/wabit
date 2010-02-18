@@ -30,7 +30,7 @@ import ca.sqlpower.dao.session.BidirectionalConverter;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.wabit.OlapConnectionMapping;
+import ca.sqlpower.wabit.OlapConnectionProvider;
 
 public class CubeConverter implements BidirectionalConverter<String, Cube> {
 
@@ -39,11 +39,11 @@ public class CubeConverter implements BidirectionalConverter<String, Cube> {
 	 * string. If we are only converting cubes to strings then this value will
 	 * be unused.
 	 */
-	private final OlapConnectionMapping mapping;
+	private final OlapConnectionProvider mapping;
 
 	private final DataSourceCollection<SPDataSource> dsCollection;
 
-	public CubeConverter(OlapConnectionMapping con, DataSourceCollection<SPDataSource> dsCollection) {
+	public CubeConverter(OlapConnectionProvider con, DataSourceCollection<SPDataSource> dsCollection) {
 		this.mapping = con;
 		this.dsCollection = dsCollection;
 	}

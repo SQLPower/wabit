@@ -19,17 +19,25 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.io.File;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.util.UserPrompter;
 import ca.sqlpower.util.UserPrompter.UserPromptOptions;
 import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.wabit.StubWabitSession;
 import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 
 /**
  * This test class is for testing problems with Wabit and the demo project.
@@ -38,28 +46,49 @@ public class DemoDatabaseTest extends TestCase {
 
     
     
-    public void testVersionNumberUpToDate() throws Exception {
+    private WabitSessionContext context;
+	private StubWabitSession session;
+
+	public void testVersionNumberUpToDate() throws Exception {
     
-        final PlDotIni defaultPlIni = new PlDotIni();
-        defaultPlIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
-        defaultPlIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
+    	final PlDotIni plIni = new PlDotIni();
+    	plIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
+    	plIni.read(ClassLoader.getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
         
-        WabitSessionContext context = new StubWabitSessionContext() {
-            @Override
-            public UserPrompter createUserPrompter(String question,
-                    UserPromptType responseType, UserPromptOptions optionType,
-                    UserPromptResponse defaultResponseType,
-                    Object defaultResponse, String... buttonNames) {
-                fail("Loading the example workspace should not prompt the user, it should just work." +
-                        " Prompt was: " + question);
-                throw new IllegalStateException();
-            }
-            
-            @Override
-            public DataSourceCollection<SPDataSource> getDataSources() {
-                return defaultPlIni;
-            }
-        };
+        final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
+        		Olap4jDataSource.class);
+        if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");
+        final OlapConnectionPool connectionPool = new OlapConnectionPool(olapDS, 
+        		new SQLDatabaseMapping() {
+        	private final SQLDatabase sqlDB = new SQLDatabase(olapDS.getDataSource());
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return sqlDB;
+        	}
+        });
+    	
+    	
+    	this.context = new StubWabitSessionContext() {
+    		public org.olap4j.OlapConnection createConnection(Olap4jDataSource dataSource) 
+    			throws java.sql.SQLException ,ClassNotFoundException ,javax.naming.NamingException {
+    				return connectionPool.getConnection();
+    		};
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return plIni;
+    		}
+    	};
+    	
+    	this.session = new StubWabitSession(context) {
+    		
+    		@Override
+    		public DataSourceCollection<SPDataSource> getDataSources() {
+    			return getContext().getDataSources();
+    		}
+    		
+    		@Override
+    		public WabitWorkspace getWorkspace() {
+    			return null;
+    		}
+    	};
         
         InputStream in = DemoDatabaseTest.class.getResourceAsStream("/ca/sqlpower/wabit/example_workspace.wabit");
         OpenWorkspaceXMLDAO workspaceDAO =

@@ -19,22 +19,14 @@
 
 package ca.sqlpower.wabit;
 
-import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
-
-import javax.naming.NamingException;
-
-import org.olap4j.OlapConnection;
 
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.WorkspaceGraphModel;
 import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.StubSQLDatabaseMapping;
 import ca.sqlpower.testutil.StubDataSourceCollection;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -49,9 +41,10 @@ import ca.sqlpower.wabit.swingui.WabitSwingSession;
 
 public class WabitWorkspaceTest extends AbstractWabitObjectTest {
 
-    private WabitWorkspace workspace;
     
-    /**
+    private WabitWorkspace workspace;
+
+	/**
      * We are not persisting the WabitWorkspace object because it is created by
      * the session.
      */
@@ -126,8 +119,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        workspace = getWorkspace();
-        workspace.setName("ws");
+        this.workspace = getWorkspace();
     }
     
     @Override
@@ -145,7 +137,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     
     @Override
     public WabitObject getObjectUnderTest() {
-        return workspace;
+        return getWorkspace();
     }
     
     /**
@@ -153,14 +145,10 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * removed the wabit object being edited should be changed.
      */
     public void testRemovingSelectedQueryCacheChangesSelection() throws Exception {
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        QueryCache query = new QueryCache(new SQLDatabaseMapping() {
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return null;
-            }
-        });
-        workspace.setSession(session);
-        workspace.addQuery(query, session);
+    	
+        QueryCache query = new QueryCache(getContext());
+        
+        workspace.addQuery(query, getSession());
         workspace.setEditorPanelModel(query);
         assertEquals(query, workspace.getEditorPanelModel());
         
@@ -173,12 +161,9 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * removed the wabit object being edited should be changed.
      */
     public void testRemovingSelectedOlapQueryChangesSelection() throws Exception {
-        OlapQuery query = new OlapQuery(new OlapConnectionMapping() {
-            public OlapConnection createConnection(Olap4jDataSource dataSource)
-                    throws SQLException, ClassNotFoundException, NamingException {
-                return null;
-            }
-        });
+    	
+        OlapQuery query = new OlapQuery(getContext());
+        
         workspace.addOlapQuery(query);
         workspace.setEditorPanelModel(query);
         assertEquals(query, workspace.getEditorPanelModel());
@@ -206,14 +191,12 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * when the remove operation occurs.
      */
     public void testRemovingQueryWithDependency() throws Exception {
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        workspace.setSession(session);
-        QueryCache query = new QueryCache(new SQLDatabaseMapping() {
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return null;
-            }
-        });
-        workspace.addQuery(query, session);
+             
+        QueryCache query = new QueryCache(getContext());
+        
+        query.setDataSource((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
+        
+        workspace.addQuery(query, getSession());
         Chart chart = new Chart();
         chart.setName("chart");
         chart.setQuery(query);
@@ -232,18 +215,19 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * A simple test of merging some WabitObjects from one workspace into another.
      */
     public void testMergeIntoSession() throws Exception {
-        WabitSwingSession startingSession = new StubWabitSwingSession();
-        WabitWorkspace startingWorkspace = new WabitWorkspace();
-        startingWorkspace.setSession(startingSession);
         
-        QueryCache query = new QueryCache(new StubWabitSessionContext());
-        startingWorkspace.addQuery(query, startingSession);
+        QueryCache query = new QueryCache(getContext());
+        
+        query.setDataSource((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
+        getWorkspace().addQuery(query, getSession());
+        
         Chart chart = new Chart();
         chart.setName("chart");
         chart.setQuery(query);
-        startingWorkspace.addChart(chart);
+        getWorkspace().addChart(chart);
+        
         Report report = new Report("Report");
-        startingWorkspace.addReport(report);
+        getWorkspace().addReport(report);
         ContentBox chartContentBox = new ContentBox();
         chartContentBox.setContentRenderer(new ChartRenderer(chart));
         report.getPage().addContentBox(chartContentBox);
@@ -255,15 +239,15 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         WabitWorkspace finishingWorkspace = new WabitWorkspace();
         finishingWorkspace.setSession(finishingSession);
         
-        assertEquals(3, startingWorkspace.getChildren().size());
-        assertTrue(startingWorkspace.getChildren().contains(query));
-        assertTrue(startingWorkspace.getChildren().contains(chart));
-        assertTrue(startingWorkspace.getChildren().contains(report));
+        assertEquals(3, getWorkspace().getChildren().size());
+        assertTrue(getWorkspace().getChildren().contains(query));
+        assertTrue(getWorkspace().getChildren().contains(chart));
+        assertTrue(getWorkspace().getChildren().contains(report));
         assertEquals(0, finishingWorkspace.getChildren().size());
         
-        startingWorkspace.mergeIntoWorkspace(finishingWorkspace);
+        getWorkspace().mergeIntoWorkspace(finishingWorkspace);
         
-        assertEquals(0, startingWorkspace.getChildren().size());
+        assertEquals(0, getWorkspace().getChildren().size());
         assertEquals(3, finishingWorkspace.getChildren().size());
         assertTrue(finishingWorkspace.getChildren().contains(query));
         assertTrue(finishingWorkspace.getChildren().contains(chart));
@@ -275,9 +259,6 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
      * the UUIDs. This prevents the workspace from gaining duplicate UUIDs.
      */
     public void testMergingUpdatesUUIDs() throws Exception {
-        WabitSwingSession startingSession = new StubWabitSwingSession();
-        WabitWorkspace startingWorkspace = new WabitWorkspace();
-        startingWorkspace.setSession(startingSession);
         
         Set<String> uniqueUUIDs = new HashSet<String>() {
             @Override
@@ -289,14 +270,16 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
             }
         };
         
-        QueryCache query = new QueryCache(new StubWabitSessionContext());
-        startingWorkspace.addQuery(query, startingSession);
+        QueryCache query = new QueryCache(getContext());
+        query.setDataSource((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
+        getWorkspace().addQuery(query, getSession());
+        
         Chart chart = new Chart();
         chart.setName("chart");
         chart.setQuery(query);
-        startingWorkspace.addChart(chart);
+        getWorkspace().addChart(chart);
         Report report = new Report("Report");
-        startingWorkspace.addReport(report);
+        getWorkspace().addReport(report);
         ContentBox chartContentBox = new ContentBox();
         final ChartRenderer chartContentRenderer = new ChartRenderer(chart);
         chartContentBox.setContentRenderer(chartContentRenderer);
@@ -306,8 +289,8 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         queryContentBox.setContentRenderer(resultSetContentRenderer);
         report.getPage().addContentBox(queryContentBox);
         
-        WorkspaceGraphModel graph = new WorkspaceGraphModel(startingWorkspace, 
-                startingWorkspace, false, false);
+        WorkspaceGraphModel graph = new WorkspaceGraphModel(getWorkspace(), 
+        		getWorkspace(), false, false);
         for (SPObject o : graph.getNodes()) {
             System.out.println("Adding object of type " + o.getClass() + " with UUID " + o.getUUID());
             uniqueUUIDs.add(o.getUUID());
@@ -317,15 +300,15 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         WabitWorkspace finishingWorkspace = new WabitWorkspace();
         finishingWorkspace.setSession(finishingSession);
         
-        assertEquals(3, startingWorkspace.getChildren().size());
-        assertTrue(startingWorkspace.getChildren().contains(query));
-        assertTrue(startingWorkspace.getChildren().contains(chart));
-        assertTrue(startingWorkspace.getChildren().contains(report));
+        assertEquals(3, getWorkspace().getChildren().size());
+        assertTrue(getWorkspace().getChildren().contains(query));
+        assertTrue(getWorkspace().getChildren().contains(chart));
+        assertTrue(getWorkspace().getChildren().contains(report));
         assertEquals(0, finishingWorkspace.getChildren().size());
         
-        startingWorkspace.mergeIntoWorkspace(finishingWorkspace);
+        getWorkspace().mergeIntoWorkspace(finishingWorkspace);
         
-        assertEquals(0, startingWorkspace.getChildren().size());
+        assertEquals(0, getWorkspace().getChildren().size());
         assertEquals(3, finishingWorkspace.getChildren().size());
         assertTrue(finishingWorkspace.getChildren().contains(query));
         assertTrue(finishingWorkspace.getChildren().contains(chart));
@@ -334,7 +317,10 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         WorkspaceGraphModel endGraph = new WorkspaceGraphModel(finishingWorkspace, 
                 finishingWorkspace, false, false);
         for (SPObject o : endGraph.getNodes()) {
-            uniqueUUIDs.add(o.getUUID());
+        	if (!(o instanceof WabitDataSource) ||
+        			((WabitDataSource)o).getName().equals("regression_test") == false) {
+        		uniqueUUIDs.add(o.getUUID());
+        	}
         }
         
     }

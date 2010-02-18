@@ -19,15 +19,36 @@
 
 package ca.sqlpower.wabit.rs;
 
+
 public interface ResultSetListener {
 
     /**
-     * Called every time a {@link ResultSetProducer}'s execute() method has been
-     * called.
+     * Called every time a {@link ResultSetProducer}'s has been populated 
+     * with fresh data.
      * 
      * @param evt
      *            The result set event which gives more information about the
      *            event, including access to the newly-produced result set.
      */
-    void resultSetProduced(ResultSetProducerEvent evt);
+    void newData(ResultSetEvent evt);
+    
+    /**
+     * Called when the result set population is complete.
+     * @param evt
+     *            The result set event which gives more information about the
+     *            event, including access to the newly-produced result set.
+     */
+    void executionComplete(ResultSetEvent evt);
+    
+    /**
+     * Gets thrown when this handle starts executing.
+     * 
+     * This is mostly used internally and is not of any use to the
+     * external code, since by the time this event gets fired,
+     * the processing will most likely be done already.
+     * 
+     * @param evt
+     * 			The event.
+     */
+    void executionStarted(ResultSetEvent evt);
 }

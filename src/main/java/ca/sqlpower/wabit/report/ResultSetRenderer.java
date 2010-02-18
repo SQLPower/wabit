@@ -46,15 +46,12 @@ import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
-import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.CachedRowSet;
-import ca.sqlpower.sql.RowSetChangeEvent;
-import ca.sqlpower.sql.RowSetChangeListener;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
 import ca.sqlpower.wabit.AbstractWabitObject;
@@ -62,9 +59,15 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
-import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetStatus;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
 import ca.sqlpower.wabit.rs.query.QueryException;
 
 /**
@@ -205,40 +208,20 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     
     /**
      * The query that provides the content data for this renderer.
-     * <p>
-     * TODO: change this to ResultSetProducer
      */
-    private final QueryCache query;
+    private final WabitResultSetProducer query;
     
     /**
      * A cached copy of the result set that came from the Query object.
-     * This will be null when the result set is not being painted. Just
-     * before the result set is to be rendered to the screen the 
-     * executeQuery method should be called to populate this result set
-     * and this value should be set back to null when rendering the result
-     * set is finished.
-     * <p>
-     * Note: This can be null when painting if the result set returned
-     * by the query is null.
      */
-    private CachedRowSet paintingRS = null;
-    
-    /**
-     * This result set should only be used when printing. If printing is not being
-     * done then this result set should be null. This result set will contain the entire
-     * result of the query instead of just a result set limited by a row limit.
-     * <p>
-     * Note: This can be null when painting if the result set returned
-     * by the query is null.
-     */
-    private CachedRowSet printingResultSet = null;
+    private ResultSetHandle resultSetHandle = null;
 
     /**
      * If the query fails to execute, the corresponding exception will be saved here and
      * rendered instead of the results.
      */
     private Exception executeException;
-
+    
 	/**
 	 * This will store the background colour for the result set renderer.
 	 */
@@ -252,43 +235,42 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	
 	/**
 	 * This listens for all property changes on the parent content box to 
-	 * know when to recreate the layout of the result set. This also listens
-	 * to changes in the result set renderer for changes that the ContentBox
-	 * doesn't receive.
-	 * <p>
-	 * XXX Make the ContentBox aware of changes to the query. The content box
-	 * should receive events when the query changes when it is listening to
-	 * the children of a result set renderer.
+	 * know when to recreate the layout of the result set.
 	 */
 	private final SPListener parentChangeListener = new AbstractSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
-            clearResultSetLayout();
+        	pageCells.remove();
         }
     };
 
+
     /**
-     * This change listener is placed on {@link CachedRowSet}s to monitor
-     * streaming result sets to know when a new row is added to the result set.
-     * It is kept attached to the right row set by {@link #resultSetHandler}.
+     * Listens to the result set handle and refreshes as new
+     * data comes in.
      */
-	private final RowSetChangeListener rowSetChangeListener = new RowSetChangeListener() {
-		public void rowAdded(RowSetChangeEvent e) {
-		    if (getParent() != null) {
-		        getParent().repaint();
-		    }
+    private ResultSetListener resultSetListener = new ResultSetListener() {
+		public void newData(ResultSetEvent evt) {
+			if (evt.getSourceHandle().getResultSetType().equals(ResultSetType.STREAMING) &&
+					getParent() != null) {
+				pageCells.remove();
+			    ResultSetRenderer.this.getParent().repaint();
+			}
 		}
+		public void executionComplete(ResultSetEvent evt) {
+			pageCells.remove();
+			if (ResultSetRenderer.this.getParent() != null) {
+				ResultSetRenderer.this.getParent().repaint();
+			}
+		}
+		public void executionStarted(ResultSetEvent evt) {
+			// don't care.
+		};
 	};
 	
-	/**
-	 * This listener will be attached to each {@link ColumnInfo} object in the renderer
-	 * and will request a repaint when any properties of the column change. This will 
-	 * be removed from the {@link ColumnInfo} when the column is removed.
-	 */
-	private final SPListener columnInfoChangeListener = new AbstractSPListener() {
+	private final SPListener columnInfoListener = new AbstractSPListener() {
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
-			if (getParent() != null) {
-				getParent().repaint();
-			}
+			pageCells.remove();
+			ResultSetRenderer.this.getParent().repaint();
 		};
 	};
 	
@@ -296,79 +278,32 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 	 * This listener will fire a change event when the query changes to signal that
 	 * the result set renderer needs to be repainted.
 	 */
-    private final SPListener queryChangeListener = new AbstractSPListener() {
-		public void propertyChangeImpl(PropertyChangeEvent evt) {
-			if (evt.getPropertyName().equals("name")) {
-				setName("Result Set: " + query.getName());
-			}
-			if (paintingRS != null) {
-				try {
-					initColumns(paintingRS);
-				} catch (Exception ex) {
-					executeException = ex;
-				}
-			}
-			if (getParent() != null) {
-			    getParent().repaint();
-			}
+    private final ResultSetProducerListener queryChangeListener = new ResultSetProducerListener() {
+		
+		public void structureChanged(ResultSetProducerEvent evt) {
+			refresh();
+			dirty = true;
+		}
+		public void executionStopped(ResultSetProducerEvent evt) {
+			// not interested
+		}
+		public void executionStarted(ResultSetProducerEvent evt) {
+			// not interested
 		}
 	};
 
-	private final class ResultSetHandler implements ResultSetListener {
-	    private CachedRowSet currentRowSet = null;
-	    
-        public void resultSetProduced(ResultSetProducerEvent evt) {
-            cleanup();
-            if (evt.getResults() != null &&
-            		evt.getResults().getResultSet() != null) {
-            	currentRowSet = evt.getResults().getResultSet();
-            }
-            if (currentRowSet != null) {
-                currentRowSet.addRowSetListener(rowSetChangeListener);
-            }
-            paintingRS = currentRowSet;
-            if (paintingRS != null) {
-            	// If we're dealing with a CachedRowSet and it's data is null
-            	// or simply empty, 
-            	// this means that it will be populated later on. we will know when
-            	// because we just registered a listener on it anyways.
-            	if (!(paintingRS instanceof CachedRowSet) || 
-            			((paintingRS instanceof CachedRowSet)
-            			&& ((CachedRowSet)paintingRS).getData() != null)) { 
-	            	try {
-	            		initColumns(paintingRS);
-	            	} catch (Exception ex) {
-	            		executeException = ex;
-	            	}
-            	}
-            }
-            if (getParent() != null) {
-            	getParent().repaint();
-            }
-        }
-        
-        /**
-         * Removes the listener on the current row set, if there is one.
-         */
-        public void cleanup() {
-            if (currentRowSet != null) {
-                currentRowSet.removeRowSetListener(rowSetChangeListener);
-            }
-        }
-	}
+	private Exception internalError = null;
+
+	private boolean dirty = false;
 	
-	private final ResultSetHandler resultSetHandler = new ResultSetHandler();
-
-	private SPVariableResolver lastContextUsed;
-
-    public ResultSetRenderer(@Nonnull QueryCache query) {
+	
+    public ResultSetRenderer(@Nonnull WabitResultSetProducer query) {
     	this(query, new ArrayList<ColumnInfo>());
     }
     
-    public ResultSetRenderer(@Nonnull QueryCache query, @Nonnull List<ColumnInfo> columnInfoList) {
+    public ResultSetRenderer(@Nonnull WabitResultSetProducer query, @Nonnull List<ColumnInfo> columnInfoList) {
         this.query = query;
-        query.addResultSetListener(resultSetHandler);
-		query.addSPListener(queryChangeListener);
+        query.addResultSetProducerListener(queryChangeListener);
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
         setName("Result Set: " + query.getName());
 	}
@@ -384,8 +319,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	this.headerFont = resultSetRenderer.headerFont;
     	this.bodyFont = resultSetRenderer.bodyFont;
     	this.nullString = resultSetRenderer.nullString;
-    	this.paintingRS = resultSetRenderer.paintingRS;
-    	this.printingResultSet = resultSetRenderer.printingResultSet;
+    	this.resultSetHandle = resultSetRenderer.resultSetHandle;
     	this.printingGrandTotals = resultSetRenderer.printingGrandTotals;
     	
     	this.columnInfo = new ArrayList<ColumnInfo>();
@@ -394,207 +328,186 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     		addChild(newColumnInfo, columnInfo.size());
     	}
     	
-    	query.addSPListener(queryChangeListener);
-    	query.addResultSetListener(resultSetHandler);
-    	
-    	if (resultSetRenderer.resultSetHandler.currentRowSet != null) {
-            resultSetHandler.currentRowSet =
-                resultSetRenderer.resultSetHandler.currentRowSet;
-    	}
+    	// Listen to modifications to the query structure.
+    	query.addResultSetProducerListener(queryChangeListener);
     	
     	setName(resultSetRenderer.getName());
     }
     
-    public QueryCache getContent(){
+    public WabitResultSetProducer getContent(){
     	return query;
     }
     
     @Override
     public CleanupExceptions cleanup() {
-        query.removeResultSetListener(resultSetHandler);
-    	query.removeSPListener(queryChangeListener);
-    	query.removeSPListener(columnInfoChangeListener);
-    	resultSetHandler.cleanup();
+    	query.removeResultSetProducerListener(queryChangeListener);
+    	if (this.resultSetHandle != null) {
+    		this.resultSetHandle.removeResultSetListener(resultSetListener);
+    	}
     	return new CleanupExceptions();
     }
-
-	/**
-	 * This will execute the query contained in this result set and the event
-	 * fired from the query will set the result set to be a new result set.
-	 * <p>
-	 * NOTE: This method should not contain any method calls that could fire
-	 * events on the result set renderer. Firing a property change event can
-	 * cause the content box to update and cause this class to call
-	 * {@link #clearResultSetLayout()} causing the result set to be nulled out.
-	 * <p>
-	 * Package private for testing.
-	 */
-	void executeQuery(SPVariableResolver variablesContext) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
-		}
-		
-    	paintingRS = null;
-    	executeException = null;
-    	try {
-    		query.execute(variablesContext);
-    	} catch (Exception ex) {
-    		executeException = ex;
-    	}
     
-        if (logger.isDebugEnabled()) {
-			logger.debug("Finished fetching results for query " + query.generateQuery());
-		}
-	}
-	
-    /**
-     * This will execute the query contained in this result set and
-     * set the result set to be a new result set.
-     */
-	private Exception executeQueryForPrinting(SPVariableResolver variablesContext) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Starting to fetch a new result set for query " + query.generateQuery());
-		}
-        CachedRowSet executedRs = null;
-        
-		try {
-			query.executeStatement(true, variablesContext);
-			boolean hasNext = true;
-			while (hasNext) {
-            	if (query.getResultSet() != null) {
-            		executedRs = query.getResultSet();
-            		break;
-            	}
-                boolean sqlResult = query.getMoreResults();
-                hasNext = !((sqlResult == false) && (query.getUpdateCount() == -1));
-            }
-			if (executedRs == null) {
-				printingResultSet = null;
-				return new SQLException("There are no results in the executed query.");
-			} else {
-				CachedRowSet crs = new CachedRowSet();
-		        crs.populate(executedRs);
-		        printingResultSet = crs;
-			}
-        } catch (Exception ex) {
-            return ex;
-        }
-        
-        if (logger.isDebugEnabled()) {
-			logger.debug("Finished fetching results for query " + query.generateQuery());
-		}
-        
-        return null;
-	}
+    public void resetToFirstPage() {
+    	this.refresh();
+    }
+    
+    private void setResultSetHandle(ResultSetHandle rsh) {
+    	
+    	this.internalError = null;
+    	
+    	// Clean up all previous listeners
+    	if (this.resultSetHandle != null) {
+    		this.resultSetHandle.removeResultSetListener(resultSetListener);
+    		this.resultSetHandle.cancel();
+    	}
+    	
+    	refresh();
+		this.resultSetHandle = rsh;
+    }
 	
 	/**
-	 * Constructor subroutine.
+	 * Synchronizes this renderer to a resultset contents.
 	 * 
 	 * @param rs
 	 * 				The RS to map onto
 	 * @throws SQLException
 	 *             If the resultset metadata methods fail.
 	 */
-    public void initColumns(ResultSet rs) throws SQLException, ObjectDependentException {
-    	ResultSetMetaData rsmd = rs.getMetaData();
+    private void initColumns(ResultSet rs) {
     	
-    	//id columns by items and alias in cases where the query is text based.
-    	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
-    	for (ColumnInfo info : columnInfo) {
-    		logger.debug("Loaded key " + info.getColumnInfoItem());
-    		colKeyToInfoMap.put(info.getColumnInfoItem(), info);
-    	}
-    	Map<String, ColumnInfo> colAliasToInfoMap = new HashMap<String, ColumnInfo>();
-    	for (ColumnInfo info : columnInfo) {
-    		colAliasToInfoMap.put(info.getColumnAlias(), info);
-    	}
+    	this.internalError = null;
     	
-    	//sort column info into the new desired positions.
-    	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
-        for (int col = 1; col <= rsmd.getColumnCount(); col++) {
-        	logger.debug(rsmd.getColumnClassName(col));
-        	ColumnInfo ci;
-        	if (((QueryCache) query).isScriptModified()) {
+        try {
+        	ResultSetMetaData rsmd = rs.getMetaData();
+        	
+        	if (rsmd == null) {
+        		return;
+        	}
+        	
+        	//id columns by items and alias in cases where the query is text based.
+        	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
+        	for (ColumnInfo info : columnInfo) {
+        		logger.debug("Loaded key " + info.getColumnInfoItem());
+        		colKeyToInfoMap.put(info.getColumnInfoItem(), info);
+        	}
+        	Map<String, ColumnInfo> colAliasToInfoMap = new HashMap<String, ColumnInfo>();
+        	for (ColumnInfo info : columnInfo) {
+        		colAliasToInfoMap.put(info.getColumnAlias(), info);
+        	}
+        	
+        	//sort column info into the new desired positions.
+        	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
+        	
+        	for (int col = 1; col <= rsmd.getColumnCount(); col++) {
+        		
+        		logger.debug(rsmd.getColumnClassName(col));
+        		
+        		ColumnInfo ci;
+        		
         		String columnKey = rsmd.getColumnLabel(col);
         		if (colAliasToInfoMap.get(columnKey) != null) {
         			ci = colAliasToInfoMap.get(columnKey);
         		} else {
         			ci = new ColumnInfo(columnKey);
-//        			ci.setWidth(-1); XXX i don't know why this is here but taking it out makes columns size properly
         		}
-        	} else {
-        		Item item = query.getSelectedColumns().get(col - 1);
-        		String columnKey = rsmd.getColumnLabel(col);
-        		logger.debug("Matching key " + item.getName());
-        		if (colKeyToInfoMap.get(item) != null) {
-        			ci = colKeyToInfoMap.get(item);
-        		} else {
-        			ci = new ColumnInfo(item, columnKey);
-//        			ci.setWidth(-1); XXX i don't know why this is here but taking it out makes columns size properly
+        		
+        		ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
+        		
+        		if (ci.getDataType().equals(DataType.NUMERIC)) {
+        			ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+        		}
+        		
+        		ci.setParent(ResultSetRenderer.this);
+        		newColumnInfo.add(ci);
+        	}
+        	
+        	//rearrange columns to match result set.
+        	logger.debug("Initializing columns: now have " + newColumnInfo.size() + " columns, previously had " + columnInfo.size());
+        	
+        	//Be careful, iterating forward while removing elements from columnInfo
+        	//can cause us to run off the end before we finish iterating through 
+        	//newColumnInfo
+        	for (int i = 0 ; i < newColumnInfo.size(); i++) {
+        		
+        		if (i >= columnInfo.size()) {
+        			
+        			logger.debug("Adding column info to position " + i);
+        			addChild(newColumnInfo.get(i), i);
+        			
+        		} else if (!newColumnInfo.get(i).getColumnAlias().equals(columnInfo.get(i).getColumnAlias())) {
+        			
+        			ColumnInfo oldInfo = columnInfo.get(i);
+        			ColumnInfo newInfo = newColumnInfo.get(i);
+        			removeChild(oldInfo);
+        			for (ColumnInfo currentColumn : columnInfo) {
+        				if (newInfo.getColumnAlias().equals(currentColumn.getColumnAlias())) {
+        					removeChild(currentColumn);
+        					break;
+        				}
+        			}
+        			addChild(newInfo, i);        			
         		}
         	}
-            ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
-            if (ci.getDataType().equals(DataType.NUMERIC)) {
-            	ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-            }
-            ci.setParent(ResultSetRenderer.this);
-            newColumnInfo.add(ci);
-        }
-        
-        //rearrange columns to match result set.
-        logger.debug("Initializing columns: now have " + newColumnInfo.size() + " columns, previously had " + columnInfo.size());
-        
-        //Be careful, iterating forward while removing elements from columnInfo
-        //can cause us to run off the end before we finish iterating through 
-        //newColumnInfo
-        for (int i = 0 ; i < newColumnInfo.size(); i++) {
-        	if (i >= columnInfo.size()) {
-        		logger.debug("Adding column info to position " + i);
-        		addChild(newColumnInfo.get(i), i);
-        	} else if (newColumnInfo.get(i) != columnInfo.get(i)) {
-        		ColumnInfo oldInfo = columnInfo.get(i);
-        		ColumnInfo newInfo = newColumnInfo.get(i);
-        		removeChild(oldInfo);
-        		if (columnInfo.contains(newInfo)) {
-        			removeChild(newInfo);
+        	
+        	if (newColumnInfo.size() < columnInfo.size()) {
+        		logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
+        		for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
+        			removeChild(columnInfo.get(i));
         		}
-        		addChild(newInfo, i);
         	}
+        } catch (Exception e) {
+        	
+        	logger.error(e);
+        	e.printStackTrace();
+        	this.internalError = e;
+        	
         }
-        
-        if (newColumnInfo.size() < columnInfo.size()) {
-        	logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
-        	for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
-        		removeChild(columnInfo.get(i));
-        	}
-        }
-    }
-
-    public void resetToFirstPage() {
-        clearResultSetLayout();
     }
 
     public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
-    	if ((printing && printingResultSet == null) || (printing && this.lastContextUsed != variablesContext)) {
-    		this.lastContextUsed = variablesContext;
-    		Exception printingEx = executeQueryForPrinting(variablesContext);
-    		if (printingEx != null) {
-                return renderFailure(printingEx, g, contentBox, scaleFactor, pageIndex);
-            } else {
-                return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
-            }
-    	} else if ((!printing && paintingRS == null) || (!printing && this.lastContextUsed != variablesContext)) {
-    		this.lastContextUsed = variablesContext;
-    		executeQuery(variablesContext);
+    	
+    	if (resultSetHandle == null || dirty) {
+    		try {
+				this.setResultSetHandle(
+						query.execute(new SPVariableHelper(ResultSetRenderer.this), resultSetListener));
+			} catch (ResultSetProducerException e) {
+				this.internalError = e;
+			} finally {
+				dirty = false;
+			}
     	}
-    	if (executeException != null) {
-            return renderFailure(executeException, g, contentBox, scaleFactor, pageIndex);
-        } else {
-            return renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
-        }
+    	
+    	initColumns(resultSetHandle.getResultSet());
+    	
+    	if (this.resultSetHandle.getStatus().equals(ResultSetStatus.ERROR)) {
+    		
+    		return renderFailure(
+    				this.resultSetHandle.getException(), 
+    				g, 
+    				contentBox, 
+    				scaleFactor, 
+    				pageIndex);
+    	
+    	}else if (this.internalError != null) {
+    		
+    		return renderFailure(
+					this.internalError, 
+					g, 
+					contentBox, 
+					scaleFactor, 
+					pageIndex);
+			
+    	} else {
+    		boolean pagesLeft = renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
+    		if (printing) {
+    			return pagesLeft;
+    		} else {
+    			return false;
+    		}
+    	}
     }
     
-    public boolean renderFailure(Exception failure, Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    private boolean renderFailure(Exception failure, Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
         List<String> errorMessage = new ArrayList<String>();
         if (failure instanceof QueryException) {
             QueryException qe = (QueryException) failure;
@@ -645,32 +558,21 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         }
     }
 
-    public boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
-    	CachedRowSet rs = this.paintingRS;
-    	if (printing) {
-    		rs = printingResultSet;
-    	}
+    private boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
     	
-    	if (rs == null || rs.getData().size() == 0) {
-    	    renderMessage(g, contentBox, 
-    	            Collections.singletonList("The result set from " 
-    	                    + query.getName() + " is empty."));
-    	    return false;
-    	}
-    	
-    	RowComparator comparator = new RowComparator();
-    	for (int i = 0; i < getColumnInfoList().size(); i++) {
-    	    if (!getColumnInfoList().get(i).getWillGroupOrBreak().equals(GroupAndBreak.NONE)) {
-    	        comparator.addSortColumn(i + 1, true);
-    	    }
-    	}
     	try {
-    	    rs.sort(comparator);
-    	    
-    	    autosizeColumnInformation(g, contentBox, rs);
-
-    	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
-            createResultSetLayout(zeroClipGraphics, rs);
+    		
+    		CachedRowSet rs = (CachedRowSet)this.resultSetHandle.getResultSet();
+    		
+        	if (rs.getData().size() == 0) {
+        	    renderMessage(g, contentBox, 
+        	            Collections.singletonList("The result set from " 
+        	                    + query.getName() + " is empty."));
+        	    return false;
+        	}
+        	
+            maybeCreateResultSetLayout(g, rs, contentBox);
+            
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
@@ -716,24 +618,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             g.setStroke(oldStroke);
         }
         
-        //TODO come up with a better way to clear the result sets, probably at the same time the page positions are cleared to get fresh data.
-        final boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
-        if (isLastPage) {
-            if (printing) {
-                printingResultSet = null;
-            }
-        }
+        boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
         return !isLastPage;
     }
     
-    /**
-     * Call this method if something changes in the result set that causes
-     * the need to redefine the layout of the result set. 
-     */
-    public void clearResultSetLayout() {
-        pageCells.set(null);
-        printingResultSet = null;
-    }
 
     /**
      * This method does all of the layout of each section of a result set. This
@@ -761,13 +649,25 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      *            set should also be sorted by the columns defined as breaks to
      *            avoid sections that are identified by the same section.
      */
-    void createResultSetLayout(Graphics2D g, ResultSet rs) throws SQLException {
-        if (pageCells.get() != null) return; 
+    private void maybeCreateResultSetLayout(Graphics2D g, CachedRowSet rs, ContentBox contentBox) throws SQLException {
+    	
+    	if (pageCells.get() != null) return; 
         
+    	RowComparator comparator = new RowComparator();
+    	for (int i = 0; i < getColumnInfoList().size(); i++) {
+    	    if (!getColumnInfoList().get(i).getWillGroupOrBreak().equals(GroupAndBreak.NONE)) {
+    	        comparator.addSortColumn(i + 1, true);
+    	    }
+    	}
+    	
+    	rs.sort(comparator);
+	    autosizeColumnInformation(g, contentBox, rs);
+	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
+    	
         final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, (int) getParent().getWidth(), nullString);
         
-        List<List<ResultSetCell>> createResultSetLayout = reportPositionRenderer.createResultSetLayout(
-                g, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals());
+        List<List<ResultSetCell>> createResultSetLayout = 
+        		reportPositionRenderer.createResultSetLayout(zeroClipGraphics, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals());
         pageCells.set(createResultSetLayout);
     }
     
@@ -1002,12 +902,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
 
 	public void refresh() {
-		try {
-			// Force the query to get a new result set
-			query.executeStatement(new SPVariableHelper(this));
-		} catch (SQLException ex) {
-			executeException = ex;
-		}
+		this.pageCells.remove();
+		this.executeException = null;
+		this.internalError = null;
 	}
 
     /**
@@ -1030,7 +927,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         if (columnInfo.contains(child)) {
             int index = columnInfo.indexOf(child);
             columnInfo.remove(child);
-            child.removeSPListener(columnInfoChangeListener);
+            child.removeSPListener(columnInfoListener);
             fireChildRemoved(child.getClass(), child, index);
             return true;
         }
@@ -1045,7 +942,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     protected void addChildImpl(SPObject child, int index) {
         columnInfo.add(index, (ColumnInfo) child);
         child.setParent(this);
-        child.addSPListener(columnInfoChangeListener);
+        child.addSPListener(columnInfoListener);
         fireChildAdded(child.getClass(), child, index);
     }
     

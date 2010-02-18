@@ -32,9 +32,9 @@ import org.apache.log4j.Logger;
 import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 
+import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
-import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -42,7 +42,6 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
 import ca.sqlpower.wabit.report.chart.ChartDataListener;
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
-import ca.sqlpower.wabit.rs.ResultSetProducerException;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 
 /**
@@ -55,11 +54,19 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 
 	private final Chart chart;
 	
+	private Chart chartCache;
+	
 	private final ChartDataListener chartListener = new ChartDataListener() {
         public void chartDataChanged(ChartDataChangedEvent evt) {
             getParent().repaint();
         }
     };
+    
+    private final AbstractSPListener chartStructureListener = new AbstractSPListener() {
+    	protected void propertyChangeImpl(java.beans.PropertyChangeEvent evt) {
+    		ChartRenderer.this.chartCache = new Chart(ChartRenderer.this.chart);
+    	};
+	};
     
     public ChartRenderer(@Nonnull ChartRenderer renderer) {
     	this(renderer.chart);
@@ -69,8 +76,15 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		if (chart == null) {
 		    throw new NullPointerException("Null chart not permitted");
 		}
+		/*
+		 * Because charts are mutable objects and cannot work in multi-threaded
+		 * way, we have to grab a copy of the chart source and update it every time
+		 * the source one changes.
+		 */
         this.chart = chart;
+        this.chartCache = new Chart(chart, this);
         chart.addChartDataListener(chartListener);
+        chart.addSPListener(chartStructureListener);
 		setName("Renderer of: " + chart.getName());
 	}
     
@@ -85,32 +99,10 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     // TODO we intend to remove this whole method into the SwingUI layer (SwingContentRenderer)
 	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
 			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
-	    if (!chart.getMissingIdentifiers().isEmpty()) {
-	        renderError(g, contentBox,
-	                "There are columns missing from the query but used in the chart.",
-	                "To fix this, you can edit the chart or its query.",
-	                "Chart: " + chart.getName(),
-	                "Query: " + (chart.getQuery() == null ? "not set" : chart.getQuery().getName()));
-	        renderError(g, contentBox);
-	        return false;
-	    }
-	    
-	    try {
-	        if (chart.getUnfilteredResultSet() == null && chart.getQuery() != null) {
-	            // TODO has to be on a background thread!
-	            chart.getQuery().execute(variablesContext);
-	        }
-	    } catch (Exception ex) {
-	        logger.info("Chart data error", ex);
-	        renderError(g, contentBox,
-	                "Failed to refresh chart's data:",
-	                ex.toString()
-	                );
-	    }
 	    
 		JFreeChart jFreeChart = null;
 		try {
-		    jFreeChart = ChartSwingUtil.createChartFromQuery(chart);
+		    jFreeChart = ChartSwingUtil.createChartFromQuery(chartCache);
 			if (jFreeChart == null) {
 			    g.drawString("Empty Chart", 0, g.getFontMetrics().getHeight());
 			    return false;
@@ -179,19 +171,15 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     @Override
     public CleanupExceptions cleanup() {
         chart.removeChartDataListener(chartListener);
+        chart.removeSPListener(chartStructureListener);
         return new CleanupExceptions();
     }
 
 	public void refresh() {
-		try {
-		    if (chart.getQuery() != null) {
-		        chart.getQuery().execute(new SPVariableHelper(this));
-		    }
-		} catch (InterruptedException e) {
-			throw new RuntimeException("Chart renderer was interrupted while refreshing data.", e);
-		} catch (ResultSetProducerException e) {
-		    throw new RuntimeException(e);
-        }
+		chart.removeSPListener(chartStructureListener);
+		chartCache.cleanup();
+		chart.refresh();
+		ChartRenderer.this.chartCache = new Chart(ChartRenderer.this.chart);
 	}
 
     @Override

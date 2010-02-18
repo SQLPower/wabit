@@ -19,82 +19,325 @@
 
 package ca.sqlpower.wabit.rs;
 
-import java.sql.ResultSet;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import ca.sqlpower.object.SPVariableHelper;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.wabit.OlapConnectionProvider;
+import ca.sqlpower.wabit.SqlConnectionProvider;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
+
+import com.rc.retroweaver.runtime.Collections;
+
 
 /**
  * Convenient implementation support for the {@link ResultSetProducer} interface.
+ * 
+ * 
  */
 public class ResultSetProducerSupport {
 
-    private final ResultSetProducer eventSource;
-    private final List<ResultSetListener> listeners = new ArrayList<ResultSetListener>();
+	private final List<ResultSetHandle> handles = 
+		Collections.synchronizedList(new ArrayList<ResultSetHandle>());
+	
+    private final List<ResultSetProducerListener> listeners = 
+    	Collections.synchronizedList(new ArrayList<ResultSetProducerListener>());
 
-    /**
-     * Count of the number of times the {@link #fireResultSetEvent(ResultSet)}
-     * method has been called.
-     */
-    private long eventsFired;
-    
-    public ResultSetProducerSupport(@Nonnull ResultSetProducer eventSource) {
-        this.eventSource = eventSource;
-        if (eventSource == null) {
-            throw new NullPointerException("Null source not allowed");
-        }
+	private final ResultSetProducerStatusInformant informant;
+	
+	private final ResultSetListener internalListener = new ResultSetListener() {
+	
+		/**
+	     * These implementations of {@link ResultSetListener} are used
+	     * to listen to the child handles. Do not call this from any other class.
+	     */
+		public void executionComplete(ResultSetEvent evt) {
+			
+			synchronized (handles) {
+				// We get called here when one of our handles has completed it's work.
+				handles.remove(evt.getSourceHandle());
+				ResultSetProducerSupport.this.fireExecutionComplete();
+			}
+		}
+		
+		/**
+	     * These implementations of {@link ResultSetListener} are used
+	     * to listen to the child handles. Do not call this from any other class.
+	     */
+		public void newData(ResultSetEvent evt) {
+			// we don't care about those.
+		}
+		
+		public void executionStarted(ResultSetEvent evt) {
+			fireExecutionStarted();
+		}
+	};
+
+	private final ResultSetProducer source;
+	
+	
+	/**
+	 * Constructs a helper object that will keep track of all
+	 * distributed {@link ResultSetHandle} objects and will
+	 * notify listeners wether they are running or not.
+	 */
+    public ResultSetProducerSupport(@Nonnull ResultSetProducer source) {
+		this(source, null);
     }
     
-    /** @see ResultSetProducer#addResultSetListener(ResultSetListener) */
-    public void addResultSetListener(@Nonnull ResultSetListener listener) {
+    /**
+	 * Constructs a helper object that will keep track of all
+	 * distributed {@link ResultSetHandle} objects and will
+	 * notify listeners wether they are running or not.
+	 * 
+	 * @param source The {@link ResultSetProducer} for which this 
+	 * support object was created.
+	 * 
+	 * @param isRunning Callback used in conjunction with 
+	 * this object's internal state that will determine if this object
+	 * is running or not. Some objects might want to report themselves
+	 * in an active state even if the distributed handles are all idle.
+	 */
+    public ResultSetProducerSupport(
+    		@Nonnull ResultSetProducer source, 
+    		@Nullable ResultSetProducerStatusInformant informant) {
+		this.source = source;
+		this.informant = informant;
+    }
+    
+    
+    public void addResultSetListener(@Nonnull ResultSetProducerListener listener) {
         if (listener == null) {
             throw new NullPointerException("Null listener not allowed");
         }
-        listeners.add(listener);
+        synchronized (listeners) {
+        	listeners.add(listener);
+		}
     }
 
-    /** @see ResultSetProducer#removeResultSetListener(ResultSetListener) */
-    public void removeResultSetListener(ResultSetListener listener) {
-        listeners.remove(listener);
+    public void removeResultSetListener(ResultSetProducerListener listener) {
+        synchronized (listeners) {
+        	listeners.remove(listener);
+		}
     }
-
+    
     /**
-     * Notifies all registered listeners of the new result set. The event's
-     * source is the ResultSetProducer specified to this instance's constructor.
-     * <p>
-     * Calling this method has the side effect of incrementing the eventsFired
-     * property by exactly 1.
+     * Builds a {@link ResultSetHandle} and will trigger it's execution
+     * in the background.
      * 
-     * @param results
-     *            The new result sets. If it is already a CachedRowSet, it will
-     *            be embedded in the event object as-is; otherwise, it will be
-     *            copied into a new CachedRowSet. In the latter case, the row
-     *            cursor of <code>results</code> will have been moved to the
-     *            <i>afterLast</i> position as a side effect of populating the
-     *            new CachedRowSet. Furthermore, for the CachedRowSet to
-     *            populate properly, the row cursor of <code>results</code>
-     *            should be at the <i>beforeFirst</i> position prior to calling
-     *            this method.
+     * This version takes a query and a {@link SPVariableResolver} (usually an 
+     * instance of {@link SPVariableHelper}) and will build the 
+     * {@link PreparedStatement} in the background.
+     * 
+     * @param query A query with variables included.
+     * @param variablesContext A variable resulver from which to resolve variables.
+     * @param isStreaming Whether or not this is a streaming query.
+     * @param rowLimit The row limit for queries 
+     * @param listener A listener to bind to the {@link ResultSetHandle}
+     * @return An executing {@link ResultSetHandle}
+     * @throws SQLException
      */
-    public void fireResultSetEvent(@Nullable ResultSetHandle results) {
-        
-    	eventsFired++;
-        
-        ResultSetProducerEvent evt = new ResultSetProducerEvent(eventSource, results);
-        
-        for (int i = listeners.size() - 1; i >= 0; i--) {
-            listeners.get(i).resultSetProduced(evt);
-        }
+    public ResultSetHandle execute(
+    		@Nonnull final SqlConnectionProvider connectionProvider,
+    		@Nonnull final JDBCDataSource dataSource,
+    		@Nonnull final String query,
+    		@Nonnull final SPVariableHelper variablesContext,
+    		@Nonnull final ResultSetType type,
+            final int rowLimit,
+            @Nullable final ResultSetListener listener) throws SQLException
+    {
+    	synchronized (handles) {
+    		
+    		ResultSetHandle rsh = 
+    			new ResultSetHandle(
+    					connectionProvider,
+    					dataSource,
+    					query,
+    					variablesContext,
+    					type,
+    					rowLimit,
+    					null);
+    		
+    		rsh.addResultSetListener(internalListener);
+    		if (listener != null) {
+    			rsh.addResultSetListener(listener);
+    		}
+    		
+    		// Save this new one
+    		this.handles.add(rsh);
+			
+    		rsh.populate();
+    		
+    		// Notify listeners, if necessary, that we are now executing something
+    		fireExecutionStarted();
+    		
+    		return rsh;
+		}
+    }
+    
+    /**
+     * Builds a {@link ResultSetHandle} and will trigger it's execution
+     * in the background.
+     * 
+     * This version takes a query and a {@link SPVariableResolver} (usually an 
+     * instance of {@link SPVariableHelper}) and will build the 
+     * {@link PreparedStatement} in the background.
+     * 
+     * @param query A query with variables included.
+     * @param variablesContext A variable resulver from which to resolve variables.
+     * @param isStreaming Whether or not this is a streaming query.
+     * @param rowLimit The row limit for queries 
+     * @param listener A listener to bind to the {@link ResultSetHandle}
+     * @return An executing {@link ResultSetHandle}
+     * @throws SQLException
+     */
+    public ResultSetHandle execute(
+    		@Nonnull final OlapConnectionProvider connectionProvider,
+    		@Nonnull final Olap4jDataSource dataSource,
+    		@Nonnull final String query,
+    		@Nonnull final SPVariableHelper variablesContext,
+    		@Nonnull final ResultSetType type,
+            final int rowLimit,
+            @Nullable final ResultSetListener listener) throws SQLException
+    {
+    	synchronized (handles) {
+    		
+    		ResultSetHandle rsh = 
+    			new ResultSetHandle(
+    					connectionProvider,
+    					dataSource,
+    					query,
+    					variablesContext,
+    					type,
+    					rowLimit,
+    					null);
+    		
+    		rsh.addResultSetListener(internalListener);
+    		if (listener != null) {
+    			rsh.addResultSetListener(listener);
+    		}
+    		
+    		// Save this new one
+    		this.handles.add(rsh);
+			
+    		rsh.populate();
+    		
+    		// Notify listeners, if necessary, that we are now executing something
+    		fireExecutionStarted();
+    		
+    		return rsh;
+		}
+    }
+    
+    /**
+     * Cancels the execution of every handle.
+     */
+    public void cancel() {
+    	synchronized (handles) {
+    		for (int i = this.handles.size()-1; i >= 0; i--) {
+    			ResultSetHandle rsh = this.handles.get(i);
+    			rsh.cancel();
+    			this.handles.remove(i);
+    		}
+		}
     }
 
     /**
-     * Returns the count of how many times
-     * {@link #fireResultSetEvent(ResultSet)} has been called.
+     * Notifies all listeners that this producer's structure has
+     * changed and the subsequent handles will be different.
      */
-    public long getEventsFired() {
-        return eventsFired;
-    }
+	public synchronized void fireStructureChanged() {
+		synchronized (listeners) {
+			for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+				rspl.structureChanged(new ResultSetProducerEvent(source));
+			}
+		}
+	}
+	
+	/**
+	 * This method will determine if the execution is in fact started and
+	 * will fire required events if necessary.
+	 * 
+	 * Callers of this method from the exterior should be aware that 
+	 * the {@link ResultSetProducerStatusInformant} passed at construction
+	 * time will be asked to report on the current status of the execution.
+	 */
+	public synchronized void fireExecutionStarted() {
+		
+		boolean isRunning = false;
+
+		synchronized (handles) {
+		
+			if (this.informant != null &&
+					this.informant.isRunning()) {
+				isRunning = true;
+			}
+			if (!isRunning) {
+				for (ResultSetHandle rsh : this.handles) {
+					if (rsh.isRunning()) {
+						isRunning = true;
+						break;
+					}
+				}
+			}			
+		}
+		
+		if (isRunning) {
+			synchronized (listeners) {
+				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+					rspl.executionStarted(new ResultSetProducerEvent(source));
+				}
+			}
+		}
+	}
+	
+	/**
+	 * This method will determine if the execution is in fact completed and
+	 * will fire required events if necessary.
+	 */
+	public synchronized void fireExecutionComplete() {
+		
+		boolean sourceIsActive = false;
+		
+		synchronized (handles) {
+			
+			// Notify listeners if necessary that the last
+			// handle has stopped executing
+			if (informant != null &&
+					informant.isRunning()) {
+				sourceIsActive = true;
+			}
+		}
+		
+		if (!sourceIsActive && handles.size() == 0) {
+			synchronized (listeners) {
+				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+					rspl.executionStopped(new ResultSetProducerEvent(source));
+				}
+			}
+		}
+	}
+	
+	public boolean isRunning() {
+		boolean running = false;
+		synchronized (handles) {
+			for (int i = this.handles.size()-1; i >= 0; i--) {
+				ResultSetHandle rsh = this.handles.get(i);
+				if (rsh.isRunning()) {
+					running = true;
+				} else {
+					handles.remove(rsh);
+				}
+			}
+		}
+		return running;
+	}
 }

@@ -79,25 +79,27 @@ import javax.swing.undo.UndoManager;
 import org.apache.log4j.Logger;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.olap4j.CellSet;
-import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
-import org.olap4j.OlapStatement;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.query.Query;
 
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
-import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
-import ca.sqlpower.wabit.WabitSessionContext;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
+import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetStatus;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.OlapQueryEvent;
-import ca.sqlpower.wabit.rs.olap.OlapQueryListener;
 import ca.sqlpower.wabit.swingui.QueryPanel;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
@@ -114,6 +116,13 @@ import com.jgoodies.forms.layout.FormLayout;
 public class OlapQueryPanel implements WabitPanel {
     
     private static final Logger logger = Logger.getLogger(OlapQueryPanel.class);
+    
+    /**
+     * A semaphore with one permit. This is the mechanism by which we serialize
+     * query executions.
+     */
+//    private final Semaphore executionSemaphore = new Semaphore(1);
+    
     
     /**
      * This class is the cube trees drag gesture listener, it starts the drag
@@ -151,6 +160,11 @@ public class OlapQueryPanel implements WabitPanel {
      * The model that stores values displayed by this panel.
      */
     private final OlapQuery query;
+    
+    /**
+     * Ref to this query's handle
+     */
+    private ResultSetHandle resultSetHandle;
     
     private static final Object UNDO_MDX_EDIT = "Undo MDX Edit";
 
@@ -219,15 +233,41 @@ public class OlapQueryPanel implements WabitPanel {
      * This listener is attached to the underlying query being displayed by this
      * panel. This will update the panel when changes occur in the query.
      */
-    private final OlapQueryListener queryListener = new OlapQueryListener() {
-        public void queryExecuted(final OlapQueryEvent e) {
-            SPSUtils.runOnSwingThread(new Runnable() {
-                public void run() {
-                    updateCellSet(e.getCellSet());
-                }
-            });
-        }
-    };
+    private final ResultSetListener resultSetListener = new ResultSetListener() {
+		public void newData(ResultSetEvent evt) {
+			// Don't care
+		}
+		public void executionStarted(ResultSetEvent evt) {
+			// don't care.
+		};
+		public void executionComplete(final ResultSetEvent evt) {
+			if (evt.getSourceHandle().getStatus() == ResultSetStatus.ERROR) {
+	    		cellSetViewer.showMessage(
+	    				query, 
+	    				"Cannot execute your query : " 
+	    						+ evt.getSourceHandle().getException().getMessage());
+	    		updateCellSet(null);
+	    	} else {
+	    		updateCellSet(evt.getSourceHandle().getCellSet());                		
+	    	}
+		}
+	};
+	
+	private final ResultSetProducerListener resultSetProducerListener = new ResultSetProducerListener() {
+		public void structureChanged(ResultSetProducerEvent evt) {
+			executeQuery();
+			if (OlapQueryPanel.this.resultSetHandle == null) {
+				// This means that the RS producer could not execute.
+				updateCellSet(null);
+			}
+		}
+		public void executionStopped(ResultSetProducerEvent evt) {
+			// Don't care
+		}
+		public void executionStarted(ResultSetProducerEvent evt) {
+			// Dont't care
+		}
+	};
 
     /**
      * This updates the displayed name of the query when it changes.
@@ -306,11 +346,15 @@ public class OlapQueryPanel implements WabitPanel {
     private JPanel panel;
     
     public OlapQueryPanel(final WabitSwingSession session, final JComponent parentComponent, final OlapQuery query) {
-        this.parentComponent = parentComponent;
+        
+    	this.parentComponent = parentComponent;
+        
         this.query = query;
+        this.query.addResultSetProducerListener(resultSetProducerListener);
+        
         this.session = session;
         final JFrame parentFrame = ((WabitSwingSessionContext) session.getContext()).getFrame();
-        cellSetViewer = new CellSetViewer(session, query);
+        cellSetViewer = new CellSetViewer(query);
         query.addSPListener(queryPropertyListener);
         
         this.undoManager  = new UndoManager();
@@ -339,7 +383,6 @@ public class OlapQueryPanel implements WabitPanel {
             public void actionPerformed(ActionEvent e) {
                 try {
                     query.reset();
-                    OlapGuiUtil.asyncExecute(query, session);
                 } catch (SQLException e1) {
                     throw new RuntimeException(e1);
                 }
@@ -374,7 +417,7 @@ public class OlapQueryPanel implements WabitPanel {
         
             public void actionPerformed(ActionEvent e) {
                 if (databaseComboBox.getSelectedItem() == null) {
-                    JOptionPane.showMessageDialog(parentComponent, 
+                    JOptionPane.showMessageDialog(OlapQueryPanel.this.parentComponent, 
                             "Please choose a database from the above list first", 
                             "Choose a database", 
                             JOptionPane.WARNING_MESSAGE);
@@ -386,7 +429,7 @@ public class OlapQueryPanel implements WabitPanel {
                     try {
                         tree = new JTree(
                                 new Olap4jTreeModel(
-                                        Collections.singletonList(query.createOlapConnection()),
+                                        Collections.singletonList(session.getContext().createConnection(query.getOlapDataSource())),
                                         Cube.class,
                                         Dimension.class));
                     } catch (Exception e1) {
@@ -410,9 +453,31 @@ public class OlapQueryPanel implements WabitPanel {
         
         cubeTreeScrollPane = new JScrollPane(cubeTree);
         
-        query.addOlapQueryListener(queryListener);
-        
         buildUI();
+        
+        cellSetViewer.showMessage(query, "Loading your query...");
+        
+        // Display the panel THEN execute.
+        SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				executeQuery();
+			}
+		});
+    }
+    
+    private void executeQuery() {
+		try {
+			if (this.resultSetHandle != null) {
+				this.resultSetHandle.cancel();
+				this.resultSetHandle.removeResultSetListener(resultSetListener);
+			}
+			this.resultSetHandle = 
+				this.query.execute(
+						new SPVariableHelper(query), 
+						this.resultSetListener);
+		} catch (ResultSetProducerException e1) {
+			cellSetViewer.showMessage(query, "Cannot execute your query : " + e1.getMessage());
+		}
     }
 
     private void buildUI() {
@@ -426,11 +491,7 @@ public class OlapQueryPanel implements WabitPanel {
 
         Action executeAction = new AbstractAction("Execute", WabitIcons.RUN_ICON_32) {
 			public void actionPerformed(ActionEvent e) {
-				if (queryPanels.getSelectedComponent() == textQueryPanel) {
-					executeMdxAction.actionPerformed(e);
-				} else {
-					OlapGuiUtil.asyncExecute(query, session);
-				}
+				executeMdxAction.actionPerformed(e);
 			}
 		};
         toolBarBuilder.add(executeAction);
@@ -453,7 +514,6 @@ public class OlapQueryPanel implements WabitPanel {
             public void actionPerformed(ActionEvent e) {
                 try {
                     query.setNonEmpty(nonEmptyRowsCheckbox.isSelected());
-                    OlapGuiUtil.asyncExecute(query, session);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
@@ -508,35 +568,13 @@ public class OlapQueryPanel implements WabitPanel {
         
         executeMdxAction = new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                CellSet cellSet;
-                OlapStatement statement = null;
-                OlapConnection connection = null;
-                try {
-                    connection = query.createOlapConnection();
-                    if (connection != null) {
-                        try {
-                            statement = connection.createStatement();
-                            cellSet = statement.executeOlapQuery(mdxTextArea.getText());
-                        } catch (OlapException e1) {
-                            e1.printStackTrace();
-                            JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(parentComponent), "FAIL\n" + e1.getMessage());
-                            return;
-                        } finally {
-                            if (statement != null) {
-                                try {
-                                    statement.close();
-                                } catch (SQLException e1) {
-                                    //squish exception to not hide any exceptions thrown by the catch.
-                                }
-                            }
-                        }
-
-                        cellSetViewer.showCellSet(query, cellSet);
-                        queryPanels.setSelectedIndex(0);
-                    }
-                } catch (Exception e1) {
-                    throw new RuntimeException(e1);
-                }
+            	
+            	if (queryPanels.getSelectedComponent() == mdxTextArea) {
+            		// Setting the modified query will trigger the execution.
+            		query.setModifiedOlapQuery(mdxTextArea.getText());
+            	} else {
+            		executeQuery();
+            	}
             }
         };
 
@@ -562,8 +600,12 @@ public class OlapQueryPanel implements WabitPanel {
      * the panel is being disposed.
      */
     private void cleanup() {
+    	if (this.resultSetHandle != null) {
+    		resultSetHandle.removeResultSetListener(resultSetListener);
+    		resultSetHandle.cancel();
+    	}
         query.removeSPListener(queryPropertyListener);
-        query.removeOlapQueryListener(queryListener);
+        query.removeResultSetProducerListener(resultSetProducerListener);
         session.getWorkspace().removeDatabaseListChangeListener(dbListChangeListener);
     }
 
@@ -599,18 +641,12 @@ public class OlapQueryPanel implements WabitPanel {
         } else {
             cubeTree.setModel(new DefaultTreeModel(new DefaultMutableTreeNode("Hidden")));
         }
-        boolean autoExecuteDisabled = session.getContext().getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
-		if (!autoExecuteDisabled) {
-			OlapGuiUtil.asyncExecute(query, session);
-		} else {
-			cellSetViewer.showMessage(query, "Query auto-execute is disabled. Press 'Execute' button to execute the query.");
-		}
     }
     
     /**
      * This method will update the cell set in this panel.
      */
-    public void updateCellSet(final CellSet cellSet) {
+    private void updateCellSet(final CellSet cellSet) {
         cellSetViewer.updateCellSetViewer(query, cellSet);
         try {
             updateMdxText(query.getMdxText());

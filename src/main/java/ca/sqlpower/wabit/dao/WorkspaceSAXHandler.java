@@ -26,7 +26,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,7 +55,6 @@ import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
-import ca.sqlpower.query.Query;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.SQLObjectItem;
@@ -726,7 +724,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
             cubeName = attributes.getValue("cube-name");
             createdObject = null;
         } else if (name.equals("olap4j-query")) {
-            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), attributes.getValue("name"), catalogName, schemaName, cubeName, !isInLayout);
+            olapQuery = new OlapQuery(olapID, session.getContext(), attributes.getValue("name"), attributes.getValue("name"), catalogName, schemaName, cubeName, attributes.getValue("modifiedOlapQuery"), !isInLayout);
             olapQuery.setName(olapName);
             olapQuery.setOlapDataSource(olapDataSource);
             if (cellSetRenderer == null) {
@@ -800,11 +798,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                         }
                     }
                     if (query != null) {
-                        try {
-                            chart.setQuery(query);
-                        } catch (SQLException e) {
-                            throw new RuntimeException("Error loading project while on chart " + chart.getName(), e);
-                        }
+                        chart.setQuery(query);
                     }
                     OlapQuery olapQuery = null;
                     for (OlapQuery q : session.getWorkspace().getOlapQueries()) {
@@ -814,11 +808,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                         }
                     }
                     if (olapQuery != null) {
-                        try {
-                            chart.setQuery(olapQuery);
-                        } catch (SQLException e) {
-                            throw new RuntimeException("Error loading project while on chart renderer " + chart.getName(), e);
-                        }
+                    	try {
+	                    	chart.setMagicEnabled(false);
+	                        chart.setQuery(olapQuery);
+                    	} finally {
+                    		chart.setMagicEnabled(true);
+                    	}
                     }
                     if (query == null && olapQuery == null) {
                         throw new IllegalArgumentException("The query with UUID " + aval + " is missing from this project.");
@@ -1078,21 +1073,30 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	String colInfoName = attributes.getValue("name");
         	String colInfoItem = attributes.getValue("column-info-item-id");
         	
-        	//For backwards compatability with 0.9.1
-        	String colInfoKey = attributes.getValue("column-info-key");
-        	if (colInfoKey != null && colInfoItem == null) {
-        		Query q = rsRenderer.getContent();
-        		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
-        			Item item = entry.getValue();
-        			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {
-        				colInfoItem = entry.getKey();
-        				break;
-        			}
-        		}
-        		if (colInfoItem == null) {
-        			colInfo = new ColumnInfo(colInfoKey, colInfoName);
-        		}
-        	}
+        	/*
+        	 * XXX This retro compatibility fix forces us to violate
+        	 * proper encapsulation and cannot be maintained if we want to
+        	 * display OLAP queries in a RSRenderer. Imma comment it
+        	 * out for now and evaluate later if we want to keep it.
+        	 * It is for retrocompatibility with 0.9.1, which is a terribly
+        	 * old version anyways. I'm not even sure we can load those files
+        	 * now anyways.
+        	 */
+//        	//For backwards compatability with 0.9.1
+//        	String colInfoKey = attributes.getValue("column-info-key");
+//        	if (colInfoKey != null && colInfoItem == null) {
+//        		Query q = rsRenderer.getContent();
+//        		for (Map.Entry<String, Item> entry : uuidToItemMap.entrySet()) {
+//        			Item item = entry.getValue();
+//        			if (q.getSelectedColumns().contains(item) && (item.getAlias().equals(colInfoKey) || item.getName().equals(colInfoKey))) {
+//        				colInfoItem = entry.getKey();
+//        				break;
+//        			}
+//        		}
+//        		if (colInfoItem == null) {
+//        			colInfo = new ColumnInfo(colInfoKey, colInfoName);
+//        		}
+//        	}
         	
         	String colAlias = attributes.getValue("column-alias");
         	if (colInfo == null && colAlias != null && colInfoItem == null) {

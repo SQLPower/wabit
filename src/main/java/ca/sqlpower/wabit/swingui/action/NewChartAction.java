@@ -29,7 +29,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ChartUtil;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
@@ -44,7 +44,7 @@ public class NewChartAction extends AbstractAction {
 	
     private final WabitSwingSession session;
 
-    private final ResultSetProducer dataProvider;
+    private final WabitResultSetProducer dataProvider;
 
     /**
      * Creates an action which, when invoked, creates new chart with the given
@@ -56,7 +56,7 @@ public class NewChartAction extends AbstractAction {
      *            The ResultSetProducer that will provide data to the new
      *            chart. Null means not to set an initial data provider.
      */
-    public NewChartAction(WabitSwingSession session, ResultSetProducer dataProvider) {
+    public NewChartAction(WabitSwingSession session, WabitResultSetProducer dataProvider) {
         super("New Chart", NEW_CHART_ICON);
         this.session = session;
         this.dataProvider = dataProvider;
@@ -73,16 +73,14 @@ public class NewChartAction extends AbstractAction {
     }
 
     public void actionPerformed(ActionEvent e) {
-        Chart chart = new Chart();
-        session.getWorkspace().addChart(chart);
         
+    	Chart chart = new Chart();
         chart.setType(ChartType.BAR);
         
         if (dataProvider != null) {
             try {
                 chart.setName(dataProvider.getName() + " Chart");
                 chart.setQuery(dataProvider);
-                dataProvider.execute();
                 ChartUtil.setDefaults(chart);
             } catch (Exception ex) {
                 SPSUtils.showExceptionDialogNoReport(
@@ -93,6 +91,7 @@ public class NewChartAction extends AbstractAction {
             chart.setName("New Chart");
         }
         
+        session.getWorkspace().addChart(chart);
     }
 
 }

@@ -25,7 +25,6 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -34,15 +33,8 @@ import java.util.Set;
 
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
-import ca.sqlpower.sql.PlDotIni;
-import ca.sqlpower.sqlobject.SQLDatabase;
-import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
-import ca.sqlpower.wabit.StubWabitSession;
-import ca.sqlpower.wabit.StubWabitSessionContext;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitSession;
-import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 import ca.sqlpower.wabit.rs.query.QueryCache;
@@ -51,13 +43,11 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
 
     private ResultSetRenderer renderer;
     
-    private SQLDatabase db;
-    
     private Graphics graphics;
     
-    private SQLDatabaseMapping stubMapping;
-    
     private ContentBox parentCB;
+
+	private QueryCache query;
     
     @Override
     public Class<? extends WabitObject> getParentClass() {
@@ -76,17 +66,10 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         
-        stubMapping = new SQLDatabaseMapping() {
-            public SQLDatabase getDatabase(JDBCDataSource ds) {
-                return db;
-            }
-        };
+        this.query = new QueryCache(getContext());
+        getWorkspace().addQuery(query, getSession());
+        query.setDataSource((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
         
-        PlDotIni plini = new PlDotIni();
-        plini.read(new File("src/test/java/pl.regression.ini"));
-        JDBCDataSource ds = plini.getDataSource("regression_test", JDBCDataSource.class);
-        db = new SQLDatabase(ds);
-        QueryCache query = new QueryCache(stubMapping);
         getWorkspace().addChild(query, 0);
 		renderer = new ResultSetRenderer(query);
         parentCB = new ContentBox();
@@ -118,7 +101,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         Connection con = null;
         Statement stmt = null;
         try {
-            con = db.getConnection();
+            con = getContext().createConnection((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
             stmt = con.createStatement();
             stmt.execute("Create table subtotal_table (break_col varchar(50), subtotal_values integer)");
             stmt.execute("insert into subtotal_table (break_col, subtotal_values) values ('a', 10)");
@@ -138,32 +121,35 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
             if (con != null) con.close();
         }
         
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        WabitWorkspace workspace = new WabitWorkspace();
-        workspace.setSession(session);
-        QueryCache cache = new QueryCache(stubMapping);
-        workspace.addQuery(cache, session);
-        cache.setDBMapping(stubMapping);
-        cache.setDataSource(db.getDataSource());
-        cache.setUserModifiedQuery("select * from subtotal_table");
-        assertEquals(db, cache.getDatabase());
+        query.setUserModifiedQuery("select * from subtotal_table");
 
         Report report = new Report("report");
-        workspace.addReport(report);
+        getWorkspace().addReport(report);
+        
         ContentBox cb = new ContentBox();
         report.getPage().addContentBox(cb);
         cb.setWidth(100);
         cb.setHeight(200);
-        ResultSetRenderer renderer = new ResultSetRenderer(cache);
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
         renderer.setParent(cb);
-        renderer.executeQuery(new SPVariableHelper(renderer));
+        renderer.refresh();
+        
+        Graphics2D contentGraphics = (Graphics2D) graphics.create(
+                (int) cb.getX(), (int) cb.getY(),
+                (int) cb.getWidth(), (int) cb.getHeight());
+        
+        renderer.renderReportContent(contentGraphics, cb, 1, 0, false, new SPVariableHelper(renderer));
+        
         assertEquals(2, renderer.getColumnInfoList().size());
         renderer.getColumnInfoList().get(0).setWillGroupOrBreak(GroupAndBreak.GROUP);
         renderer.getColumnInfoList().get(1).setWillSubtotal(true);
+        
         Font font = GraphicsEnvironment.getLocalGraphicsEnvironment().getAllFonts()[0];
         renderer.setHeaderFont(font);
         renderer.setBodyFont(font);
-        renderer.createResultSetLayout((Graphics2D) graphics, cache.getResultSet());
+        
+        renderer.renderReportContent(contentGraphics, cb, 1, 0, false, new SPVariableHelper(renderer));
+        
         List<List<ResultSetCell>> layoutCells = renderer.findCells();
         
         boolean foundATotal = false;
@@ -193,7 +179,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         con = null;
         stmt = null;
         try {
-            con = db.getConnection();
+            con = getContext().createConnection((JDBCDataSource)getSession().getDataSources().getDataSource("regression_test"));
             stmt = con.createStatement();
             stmt.execute("drop table subtotal_table");
         } finally {
@@ -218,7 +204,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         ColumnInfo ci3 = new ColumnInfo("Col3");
         ci3.setWidth(50);
         ciList.add(ci3);
-        ResultSetRenderer rsRenderer = new ResultSetRenderer(new QueryCache(stubMapping), ciList);
+        ResultSetRenderer rsRenderer = new ResultSetRenderer(query, ciList);
         
         assertNull(rsRenderer.getColBeingDragged());
         
@@ -246,7 +232,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         ColumnInfo ci3 = new ColumnInfo("Col3");
         ci3.setWidth(50);
         ciList.add(ci3);
-        ResultSetRenderer rsRenderer = new ResultSetRenderer(new QueryCache(stubMapping), ciList);
+        ResultSetRenderer rsRenderer = new ResultSetRenderer(query, ciList);
         
         rsRenderer.defineColumnBeingDragged(50);
         rsRenderer.moveColumnBeingDragged(25);
@@ -270,41 +256,35 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
      * an NPE.
      */
     public void testExecuteEmptyQueryWithoutException() throws Exception {
-        WabitSession session = new StubWabitSession(new StubWabitSessionContext());
-        WabitWorkspace workspace = new WabitWorkspace();
-        workspace.setSession(session);
-        QueryCache cache = new QueryCache(stubMapping);
-        workspace.addQuery(cache, session);
-        cache.setDBMapping(stubMapping);
-        cache.setDataSource(db.getDataSource());
         
         Report report = new Report("report");
-        workspace.addReport(report);
+        getWorkspace().addReport(report);
         ContentBox cb = new ContentBox();
         report.getPage().addContentBox(cb);
-        ResultSetRenderer renderer = new ResultSetRenderer(cache);
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
         cb.setContentRenderer(renderer);
      
         assertNull(renderer.getExecuteException());
         
-        renderer.executeQuery(new SPVariableHelper(renderer));
+        renderer.refresh();
         
         System.out.println(renderer.getExecuteException());
         assertNull(renderer.getExecuteException());
     }
     
     /**
-     * Tests calling renderSuccess with a null result set works without
+     * Tests calling renderSuccess with an empty result set works without
      * throwing any exceptions.
      */
     public void testRenderSuccessWithEmptyRS() throws Exception {
-        QueryCache cache = new QueryCache(stubMapping);
-        cache.setDataSource(db.getDataSource());
-        ResultSetRenderer renderer = new ResultSetRenderer(cache);
+    	
+        
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
+        renderer.refresh();
         
         Image image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        renderer.renderSuccess(g, new ContentBox(), 1, 1, false);
+        renderer.renderReportContent(g, new ContentBox(), 1, 1, false, null);
     }
 
     /**

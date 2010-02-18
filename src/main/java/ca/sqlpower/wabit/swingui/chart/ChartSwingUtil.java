@@ -108,11 +108,6 @@ public class ChartSwingUtil {
         logger.debug("Creating JFreeChart for Wabit chart " + c);
         ChartType chartType = c.getType();
         
-        if (c.getResultSet() == null) {
-            logger.debug("Returning null (chart's result set was null)");
-            return null;
-        }
-        
         if (chartType == null) {
             logger.debug("Returning null (chart's type is not set)");
             return null;

@@ -52,13 +52,18 @@ import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
+import ca.sqlpower.wabit.rs.ResultSetHandle;
+import ca.sqlpower.wabit.rs.ResultSetListener;
+import ca.sqlpower.wabit.rs.ResultSetProducerEvent;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.OlapQueryEvent;
-import ca.sqlpower.wabit.rs.olap.OlapQueryListener;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableModel;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.HierarchyComponent;
@@ -89,6 +94,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * This is the OLAP query being displayed by this cell set renderer.
      */
     private OlapQuery modifiedOlapQuery;
+    
+    /**
+     * Keeps a link to the handle of the currently executing query.
+     */
+    private ResultSetHandle resultSetHandle;
     
     /**
      * This is the current cell set being displayed.
@@ -144,31 +154,47 @@ public class CellSetRenderer extends AbstractWabitObject implements
     };
     
     /**
+     * Listener responsible of updating the results
+     */
+    private ResultSetListener resultSetListener = new ResultSetListener() {
+		public void newData(ResultSetEvent evt) {
+			// Don't care.
+		}
+		public void executionComplete(final ResultSetEvent evt) {
+			SPSUtils.runOnSwingThread(new Runnable() {
+                public void run() {
+                	CellSetRenderer.this.errorMessage = null;
+                	setCellSet(evt.getSourceHandle().getCellSet());
+                }
+			});
+		}
+		public void executionStarted(ResultSetEvent evt) {
+			CellSetRenderer.this.errorMessage = "Loading...";
+			CellSetRenderer.this.getParent().repaint();
+		};
+	};
+	
+	/**
+	 * Listens to events coming from the query.
+	 */
+	private ResultSetProducerListener resultSetProducerListener = new ResultSetProducerListener() {
+		public void structureChanged(ResultSetProducerEvent evt) {
+			refresh();
+		}
+		public void executionStopped(ResultSetProducerEvent evt) {
+			// TODO Add throbber
+		}
+		public void executionStarted(ResultSetProducerEvent evt) {
+			// TODO Add throbber
+		}
+	};
+    
+    /**
      * This member is the member the user is over with their mouse. This property
      * is only here until the render report content is moved to the swing component
      * to this class.
      */
     private Member selectedMember;
-
-    /**
-     * Listens to the query and updates the view every time the query has been
-     * executed. If the event is received on the event dispatch thread, the GUI
-     * update is done immediately; otherwise it's scheduled in the Swing event
-     * queue.
-     */
-    private final OlapQueryListener queryListener = new OlapQueryListener() {
-		public void queryExecuted(final OlapQueryEvent evt) {
-		    runInForeground(new Runnable() {
-		        public void run() {
-		            try {
-		                setCellSet(evt.getCellSet());
-		            } catch (Exception e) {
-		                throw new RuntimeException(e);
-		            }
-		        }
-		    });
-		}
-    };
     
     private boolean initDone = false;
 
@@ -200,16 +226,27 @@ public class CellSetRenderer extends AbstractWabitObject implements
     public void init() {
         if (this.initDone) return;
         try {
+        	
         	if (modifiedOlapQuery == null) {
         		setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
-
-        		// This code will eventually fire the change and set the cellset
-        		// (must be done synchronously--don't use asyncExecute!)
-        		modifiedOlapQuery.executeOlapQuery();
-            } else if (modifiedOlapQuery.hasCachedAttributes()) {
-            	modifiedOlapQuery.executeOlapQuery();
             }
+        	
+        	// This code will eventually fire the change and set the cellset
+    		// (must be done synchronously--don't use asyncExecute!)
+    		this.resultSetHandle = 
+    				modifiedOlapQuery.execute(
+    						new SPVariableHelper(this), 
+    						this.resultSetListener);
+    		
+    		if (this.resultSetHandle == null) {
+    			// The olp query could not execute.
+    			this.errorMessage = "The query '" + modifiedOlapQuery.getName() + "' did not return any results.";
+    		} else {
+    			this.errorMessage = "Loading...";
+    		}
+    		
         	this.initDone=true;
+        	
         } catch (Exception e) {
             logger.warn("Error while executing Olap Query", e);
             errorMessage = "Error when executing query:\n" + e;
@@ -223,7 +260,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
     @Override
     public CleanupExceptions cleanup() {
     	if (modifiedOlapQuery != null && !this.initDone) {
-    		modifiedOlapQuery.removeOlapQueryListener(queryListener);
+    		modifiedOlapQuery.removeResultSetProducerListener(resultSetProducerListener);
     	}
         olapQuery.removeSPListener(nameListener);
         return new CleanupExceptions();
@@ -251,6 +288,11 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         if (getCellSet() == null) {
         	g.drawString(EMPTY_CELL_SET_MESSAGE, 0, g.getFontMetrics().getHeight());
+        	return false;
+        }
+        
+        if (this.errorMessage != null) {
+        	g.drawString(this.errorMessage, 0, g.getFontMetrics().getHeight());
         	return false;
         }
         
@@ -644,20 +686,16 @@ public class CellSetRenderer extends AbstractWabitObject implements
     
     public void setModifiedOlapQuery(OlapQuery modifiedOlapQuery) {
     	if (this.modifiedOlapQuery != null) {
-    		this.modifiedOlapQuery.removeOlapQueryListener(queryListener);
+    		this.modifiedOlapQuery.removeResultSetProducerListener(resultSetProducerListener);
     		fireChildRemoved(OlapQuery.class, this.modifiedOlapQuery, 0);
     	}
         OlapQuery oldQuery = this.modifiedOlapQuery;
         this.modifiedOlapQuery = modifiedOlapQuery;
         this.modifiedOlapQuery.setParent(this);
-        this.modifiedOlapQuery.addOlapQueryListener(queryListener);
+        this.modifiedOlapQuery.addResultSetProducerListener(resultSetProducerListener);
         firePropertyChange("modifiedOlapQuery", oldQuery, modifiedOlapQuery);
         fireChildAdded(OlapQuery.class, modifiedOlapQuery, 0);
     }
-    
-    public String getErrorMessage() {
-		return errorMessage;
-	}
     
     public List<WabitObject> getDependencies() {
         if (getContent() == null) return Collections.emptyList();
@@ -699,7 +737,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (selectedMember != null) {
             try {
                 modifiedOlapQuery.toggleMember(selectedMember);
-                modifiedOlapQuery.executeOlapQuery();
+                refresh();
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -708,8 +746,17 @@ public class CellSetRenderer extends AbstractWabitObject implements
 
 	public void refresh() {
 		try {
-			setModifiedOlapQuery(OlapQuery.copyOlapQuery(olapQuery));
-			this.modifiedOlapQuery.executeOlapQuery();
+			
+			if (this.resultSetHandle != null) {
+				this.resultSetHandle.removeResultSetListener(resultSetListener);
+				this.resultSetHandle.cancel();
+			}
+			
+			this.resultSetHandle = 
+					this.modifiedOlapQuery.execute(
+							new SPVariableHelper(this), 
+							resultSetListener);
+			
 		} catch (Exception e) {
             logger.warn("Error while executing Olap Query", e);
             errorMessage = "Error when executing query:\n" + e;

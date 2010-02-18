@@ -20,8 +20,6 @@
 package ca.sqlpower.wabit.rs.query;
 
 import java.beans.PropertyChangeEvent;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -29,13 +27,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
+
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPSimpleVariableResolver;
@@ -50,13 +46,10 @@ import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLJoin;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
-import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
-import ca.sqlpower.sqlobject.SQLObjectException;
-import ca.sqlpower.sqlobject.SQLObjectRuntimeException;
 import ca.sqlpower.swingui.query.StatementExecutor;
 import ca.sqlpower.swingui.query.StatementExecutorListener;
 import ca.sqlpower.util.TransactionEvent;
@@ -65,19 +58,20 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
-import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
+import ca.sqlpower.wabit.rs.ResultSetProducerListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerSupport;
-import ca.sqlpower.wabit.rs.StreamingResultSetCollectionEvent;
-import ca.sqlpower.wabit.rs.StreamingResultSetCollectionListener;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
+import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
 
 /**
  * This method will be able to execute and cache the results of a query. It also
  * delegates some of the methods to the {@link QueryImpl} contained in it.
  */
-public class QueryCache extends AbstractWabitObject implements Query, StatementExecutor, ResultSetProducer, SPVariableResolverProvider {
+public class QueryCache extends AbstractWabitObject implements StatementExecutor, Query, WabitResultSetProducer, SPVariableResolverProvider {
     
     private static final Logger logger = Logger.getLogger(QueryCache.class);
     
@@ -85,24 +79,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     @GuardedBy("rsps")
     private final ResultSetProducerSupport rsps = new ResultSetProducerSupport(this);
-    
-    private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
-    
-    /**
-     * This is the statement currently entering result sets into this query cache.
-     * This lets the query cancel a running statement.
-     * <p>
-     * This is only used if {@link QueryImpl#streaming} is true.
-     */
-    private PreparedStatement currentStatement;
-    
-    /**
-     * This is the connection currently entering result sets into this query cache.
-     * This lets the query close a running connection
-     * <p>
-     * This is only used if {@link QueryImpl#streaming} is true.
-     */
-    private Connection currentConnection; 
     
     /**
      * Tracks if the user should be prompted every time a query is going to
@@ -125,12 +101,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * query. If false the query should only be executed by user request.
      */
     private boolean automaticallyExecuting = true;
-
-    /**
-     * Flag to indicate whether or not the query is currently running.
-     */
-    @GuardedBy("this")
-    private boolean executionInProgress = false;
     
     /**
      * These are the listeners that want to listen directly to the query that
@@ -148,73 +118,77 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
         public void propertyChangeEvent(PropertyChangeEvent evt) {
             firePropertyChangeEvent(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void joinRemoved(QueryChangeEvent evt) {
             fireJoinRemoved(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void joinPropertyChangeEvent(PropertyChangeEvent evt) {
             fireJoinPropertyChangeEvent(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void joinAdded(QueryChangeEvent evt) {
             fireJoinAdded(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void itemRemoved(QueryChangeEvent evt) {
             fireItemRemoved(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
             fireItemPropertyChangeEvent(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void itemAdded(QueryChangeEvent evt) {
             fireItemAdded(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void containerRemoved(QueryChangeEvent evt) {
             fireContainerRemoved(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void containerAdded(QueryChangeEvent evt) {
             fireContainerAdded(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void compoundEditStarted(TransactionEvent evt) {
             fireCompoundEditStarted(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
     
         public void compoundEditEnded(TransactionEvent evt) {
             fireCompoundEditEnded(evt);
+            rsps.fireStructureChanged();
+            updateVariables();
         }
 
     };
-
-    /**
-     * A collection of all of the result sets and update counts from the latest
-     * execution of this query. If the result sets in this collection are
-     * streaming then the statement used to execute the query should not be
-     * closed until the streaming has been stopped. This will be null if there
-     * are no available result sets, which can occur at the start of the query
-     * cache creation or if the cache has become stale and needs to re-execute.
-     */
-    private ResultSetHandle rsCollection;
     
-    /**
-     * This listens to {@link #rsCollection} for an event that signals all of
-     * the streaming queries in the collection have stopped streaming. When
-     * all of the streaming queries in this cache have stopped streaming an
-     * event will be fired signalling that this query is no longer running. 
-     */
-    private final StreamingResultSetCollectionListener rsCollectionListener = 
-        new StreamingResultSetCollectionListener() {
-    
-        public void allStreamingStopped(StreamingResultSetCollectionEvent evt) {
-            setRunning(false);
+    private void updateVariables() {
+    	if (variableProvider != null) {            	
+        	variableProvider.setUpdateNeeded(true);
         }
-    };
+    }
     
     /**
      * When the constants container is set in the query a WabitObject wrapper is 
@@ -229,18 +203,11 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     private QueryVariableResolver variableProvider = null;
     
     /**
-     * This helps the query to resolve variable that
-     * come from other objects.
-     */
-    private SPVariableHelper variableResolver = null;
-    
-    /**
      * Extends {@link SPSimpleVariableResolver} to make sure that we
      * initialize the variables before trying to resolve them.
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
     	private boolean updateNeeded = true;
-    	private boolean isUpdating = false;
     	public QueryVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
 		}
@@ -249,45 +216,53 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	}
     	protected void beforeLookups(String key) {
     		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
-    				&& this.updateNeeded
-    				&& !isRunning()) {
+    				&& this.updateNeeded) {
     			this.updateVars(true);
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.updateNeeded
-    				&& !isRunning()) {
+    		if (this.updateNeeded) {
     			this.updateVars(false);
     		}
     	}
 		private void updateVars(boolean completeUpdate) {
-			// Prevent recursive updates.
-			if (this.isUpdating) {
-				return;
-			}
-			this.isUpdating = true;
 			try {
-				ResultSetHandle rsucc = fetchResultSet(QueryCache.this.variableResolver);
+				execute(
+						new SPVariableHelper(QueryCache.this),
+						new ResultSetListener() {
+							public void newData(ResultSetEvent evt) {
+								if (isStreaming()) {
+									update(evt.getSourceHandle().getResultSet());
+								}
+							}
+							public void executionStarted(ResultSetEvent evt) {
+								// don't care.
+							};
+							public void executionComplete(ResultSetEvent evt) {
+								update(evt.getResults());
+							}
+							private void update(ResultSet rs) {
+								try {
+									variables.clear();
+									if (rs != null &&
+											rs.first()) {
+										do {
+											for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+												QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+											}
+										} while (rs.next());
+									}
+								} catch (SQLException e) {
+									logger.error("Failed to resolve available variables from a query.", e);
+								}
+							}
+						},
+						completeUpdate);
 				
-				if (rsucc == null) {
-					return;
-				}
-				
-				ResultSet rs = rsucc.getResultSet();
-				variables.clear();
-				if (rs != null &&
-						rs.first()) {
-					do {
-						for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-							this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-						}
-					} while (rs.next());
-				}
-			} catch (SQLException e) {
+			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
 			} finally {
 				this.updateNeeded = false;
-				this.isUpdating = false;
 			}
 		}
     }
@@ -352,22 +327,9 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * can have its listeners connected to allow using this query cache in the workspace.
      */
     public QueryCache(QueryCache q, boolean connectListeners) {
-    	
     	this.query = new QueryImpl(q.query, connectListeners);
         query.addQueryChangeListener(queryChangeListener);
         query.setUUID(getUUID());
-        
-        try {
-        	final ResultSetHandle newCollection;
-        	if (q.rsCollection != null) {
-        		newCollection = new ResultSetHandle(q.rsCollection);
-        	} else {
-        		newCollection = null;
-        	}
-            setRsCollection(newCollection);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
         createWabitObjectWrappers(false);
     }
     
@@ -453,155 +415,64 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         }
     }
 
-    /**
-     * Executes the current SQL query, returning a cached copy of the result
-     * set. The returned copy of the result set is guaranteed to be scrollable.
-     * If the query is not streaming it does not hold any remote database
-     * resources. If the query is streaming then the connection and statement
-     * will be held open to continue streaming in values.
-     * 
-     * @return an in-memory copy of the result set produced by this query
-     *         cache's current query. You are not required to close the returned
-     *         result set when you are finished with it, but you can if you
-     *         like.
-     * @throws SQLException
-     *             If the query fails to execute for any reason.
-     */
-    public boolean executeStatement() throws SQLException {
-        return executeStatement(false, this.variableResolver);
-    }
-    
-    /**
-     * Executes the current SQL query, returning a cached copy of the result
-     * set. The returned copy of the result set is guaranteed to be scrollable.
-     * If the query is not streaming it does not hold any remote database
-     * resources. If the query is streaming then the connection and statement
-     * will be held open to continue streaming in values.
-     * 
-     * @param variableContext The variable context into which to execute this query.
-     * 
-     * @return an in-memory copy of the result set produced by this query
-     *         cache's current query. You are not required to close the returned
-     *         result set when you are finished with it, but you can if you
-     *         like.
-     * @throws SQLException
-     *             If the query fails to execute for any reason.
-     */
-    public boolean executeStatement(SPVariableResolver variableContext) throws SQLException {
-        return executeStatement(false, variableContext);
+ // ------------------ ResultSetProducer interface ----------------------
+    public void addResultSetProducerListener(ResultSetProducerListener listener) {
+        synchronized(rsps) {
+            rsps.addResultSetListener(listener);
+        }
     }
 
-    /**
-     * Executes the current SQL query, returning a cached copy of the result set
-     * that is either a subset of the full results, limited by the session's row
-     * limit, or the full result set. The returned copy of the result set is
-     * guaranteed to be scrollable. If the query is not streaming it does not
-     * hold any remote database resources. If the query is streaming then the
-     * connection and statement will be held open to continue streaming in
-     * values.
-     * 
-     * @param fullResultSet
-     *            If true the full result set will be retrieved. If false then a
-     *            limited result set will be retrieved based on the session's
-     *            row limit.
-     * @return an in-memory copy of the result set produced by this query
-     *         cache's current query. You are not required to close the returned
-     *         result set when you are finished with it, but you can if you
-     *         like.
-     * @throws SQLException
-     *             If the query fails to execute for any reason.
-     */
-    public boolean executeStatement(boolean fetchFullResults, SPVariableResolver variableContext) throws SQLException {
-    	
-    	if (isRunning()) {
-    		cancel();    		
-    	}
-    	
-        if (rsCollection != null) {
-            setRsCollection(null);
+    public void removeResultSetProducerListener(ResultSetProducerListener listener) {
+        synchronized(rsps) {
+            rsps.removeResultSetListener(listener);
         }
+    }
+    
+    public boolean isRunning() {
+    	return rsps.isRunning();
+    }
+    
+    
+
+    public ResultSetHandle execute(
+    		SPVariableHelper variableContext, 
+    		ResultSetListener listener) throws ResultSetProducerException 
+    {
+        return execute(variableContext, listener, true);
+    }
+
+    public ResultSetHandle execute(
+    		SPVariableHelper variableContext, 
+    		ResultSetListener listener, 
+    		boolean fetchFullResults) throws ResultSetProducerException 
+    {
+        
         if (query.getDatabase() == null || query.getDatabase().getDataSource() == null) {
             throw new NullPointerException("Data source is null.");
         }
-        
-        
         	
     	String sql = query.generateQuery();
-    	ResultSet rs = null;
     	
     	try {
-    		setRunning(true);
-    		currentConnection = query.getDatabase().getConnection();
         	
-    			
-    		if (variableContext != null 
-    				&& variableContext instanceof SPVariableHelper) {
-    			currentStatement = ((SPVariableHelper)variableContext).substituteForDb(currentConnection, sql);
+    		SPVariableHelper helper;	
+    		if (variableContext != null) {
+    			helper = variableContext;
     		} else {
-    			SPVariableHelper adHodHelper = new SPVariableHelper(this);
-    			currentStatement = adHodHelper.substituteForDb(currentConnection, sql);
+    			helper = new SPVariableHelper(this);
     		}
     		
-    		if (!query.isStreaming() && !fetchFullResults) {
-    			currentStatement.setMaxRows(query.getRowLimit());
-    		}
+    		return rsps.execute(
+    				this.getSession().getContext(),
+    				this.getDataSource(),
+    				sql,
+    				helper,
+    				isStreaming() ? ResultSetType.STREAMING : ResultSetType.RELATIONAL,
+    				getStreamingRowLimit(),
+    				listener);
     		
-    		boolean initialResult = currentStatement.execute();
-    		
-    		setRsCollection(
-    				new ResultSetHandle(
-    						currentStatement, 
-    						isStreaming(), 
-    						getStreamingRowLimit(), 
-    						getSession()));
-    		
-    		runInForeground(new Runnable() {
-    			public void run() {
-    				synchronized(rsps) {
-    					rsps.fireResultSetEvent(rsCollection);
-    				}
-    			}
-    		});
-    		
-    		return initialResult;
-        		
-    	} catch (SQLObjectException e) {
-    		logger.error("Cannot execute query.", e);
-    		setRunning(false);
-    		throw new SQLObjectRuntimeException(e);
     	} catch (Exception t) {
-    		setRunning(false);
-    		SQLException ex = new SQLException(t.getMessage());
-    		ex.setStackTrace(t.getStackTrace());
-    		throw ex;
-    	} finally {
-    		this.variableProvider.setUpdateNeeded(true);
-    		if (!query.isStreaming()) {
-    			if (rs != null) {
-    				try {
-    					rs.close();
-    				} catch (Exception ex) {
-    					logger.warn("Failed to close result set. Squishing this exception: ", ex);
-    				}
-    			}
-    			if (currentStatement != null) {
-    				try {
-    					currentStatement.close();
-    					currentStatement = null;
-    				} catch (Exception ex) {
-    					logger.warn("Failed to close statement. Squishing this exception: ", ex);
-    				}
-    			}
-    			if (currentConnection != null) {
-    				try {
-    					currentConnection.close();
-    					currentConnection = null;
-    				} catch (Exception ex) {
-    					logger.warn("Failed to close connection. Squishing this exception: ", ex);
-    				}
-    			}
-    			setRunning(false);
-    		}
+    		throw new ResultSetProducerException(t);
     	}
     }
 
@@ -612,84 +483,19 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * {@link Statement#cancel()}.
      */
     public void cancel() {
-        if (rsCollection != null) {
-            try {
-                rsCollection.cleanup();
-            } catch (SQLException e) {
-                logger.error("Exception while cleaning up a result set collection", e);
-            }
-        }
-        if (currentStatement != null) {
-            try {
-                currentStatement.cancel();
-                currentStatement.close();
-                currentStatement = null;
-            } catch (SQLException e) {
-                logger.error("Exception while closing old streaming statement", e);
-            }
-        }
-        if (currentConnection != null) {
-            try {
-                currentConnection.close();
-                currentConnection = null;
-            } catch (SQLException e) {
-                logger.error("Exception while closing old streaming connection", e);
-            }
-        }
-        setRunning(false);
-    }
-
-    public CachedRowSet getResultSet(SPVariableHelper variablesContext) throws SQLException {
-        return fetchResultSet(variablesContext).getResultSet();
+        this.rsps.cancel();
     }
     
-    public CachedRowSet getResultSet() throws SQLException {
-        return fetchResultSet(this.variableResolver).getResultSet();
-    }
-    
-    public int getUpdateCount() {
-    	return -1;
-    }
-
-    public boolean getMoreResults() throws SQLException {
-        return false;
-    }
-
-    /**
-     * Returns the most up to date result sets in the query cache. This may
-     * execute the query on the database.
-     */
-    private ResultSetHandle fetchResultSet(SPVariableResolver variableContext) throws SQLException {
-        if (rsCollection == null
-        		|| this.variableResolver != variableContext) {
-        	try {
-				executeStatement(variableContext);
-			} catch (SQLException e) {
-				return null;
-			}
-        }
-        return rsCollection;
-    }
+    // ------------------ end ResultSetProducer interface ----------------------
     
     @Override
     public CleanupExceptions cleanup() {
         CleanupExceptions exceptions = new CleanupExceptions();
-        if (currentStatement != null) {
-            try {
-                currentStatement.cancel();
-                currentStatement.close();
-            } catch (SQLException e) {
-                exceptions.add(e);
-            }
+        try {
+        	rsps.cancel();
+        } catch (Exception e) {
+        	exceptions.add(e);
         }
-        if (currentConnection != null) {
-            try {
-                currentConnection.close();
-            } catch (SQLException e) {
-                exceptions.add(e);
-            }
-        }
-        setRunning(false);
         return exceptions;
     }
     
@@ -699,54 +505,10 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         }
         return new WabitDataSource(query.getDatabase().getDataSource());
     }
-
-    public boolean isRunning() {
-        return executionInProgress;
-    }
-
-    /**
-     * Maintains the counter that indicates if this query is currently running.
-     * Since there is no synchronization to prevent multiple threads from
-     * executing this query simultaneously, this method actually keeps a running
-     * count of how many concurrent executions are in progress.
-     * 
-     * @param isRunning
-     *            An argument of true means a new query execution is beginning;
-     *            false means a query execution has just completed.
-     */
-    private void setRunning(final boolean isRunning) {
-    	final boolean wasRunning = executionInProgress;
-		executionInProgress = isRunning;
-    	Runnable runner = new Runnable() {
-			public void run() {
-				if (wasRunning != isRunning) {
-					firePropertyChange("running", wasRunning, isRunning);
-					if (isRunning) {
-						fireQueryExecutionStart();
-					} else {
-						fireQueryExecutionStop();
-					}
-				}
-			}
-		};
-		getSession().runInForeground(runner);
-    }
     
     public boolean allowsChildren() {
         return true;
     }
-    
-    private void fireQueryExecutionStart() {
-		for (StatementExecutorListener listener : this.executorListeners) {
-			listener.queryStarted();
-		}
-	}
-	
-	private void fireQueryExecutionStop() {
-		for (StatementExecutorListener listener : this.executorListeners) {
-			listener.queryStopped();
-		}
-	}
 
     public int childPositionOffset(Class<? extends SPObject> childType) {
         int offset = 0;
@@ -789,14 +551,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         if (dependency.equals(getWabitDataSource())) {
             setDataSource(null);
         }
-    }
-    
-    /**
-     * If this returns true then this query cache is a query that should
-     * not be hooked up to listeners. 
-     */
-    public boolean isPhantomQuery() {
-        return getParent() == null;
     }
 
     public void setPromptForCrossJoins(boolean promptForCrossJoins) {
@@ -898,49 +652,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
         fireChildAdded(join.getClass(), join, index);
     }
 
-    // ------------------ ResultSetProducer interface ----------------------
-    public void addResultSetListener(ResultSetListener listener) {
-        synchronized(rsps) {
-            rsps.addResultSetListener(listener);
-        }
-    }
-
-    public void removeResultSetListener(ResultSetListener listener) {
-        synchronized(rsps) {
-            rsps.removeResultSetListener(listener);
-        }
-    }
-
-    public Future<ResultSetHandle> execute() throws ResultSetProducerException {
-    	return execute(this.variableResolver);
-    }
-    
-    public Future<ResultSetHandle> execute(final SPVariableResolver variablesContext) throws ResultSetProducerException {
-        Callable<ResultSetHandle> callable = new Callable<ResultSetHandle>() {
-            public ResultSetHandle call() throws Exception {
-                try {
-                    long eventCount = rsps.getEventsFired();
-                    final ResultSetHandle resultSets = fetchResultSet(variablesContext);
-                    if (rsps.getEventsFired() == eventCount) {
-                        runInForeground(new Runnable() {
-                            public void run() {
-                                rsps.fireResultSetEvent(resultSets);
-                            }
-                        });
-                    }
-                    return resultSets;
-                } catch (SQLException e) {
-                    throw new ResultSetProducerException(e);
-                }
-            }
-        };
-        FutureTask<ResultSetHandle> futureTask = 
-            new FutureTask<ResultSetHandle>(callable);
-        runInBackground(futureTask);
-        return futureTask;
-    }
-    // ------------------ end ResultSetProducer interface ----------------------
-
     
     //------------------- start Query interface---------------------------------
     
@@ -1018,11 +729,6 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
      * This will set the row limit on the query. This also clears the cache.
      */
     public void setRowLimit(int rowLimit) {
-        try {
-            setRsCollection(null);
-        } catch (SQLException e) {
-            throw new RuntimeException("Exception during cleanup of old result sets.", e);
-        }
         query.setRowLimit(rowLimit);
     }
     
@@ -1180,20 +886,7 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     
     //------------------- end Query interface---------------------------------
     
-    /**
-     * Sets a new result set collection in this class. This will clean up the
-     * previous result set collection which may throw a {@link SQLException}.
-     */
-    private void setRsCollection(ResultSetHandle newCollection) throws SQLException {
-        if (rsCollection != null) {
-            rsCollection.cleanup();
-            rsCollection.removeResultSetListener(rsCollectionListener);
-        }
-        rsCollection = newCollection;
-        if (rsCollection != null) {
-            rsCollection.addResultSetListener(rsCollectionListener);
-        }
-    }
+
     
     //------------------- event handling for query delegate-------------------
     
@@ -1440,18 +1133,48 @@ public class QueryCache extends AbstractWabitObject implements Query, StatementE
     	
     	// Create a variable context.
         this.variableProvider = new QueryVariableResolver(this, this.uuid, "Relational Query - " + this.getName());
-        
-        // Create a variable resolver and bind it to this node
-        this.variableResolver = new SPVariableHelper(this);
     }
+
     
-    public void addStatementExecutorListener(
-			StatementExecutorListener qcl) {
-		this.executorListeners.add(qcl);
+    
+    
+    
+    
+    
+    // XXX All this stuff will have to be removed once the SQLP lib has cleared up his act.
+    
+    
+    private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
+    private ResultSetHandle internalHandle = null;
+    
+
+	public boolean executeStatement() throws SQLException {
+		try {
+			this.internalHandle = this.execute(new SPVariableHelper(this), null);
+			return true;
+		} catch (ResultSetProducerException e) {
+			SQLException se = new SQLException();
+			se.initCause(e);
+			throw se;
+		}
 	}
-	
-	public void removeStatementExecutorListener(
-			StatementExecutorListener qcl) {
-		this.executorListeners.remove(qcl);
+
+	public boolean getMoreResults() throws SQLException {
+		return false;
+	}
+
+	public ResultSet getResultSet() throws SQLException {
+		return this.internalHandle.getResultSet();
+	}
+
+	public int getUpdateCount() {
+		return -1;
+	}
+
+	public void removeStatementExecutorListener(StatementExecutorListener sel) {
+		this.executorListeners.remove(sel);
+	}
+	public void addStatementExecutorListener(StatementExecutorListener sel) {
+		this.executorListeners.add(sel);
 	}
 }

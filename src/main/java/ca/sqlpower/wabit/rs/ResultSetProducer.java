@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2009, SQL Power Group Inc.
  *
- * This file is part of Wabit.
+ * This file is part of SQL Power Library.
  *
  * Wabit is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,64 +19,41 @@
 
 package ca.sqlpower.wabit.rs;
 
-import java.util.concurrent.Future;
-
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
-import ca.sqlpower.object.SPVariableResolver;
-import ca.sqlpower.wabit.WabitBackgroundWorker;
+import ca.sqlpower.object.SPVariableHelper;
 
 /**
  * Interface that provides all necessary methods for working with any type of
- * WabitObject that can produce a ResultSet.
+ * SPObject that can produce a ResultSet.
  */
-public interface ResultSetProducer extends WabitBackgroundWorker {
+public interface ResultSetProducer {
 
-    /**
+    
+	/**
      * Executes the current query represented by this object, returning the
      * results from the query's execution.
-     * <p>
-     * Every call to this method causes a ResultSetEvent to be fired, whether or
-     * not the call simply returns the same cached results as a previous
-     * invocation.
-     * <p>
-     * If the query is in a state where it can't be executed (because it is not
-     * sufficiently configured to issue a sensible query, or because the
-     * connection to the data source can't be established), the event will still
-     * be fired if it results in a state change from the previous execution
-     * attempt. In these cases, the event will deliver a null ResultSet to
-     * listeners.
-     * <p>
-     * <b>Implementations of ResultSetProducer are allowed to fire the
-     * ResultSetEvent while the query is locked against concurrent and/or
-     * recursive execution, so it is vitally important that ResultSetListeners
-     * do not attempt to re-execute the query in response to any
-     * ResultSetEvent.</b> Such behaviour by ResultSetListeners is unsafe in
-     * general, and may cause deadlock.
+     * 
+     * Takes a variables context to produce this result set from. Can be null,
+     * in which case it is assumed that the resultset was produced in it's native 
+     * context.
+     * 
+     * Takes a listener as an argument to register before the result set starts
+     * populating on a background thread. can be null. The calling code can
+     * register a listener on the handle later if it wants to.
      * 
      * @return The results of executing of the query. If the query is not
      *         currently in a state where it can be executed, this method
-     *         returns null and fires a ResultSetEvent with a null result set.
+     *         returns null.
      * @throws ResultSetProducerException
      *             If there was any problem obtaining the result set
-     * @throws InterruptedException
-     *             If the calling thread is interrupted while blocked waiting
-     *             for another call to execute() to complete.
      */
-    Future<ResultSetHandle> execute() throws ResultSetProducerException, 
-        InterruptedException;
+    ResultSetHandle execute(
+    		@Nullable SPVariableHelper variablesContext,
+    		@Nullable ResultSetListener listener) throws ResultSetProducerException;
     
-    /**
-     * Extended version of the {@link ResultSetProducer#execute()} method that takes
-     * a variable context into which to execute this query in.
-     * 
-     * @param variablesContext The variables context to use
-     * @return 
-     * @throws ResultSetProducerException
-     * @throws InterruptedException
-     */
-    Future<ResultSetHandle> execute(SPVariableResolver variablesContext) throws ResultSetProducerException, 
-    	InterruptedException;
+    
 
     /**
      * Adds the given listener to this result set producer's list of interested
@@ -85,7 +62,7 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      * 
      * @param listener The listener to add (must not be null).
      */
-    void addResultSetListener(@Nonnull ResultSetListener listener);
+    void addResultSetProducerListener(@Nonnull ResultSetProducerListener listener);
 
     /**
      * Removes the given listener from the listener list. Has no effect if the
@@ -93,6 +70,17 @@ public interface ResultSetProducer extends WabitBackgroundWorker {
      * 
      * @param listener The listener to remove. Nulls are ignored.
      */
-    void removeResultSetListener(ResultSetListener listener);
+    void removeResultSetProducerListener(ResultSetProducerListener listener);
 
+    /**
+     * Returns true if at least one of the distributed handles is still running.
+     * Do not confise these listeners with those that listen to the 
+     * handles. 
+     */
+    boolean isRunning();
+
+    /**
+     * Calling this method will stop the execution of all distributed handles.
+     */
+    void cancel();
 }
