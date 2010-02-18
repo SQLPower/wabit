@@ -217,15 +217,15 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     	protected void beforeLookups(String key) {
     		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
     				&& this.updateNeeded) {
-    			this.updateVars(true);
+    			this.updateVars();
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
     		if (this.updateNeeded) {
-    			this.updateVars(false);
+    			this.updateVars();
     		}
     	}
-		private void updateVars(boolean completeUpdate) {
+		private void updateVars() {
 			try {
 				execute(
 						new SPVariableHelper(QueryCache.this),
@@ -256,8 +256,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 									logger.error("Failed to resolve available variables from a query.", e);
 								}
 							}
-						},
-						completeUpdate);
+						});
 				
 			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
