@@ -373,10 +373,10 @@ public class ResultSetHandle {
 	/**
      * Triggers the population of this handle.
      */
-    public void populate() {
+    public void populate(boolean async) {
     	this.cancel();
     	executorService.execute(task);
-    	if (System.getProperty("java.class.path").contains("junit")) {
+    	if (!async || System.getProperty("java.class.path").contains("junit")) {
     		try {
     			executorService.shutdown();
     			boolean completed = executorService.awaitTermination(60, TimeUnit.SECONDS);System.getProperties();

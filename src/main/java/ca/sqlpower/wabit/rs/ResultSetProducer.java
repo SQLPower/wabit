@@ -53,6 +53,17 @@ public interface ResultSetProducer {
     		@Nullable SPVariableHelper variablesContext,
     		@Nullable ResultSetListener listener) throws ResultSetProducerException;
     
+    /**
+     * Same as the {@link ResultSetProducer#execute(SPVariableHelper, ResultSetListener)}
+     * but takes a parameter to indicate if the query must run in async mode or not.
+     * @return A fully populated ResultSetHandle
+     * @throws ResultSetProducerException
+     */
+    ResultSetHandle execute(
+    		@Nullable SPVariableHelper variablesContext,
+    		@Nullable ResultSetListener listener,
+    		@Nonnull boolean async) throws ResultSetProducerException;
+    
     
 
     /**

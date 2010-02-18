@@ -444,7 +444,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     public ResultSetHandle execute(
     		SPVariableHelper variableContext, 
     		ResultSetListener listener, 
-    		boolean fetchFullResults) throws ResultSetProducerException 
+    		boolean async) throws ResultSetProducerException 
     {
         
         if (query.getDatabase() == null || query.getDatabase().getDataSource() == null) {
@@ -469,7 +469,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     				helper,
     				isStreaming() ? ResultSetType.STREAMING : ResultSetType.RELATIONAL,
     				getStreamingRowLimit(),
-    				listener);
+    				listener,
+    				async);
     		
     	} catch (Exception t) {
     		throw new ResultSetProducerException(t);

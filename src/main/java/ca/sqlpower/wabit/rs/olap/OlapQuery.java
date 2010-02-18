@@ -1313,10 +1313,18 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     public synchronized void removeResultSetProducerListener(ResultSetProducerListener listener) {
         rsps.removeResultSetListener(listener);
     }
-
+    
     public ResultSetHandle execute(
     		@Nullable SPVariableHelper variablesContext,
     		@Nullable ResultSetListener listener) throws ResultSetProducerException
+	{
+    	return this.execute(variablesContext, listener, true);
+	}
+
+    public ResultSetHandle execute(
+    		@Nullable SPVariableHelper variablesContext,
+    		@Nullable ResultSetListener listener,
+    		boolean async) throws ResultSetProducerException
 	{
         try {
         	
@@ -1348,7 +1356,8 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
         				variablesContext,
         				ResultSetType.OLAP, 
 	        			0, 
-	        			listener);	
+	        			listener,
+	        			async);	
             
         } catch (Exception e) {
             throw new ResultSetProducerException("Couldn't create database connection for Olap query", e);

@@ -152,7 +152,8 @@ public class ResultSetProducerSupport {
     		@Nonnull final SPVariableHelper variablesContext,
     		@Nonnull final ResultSetType type,
             final int rowLimit,
-            @Nullable final ResultSetListener listener) throws SQLException
+            @Nullable final ResultSetListener listener,
+            boolean async) throws SQLException
     {
     	synchronized (handles) {
     		
@@ -174,7 +175,7 @@ public class ResultSetProducerSupport {
     		// Save this new one
     		this.handles.add(rsh);
 			
-    		rsh.populate();
+    		rsh.populate(async);
     		
     		// Notify listeners, if necessary, that we are now executing something
     		fireExecutionStarted();
@@ -206,7 +207,8 @@ public class ResultSetProducerSupport {
     		@Nonnull final SPVariableHelper variablesContext,
     		@Nonnull final ResultSetType type,
             final int rowLimit,
-            @Nullable final ResultSetListener listener) throws SQLException
+            @Nullable final ResultSetListener listener,
+            boolean async) throws SQLException
     {
     	synchronized (handles) {
     		
@@ -228,7 +230,7 @@ public class ResultSetProducerSupport {
     		// Save this new one
     		this.handles.add(rsh);
 			
-    		rsh.populate();
+    		rsh.populate(async);
     		
     		// Notify listeners, if necessary, that we are now executing something
     		fireExecutionStarted();
