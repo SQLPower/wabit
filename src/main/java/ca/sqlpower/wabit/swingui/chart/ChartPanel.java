@@ -379,7 +379,8 @@ public class ChartPanel implements WabitPanel {
      *            become invisible.
      */
     private void showError(Exception ex) {
-        if (ex != null) {
+    	chartPanel.setChart(null);
+    	if (ex != null) {
             logger.debug("Showing exception message in chart editor", ex);
             chartError.setText(
                     "<html><h2>Charting Failed</h2>" +
@@ -389,7 +390,6 @@ public class ChartPanel implements WabitPanel {
             chartError.setText(null);
             chartError.setVisible(false);
         }
-        chartPanel.setChart(null);
     }
 
 	/**

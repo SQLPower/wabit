@@ -10,8 +10,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.JComboBox;
@@ -103,7 +106,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
             }
-            final JComboBox rolePopupBox = makeRoleBox(column, chartPanel.getChart().getColumns());
+            final JComboBox rolePopupBox = makeRoleBox(chartPanel.getChart().getColumns().get(column));
             tableHeader.add(rolePopupBox);
             rolePopupBox.setBounds(
                     chartPanel.getXPositionOfColumn(tableHeader.getColumnModel(), column),
@@ -164,7 +167,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         JPanel newHeader = new JPanel(new BorderLayout());
         
         if (chartPanel.getChart().getColumns().size() > 0) {
-        	JComboBox roleBox = makeRoleBox(column, chartPanel.getChart().getColumns());
+        	JComboBox roleBox = makeRoleBox(chartPanel.getChart().getColumns().get(column));
             newHeader.add(roleBox, BorderLayout.NORTH);
         }
         
@@ -185,30 +188,53 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      * @param chartColumn
      *            The chart column whose role should show as the selected item.
      */
-    private JComboBox makeRoleBox(final int column, List<ChartColumn> chartColumns) {
+    private JComboBox makeRoleBox(ChartColumn chartColumn) {
+    	
         final JComboBox roleBox = new JComboBox(ColumnRole.values());
         if (backgroundColour != null) {
             roleBox.setBackground(backgroundColour);
         }
-        try {
-            String columnName = chartColumns.get(column).getName();
-            ResultSet rs = chartPanel.getChart().getUnfilteredResultSet();
-            int rsColumnIndex = rs.findColumn(columnName);
-            if (!SQL.isNumeric(rs.getMetaData().getColumnType(rsColumnIndex))) {
-                roleBox.removeItem(ColumnRole.SERIES);
-            }
+        try 
+        {
+        	List<String> numericCols = findNumericAndDateCols();
+        	
+        	if (!numericCols.contains(chartColumn.getName())) {
+        		roleBox.removeItem(ColumnRole.SERIES);
+        	}
+        	
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         
-        final ColumnRole currentRole = chartColumns.get(column).getRoleInChart();
-        if (currentRole == null) {
+        if (chartColumn.getRoleInChart() == null) {
             roleBox.setSelectedItem(ColumnRole.NONE);
         } else {
-            roleBox.setSelectedItem(currentRole);
+            roleBox.setSelectedItem(chartColumn.getRoleInChart());
         }
+        
         roleBox.addItemListener(roleChangeListener);
+        
         return roleBox;
+    }
+    
+    private List<String> findNumericAndDateCols() throws SQLException {
+        // XXX it would be better to store data type in column identifiers
+        ResultSet rs = chartPanel.getChart().getUnfilteredResultSet();
+        if (rs == null) return Collections.emptyList();
+        ResultSetMetaData rsmd = rs.getMetaData();
+        List<String> cols = new ArrayList<String>();
+        if (rsmd != null) {
+        	for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+        		int columnType = rsmd.getColumnType(i);
+        		if (SQL.isNumeric(columnType) || SQL.isDate(columnType)) {
+        			cols.add(rsmd.getColumnName(i));
+        			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is numeric or date. type=" + columnType);
+        		} else {
+        			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is not numeric or date. type=" + columnType);
+        		}
+        	}        	
+        }
+        return cols;
     }
 
     public void cleanup() {

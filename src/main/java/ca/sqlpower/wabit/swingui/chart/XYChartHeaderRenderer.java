@@ -135,14 +135,6 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         this.chartPanel = chartPanel;
         this.tableHeader = tableHeader;
         this.defaultTableCellRenderer = defaultTableCellRenderer;
-
-        //columnNamesInOrder = new ArrayList<ChartColumn>();
-        
-//        String[] colNames = new String[chartPanel.getChart().getColumns().size()];
-//        for (int i = 0; i < chartPanel.getChart().getColumns().size(); i++) {
-//            ChartColumn col = chartPanel.getChart().getColumns().get(i);
-//            colNames[i] = col.getName();
-//        }
         
         tableHeader.addMouseListener(comboBoxMouseListener);
         
@@ -212,6 +204,20 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 if (chartColumn.getRoleInChart() == ColumnRole.SERIES) {
                     ChartColumn xAxis = chartColumn.getXAxisIdentifier();
                     clickedBox = xAxisBox;
+                    
+                    List<String> numericColumns;
+        			try {
+        				numericColumns = findNumericAndDateCols();
+        			} catch (SQLException e2) {
+        				throw new AssertionError(e2);
+        			}
+                	for (ChartColumn info : getChartColumns()) {
+                		if (info.getRoleInChart() == ColumnRole.NONE &&
+                				numericColumns.contains(info.getColumnName())) {
+                			clickedBox.addItem(info.getColumnName());
+                		}
+                	}
+                	
                     if (xAxis != null) {
                         clickedBox.setSelectedItem(xAxis.getName());
                     } else {
@@ -316,17 +322,33 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      *            The chart column whose x-axis column should show as the
      *            selected item.
      */
-    private JComponent makeXAxisBox(ChartColumn chartColumn) {
+    private JComponent makeXAxisBox(ChartColumn chartColumn) 
+    {
         if (chartColumn.getRoleInChart() == ColumnRole.SERIES) {
-            JComboBox box = new JComboBox();
+            
+        	JComboBox box = new JComboBox();
+        	
+        	List<String> numericColumns;
+			try {
+				numericColumns = findNumericAndDateCols();
+			} catch (SQLException e) {
+				throw new AssertionError(e);
+			}
+        	for (ChartColumn info : getChartColumns()) {
+        		if (info.getRoleInChart() == ColumnRole.NONE &&
+        				numericColumns.contains(info.getColumnName())) {
+        			box.addItem(info.getColumnName());
+        		}
+        	}
+        	
             if (chartColumn.getXAxisIdentifier() != null) {
-                String xAxisColName = chartColumn.getXAxisIdentifier().getName();
-                box.addItem(xAxisColName);
-                box.setSelectedItem(xAxisColName);
+                box.setSelectedItem(chartColumn.getXAxisIdentifier().getName());
             } else {
-                // leave as a blank combo box
+                box.setSelectedItem(null);
             }
+            box.addItemListener(xAxisValuesChangeListener);
             return box;
+            
         } else {
             return makePlaceholder();
         }
@@ -348,14 +370,16 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         if (rs == null) return Collections.emptyList();
         ResultSetMetaData rsmd = rs.getMetaData();
         List<String> cols = new ArrayList<String>();
-        for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-            int columnType = rsmd.getColumnType(i);
-            if (SQL.isNumeric(columnType) || SQL.isDate(columnType)) {
-                cols.add(rsmd.getColumnName(i));
-                logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is numeric or date. type=" + columnType);
-            } else {
-                logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is not numeric or date. type=" + columnType);
-            }
+        if (rsmd != null) {
+        	for (int i = 1; i <= rsmd.getColumnCount(); i++) {
+        		int columnType = rsmd.getColumnType(i);
+        		if (SQL.isNumeric(columnType) || SQL.isDate(columnType)) {
+        			cols.add(rsmd.getColumnName(i));
+        			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is numeric or date. type=" + columnType);
+        		} else {
+        			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is not numeric or date. type=" + columnType);
+        		}
+        	}        	
         }
         return cols;
     }
