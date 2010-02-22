@@ -376,7 +376,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
         }
         
         firePropertyChange("currentCube", oldCube, currentCube);
-        rsps.fireStructureChanged();
+        fireStructureChanged();
     }
 
     public synchronized Cube getCurrentCube() {
@@ -686,7 +686,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     	if (this.variableProvider!=null) {
     		this.variableProvider.setUpdateNeeded(true);
     	}
-    	rsps.fireStructureChanged();
+    	fireStructureChanged();
     }
 
     /**
@@ -1076,7 +1076,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     	if (isMagicEnabled()){
 			this.setModifiedOlapQuery(null);
 		}
-    	rsps.fireStructureChanged();
+    	fireStructureChanged();
     }
     
 	/**
@@ -1091,7 +1091,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		if (isMagicEnabled()){
 			this.setModifiedOlapQuery(null);
 		}
-		rsps.fireStructureChanged();
+		fireStructureChanged();
 	}
     
 	/**
@@ -1187,7 +1187,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     		logger.debug("Query has rows non-empty? " + mdxQuery.getAxis(Axis.ROWS).isNonEmpty());
     	}
     	firePropertyChange("nonEmpty", oldVal, nonEmpty);
-    	rsps.fireStructureChanged();
+    	fireStructureChanged();
     }
 
     /**
@@ -1221,7 +1221,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 	        int index = axes.indexOf(child);
 	        axes.remove(child);
 	        fireChildRemoved(child.getClass(), child, index);
-	        rsps.fireStructureChanged();
+	        fireStructureChanged();
 	    }
 	    return false;
 	}
@@ -1245,7 +1245,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 	    axis.setParent(this);
 	    wasLoadedFromDao = true;
 	    fireChildAdded(child.getClass(), child, index);
-	    rsps.fireStructureChanged();
+	    fireStructureChanged();
 	}
 	
 	public synchronized String getQueryName() {
@@ -1387,6 +1387,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		// Initialize the variables provider once this object is hooked up to the tree only.
 		if (actsAsVariableProvider) {
 			this.variableProvider = new OlapVariableResolver(this, this.uuid, "OLAP Query - " + this.getName());
+		}
+	}
+	
+	private void fireStructureChanged() {
+		if (!this.wasLoadedFromDao || this.initDone || this.mdxQuery!=null) {
+			rsps.fireStructureChanged();
 		}
 	}
     

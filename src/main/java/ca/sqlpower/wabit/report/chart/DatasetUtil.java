@@ -57,8 +57,18 @@ class DatasetUtil {
      */
     static CategoryDataset createCategoryDataset(
             List<ChartColumn> columnNamesInOrder,
-            ResultSet resultSet, List<ChartColumn> categoryColumnIdentifiers) {
-        
+            ResultSet resultSet, 
+            List<ChartColumn> categoryColumnIdentifiers) 
+    {
+    	
+    	try {
+			if (resultSet.getMetaData().getColumnCount() == 0) {
+				return null;
+			}
+		} catch (SQLException e1) {
+			throw new AssertionError(e1);
+		}
+		
         //Create a list of unique category row names to label each bar with. Category rows
         //with the same name are currently summed.
         List<String> uniqueNamesInCategory = new ArrayList<String>();
@@ -133,6 +143,15 @@ class DatasetUtil {
             List<ChartColumn> columnNamesInOrder, ResultSet resultSet) {
         boolean allNumeric = true;
         boolean allDate = true;
+        
+        try {
+			if (resultSet.getMetaData().getColumnCount() == 0) {
+				return null;
+			}
+		} catch (SQLException e1) {
+			throw new AssertionError(e1);
+		}
+        
         try {
             for (ChartColumn chartCol : columnNamesInOrder) {
                 final ChartColumn xAxisIdentifier = chartCol.getXAxisIdentifier();
