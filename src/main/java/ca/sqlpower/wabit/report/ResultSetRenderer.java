@@ -433,13 +433,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         			logger.debug("Adding column info to position " + i);
         			addChild(newColumnInfo.get(i), i);
         			
-        		} else if (!newColumnInfo.get(i).getColumnAlias().equals(columnInfo.get(i).getColumnAlias())) {
+        		} else if (!newColumnInfo.get(i).getColumnAlias().equalsIgnoreCase(columnInfo.get(i).getColumnAlias())) {
         			
         			ColumnInfo oldInfo = columnInfo.get(i);
         			ColumnInfo newInfo = newColumnInfo.get(i);
         			removeChild(oldInfo);
         			for (ColumnInfo currentColumn : columnInfo) {
-        				if (newInfo.getColumnAlias().equals(currentColumn.getColumnAlias())) {
+        				if (newInfo.getColumnAlias().equalsIgnoreCase(currentColumn.getColumnAlias())) {
         					removeChild(currentColumn);
         					break;
         				}

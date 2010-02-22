@@ -52,6 +52,12 @@ import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.RepeatedMember;
 
+
+/**
+ * Charts are mutable objects. Be careful with those when you use them in
+ * reports. To do so, you would need to create a copy of that chart and 
+ * inject a variables context with {@link Chart#Chart(Chart, SPObject)}
+ */
 public class Chart extends AbstractWabitObject {
 
     private static final Logger logger = Logger.getLogger(Chart.class);
@@ -92,7 +98,8 @@ public class Chart extends AbstractWabitObject {
      * each column plays in this chart (category, series, and so on). This
      * list constitutes the child list of this WabitObject.
      */
-    private final List<ChartColumn> chartColumns = new ArrayList<ChartColumn>();
+    private final List<ChartColumn> chartColumns = 
+    		Collections.synchronizedList(new ArrayList<ChartColumn>());
     
     /**
      * This list tracks all of the column identifiers currently in use in the
@@ -340,8 +347,15 @@ public class Chart extends AbstractWabitObject {
         					if (existing != null) {
         						newCols.add(existing);
         					} else {
-        						int columnType = rsmd.getColumnType(i);
-        						newCols.add(new ChartColumn(columnName, columnType));
+        						// try to find it back in those we temporarely removed.
+        						ChartColumn backup = findByName(missingColumns, columnName);
+        						if (backup != null) {
+        							newCols.add(backup);
+        							missingColumns.remove(backup);
+        						} else {
+        							int columnType = rsmd.getColumnType(i);
+        							newCols.add(new ChartColumn(columnName, columnType));
+        						}
         					}
         				}
         			}
@@ -351,6 +365,7 @@ public class Chart extends AbstractWabitObject {
         			ChartColumn col = chartColumns.get(i);
         			if (!newCols.contains(col)) {
         				removeColumnIdentifier(col);
+        				missingColumns.add(col);
         			}
         		}
         		for (ChartColumn col : newCols) {
@@ -366,7 +381,7 @@ public class Chart extends AbstractWabitObject {
 
 	private static ChartColumn findByName(List<ChartColumn> cols, String name) {
         for (ChartColumn col : cols) {
-            if (col.getName().equals(name)) {
+            if (col.getName().equalsIgnoreCase(name)) {
                 return col;
             }
         }
