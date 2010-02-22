@@ -138,7 +138,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
                 (int) cb.getX(), (int) cb.getY(),
                 (int) cb.getWidth(), (int) cb.getHeight());
         
-        renderer.renderReportContent(contentGraphics, cb, 1, 0, false, new SPVariableHelper(renderer));
+        renderer.renderReportContent(contentGraphics, cb, 1, 0, true, new SPVariableHelper(renderer));
         
         assertEquals(2, renderer.getColumnInfoList().size());
         renderer.getColumnInfoList().get(0).setWillGroupOrBreak(GroupAndBreak.GROUP);
