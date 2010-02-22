@@ -330,6 +330,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	
     	// Listen to modifications to the query structure.
     	query.addResultSetProducerListener(queryChangeListener);
+    	if (this.resultSetHandle != null) {
+    		this.resultSetHandle.addResultSetListener(resultSetListener);
+    	}
     	
     	setName(resultSetRenderer.getName());
     }
@@ -379,10 +382,6 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	
         try {
         	ResultSetMetaData rsmd = rs.getMetaData();
-        	
-        	if (rsmd == null) {
-        		return;
-        	}
         	
         	//id columns by items and alias in cases where the query is text based.
         	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
@@ -469,7 +468,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	if (resultSetHandle == null || dirty) {
     		try {
 				this.setResultSetHandle(
-						query.execute(new SPVariableHelper(ResultSetRenderer.this), resultSetListener));
+						query.execute(new SPVariableHelper(ResultSetRenderer.this), resultSetListener, !printing));
+				if (!printing) {
+					return false;
+				}
 			} catch (ResultSetProducerException e) {
 				this.internalError = e;
 			} finally {
