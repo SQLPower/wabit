@@ -38,7 +38,6 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.HorizontalAlignment;

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
@@ -29,8 +30,6 @@ import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.enterprise.client.Watermarker;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
-
-import java.awt.Rectangle;
 
 /**
  * This is a JComponent which keeps track of what page you are on

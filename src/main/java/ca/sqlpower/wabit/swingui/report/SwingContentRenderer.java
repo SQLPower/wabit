@@ -26,7 +26,6 @@ import java.awt.event.MouseWheelEvent;
 
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
-
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.event.PInputEventListener;
 

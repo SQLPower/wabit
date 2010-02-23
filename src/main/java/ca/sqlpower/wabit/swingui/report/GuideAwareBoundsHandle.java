@@ -25,7 +25,6 @@ import java.util.Collection;
 import javax.swing.SwingConstants;
 
 import ca.sqlpower.wabit.WabitObject;
-
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 import edu.umd.cs.piccolo.util.PBounds;

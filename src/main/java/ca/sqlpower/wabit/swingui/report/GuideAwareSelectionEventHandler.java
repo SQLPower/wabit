@@ -27,7 +27,6 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.wabit.WabitObject;
-
 import edu.umd.cs.piccolo.PCanvas;
 import edu.umd.cs.piccolo.PInputManager;
 import edu.umd.cs.piccolo.PNode;
