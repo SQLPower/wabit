@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.rs;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.annotation.Nonnull;
@@ -34,8 +35,6 @@ import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.SqlConnectionProvider;
 import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
-
-import com.rc.retroweaver.runtime.Collections;
 
 
 /**

@@ -26,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -108,8 +109,8 @@ public class ResultSetHandle {
      * in the underlying {@link CachedRowSet}
      */
     @GuardedBy("resultSetListeners")
-    private final List<ResultSetListener> resultSetListeners = new 
-        ArrayList<ResultSetListener>();
+    private final List<ResultSetListener> resultSetListeners = 
+    	Collections.synchronizedList(new ArrayList<ResultSetListener>());
     
     /**
      * Internal listener to forward row updates to
@@ -117,11 +118,19 @@ public class ResultSetHandle {
      */
     private RowSetChangeListener internalListener = new RowSetChangeListener() {
 		public void rowAdded(RowSetChangeEvent e) {
-			ResultSetHandle.this.fireRowAdded(
-					ResultSetEvent.getNewDataEvent(
-							ResultSetHandle.this, 
-							e.getRow(), 
-							e.getRowNumber()));
+			final ResultSetEvent rse = ResultSetEvent.getNewDataEvent(
+									ResultSetHandle.this, 
+									e.getRow(), 
+									e.getRowNumber());
+			SwingUtilities.invokeLater(new Runnable() {
+	    		public void run() {
+	    			synchronized(resultSetListeners) {
+	    				for (ResultSetListener listener : resultSetListeners) {
+							listener.newData(rse);
+						}
+	    			}
+	    		}
+	    	});
 		}
 	};
 	
@@ -348,46 +357,42 @@ public class ResultSetHandle {
             			public void run() {
             				synchronized(resultSetListeners) {
             					for (ResultSetListener listener : resultSetListeners) {
-									listener.executionComplete(evt);
-								}
+            						listener.executionComplete(evt);
+            					}
             				}
             			}
-        			});
+            		});
             	}
             }
         }
     }
-    
-    private void fireRowAdded(final ResultSetEvent e) {
-    	SwingUtilities.invokeLater(new Runnable() {
-    		public void run() {
-    			synchronized(resultSetListeners) {
-    				for (ResultSetListener listener : resultSetListeners) {
-						listener.newData(e);
-					}
-    			}
-    		}
-    	});
-	}
 
 	/**
      * Triggers the population of this handle.
      */
     public void populate(boolean async) {
-    	this.cancel();
-    	executorService.execute(task);
-    	if (!async || System.getProperty("java.class.path").contains("junit")) {
-    		try {
-    			executorService.shutdown();
-    			boolean completed = executorService.awaitTermination(60, TimeUnit.SECONDS);System.getProperties();
-    			if (!completed) {
-    				throw new RuntimeException("Query Execution Timeout");
-    			}
-    			executorService = Executors.newCachedThreadPool();
-    		} catch (InterruptedException e) {
-    			task.cancel();
-    		}
+    	
+    	// Streaming queries are always async.
+    	if (this.rsType.equals(ResultSetType.STREAMING)) {
+    		executorService.execute(task);
     	}
+    	
+    	if (async && !System.getProperty("java.class.path").contains("junit")) {
+    		executorService.execute(task);
+    	}
+    	
+    	ExecutorService adHodExecutor = Executors.newSingleThreadScheduledExecutor();
+    	adHodExecutor.execute(task);
+    	try {
+    		adHodExecutor.shutdown();
+			boolean completed = adHodExecutor.awaitTermination(60, TimeUnit.SECONDS);System.getProperties();
+			if (!completed) {
+				throw new RuntimeException("Query Execution Timeout");
+			}
+		} catch (InterruptedException e) {
+			task.cancel();
+		}
+		
     }
 
     /**
