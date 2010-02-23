@@ -105,6 +105,7 @@ public class ColumnInfo extends AbstractWabitObject{
 		this.columnInfoItem = columnInfo.columnInfoItem;
 		this.columnAlias = columnInfo.columnAlias;
 		this.dataType = columnInfo.dataType;
+		this.format = columnInfo.format;
 		this.hAlign = columnInfo.hAlign;
 		this.width = columnInfo.width;
 		setName(columnInfo.getName());
