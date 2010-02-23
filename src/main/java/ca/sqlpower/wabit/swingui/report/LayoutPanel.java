@@ -60,6 +60,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
@@ -222,9 +223,33 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					ResultSetRenderer rsRenderer = new ResultSetRenderer(queryCache);
 					contentBox.setContentRenderer(rsRenderer);
 				} else if (wabitObject instanceof OlapQuery) {
-					OlapQuery olapQuery = (OlapQuery) wabitObject;
-					CellSetRenderer renderer = new CellSetRenderer(olapQuery);
-					contentBox.setContentRenderer(renderer);
+					
+					//Custom button text
+					Object[] options = {"OLAP Viewer", "Relational Viewer"};
+					
+					final int n = JOptionPane.showOptionDialog(LayoutPanel.this.panel,
+					    "In what type of component would you like to render this query?",
+					    "",
+					    JOptionPane.YES_NO_OPTION,
+					    JOptionPane.QUESTION_MESSAGE,
+					    WabitIcons.QUERY_32,
+					    options,
+					    options[0]);
+					
+					if (n == JOptionPane.CLOSED_OPTION) {
+						return;
+					} else if (n == 0) {
+						OlapQuery olapQuery = (OlapQuery) wabitObject;
+						CellSetRenderer renderer = new CellSetRenderer(olapQuery);
+						contentBox.setContentRenderer(renderer);
+					} else if (n == 1) {
+						OlapQuery olapQuery = (OlapQuery) wabitObject;
+						ResultSetRenderer renderer = new ResultSetRenderer(olapQuery);
+						contentBox.setContentRenderer(renderer);
+					} else {
+						throw new AssertionError();
+					}
+				
 				} else if (wabitObject instanceof Chart) {
 					Chart chart = (Chart) wabitObject;
 					ChartRenderer renderer = new ChartRenderer(chart);

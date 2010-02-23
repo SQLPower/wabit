@@ -49,6 +49,8 @@ public class WabitIcons {
 	public static final Icon SERVER_ICON_32 = makeIcon("32x32/wabitServer-32");
 	public static final Icon CLOSE_WORKSPACE = makeIcon("closeWorkspace-12");
 	public static final Icon EDIT = makeIcon("edit-16");
+	public static final Icon QUERY_32 = makeIcon("32x32/query");
+	
 	 
 	
     private static final ImageIcon makeIcon(String resourceName) {
