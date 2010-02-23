@@ -223,7 +223,7 @@ public class QueryController {
 			query.setUserModifiedQuery(queryText.getText());	
 		}
 		public void changedUpdate(DocumentEvent e) {
-			query.setUserModifiedQuery(queryText.getText());	
+			// don't care	
 		}
 	};
 
