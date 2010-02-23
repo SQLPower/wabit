@@ -25,9 +25,6 @@ import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
-import ca.sqlpower.object.AbstractSPListener;
-import ca.sqlpower.object.SPChildEvent;
-import ca.sqlpower.object.SPObject;
 import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.StubWabitObject;

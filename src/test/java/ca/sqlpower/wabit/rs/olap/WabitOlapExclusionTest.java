@@ -26,10 +26,6 @@ import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
 import ca.sqlpower.wabit.util.StubOlapConnectionMapping;
 
 public class WabitOlapExclusionTest extends AbstractWabitObjectTest {

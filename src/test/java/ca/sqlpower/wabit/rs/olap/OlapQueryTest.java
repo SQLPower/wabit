@@ -48,12 +48,6 @@ import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
-import ca.sqlpower.wabit.rs.olap.OlapQuery;
-import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
-import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
-import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
-import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
 
 public class OlapQueryTest extends AbstractWabitObjectTest {
 

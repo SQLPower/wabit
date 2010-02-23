@@ -19,11 +19,11 @@
 
 package ca.sqlpower.wabit.dao.session;
 
+import junit.framework.TestCase;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.dao.CountingWabitPersister;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.swingui.StubWabitSwingSession;
-import junit.framework.TestCase;
 
 public class WorkspacePersisterListenerTest extends TestCase {
 	

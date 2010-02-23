@@ -64,6 +64,7 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		ignorable.add("DBMapping");
 		ignorable.add("resultSet");
 		ignorable.add("statement");
+		ignorable.add("resultSetListener");
 		return ignorable;
 	}
 	
@@ -106,6 +107,9 @@ public class QueryCacheTest extends AbstractWabitObjectTest {
 		
 		// This is just varible resolver.
 		noPersist.add("variableResolver");
+		
+		noPersist.add("resultSetListener");
+		noPersist.add("internalHandle");
 		
 		return noPersist;
 	}
