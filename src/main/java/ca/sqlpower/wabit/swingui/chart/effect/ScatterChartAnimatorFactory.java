@@ -23,8 +23,8 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 
-import ca.sqlpower.wabit.swingui.chart.effect.interp.PolynomialInterpolator;
 import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.PolynomialInterpolator;
 
 public class ScatterChartAnimatorFactory extends AbstractChartAnimatorFactory {
 

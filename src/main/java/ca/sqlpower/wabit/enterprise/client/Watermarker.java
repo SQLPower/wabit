@@ -24,6 +24,7 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -36,7 +37,6 @@ import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 import com.kitfox.svg.app.beans.SVGIcon;
-import java.awt.Rectangle;
 
 public class Watermarker {
 

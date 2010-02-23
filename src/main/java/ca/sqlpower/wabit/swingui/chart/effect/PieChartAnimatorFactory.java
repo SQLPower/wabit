@@ -22,9 +22,9 @@ package ca.sqlpower.wabit.swingui.chart.effect;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.MultiplePiePlot;
 
-import ca.sqlpower.wabit.swingui.chart.effect.interp.PolynomialInterpolator;
 import ca.sqlpower.wabit.swingui.chart.effect.interp.Interpolator;
 import ca.sqlpower.wabit.swingui.chart.effect.interp.LinearInterpolator;
+import ca.sqlpower.wabit.swingui.chart.effect.interp.PolynomialInterpolator;
 
 public class PieChartAnimatorFactory extends AbstractChartAnimatorFactory {
 
