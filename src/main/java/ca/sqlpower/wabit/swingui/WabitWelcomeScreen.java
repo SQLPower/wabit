@@ -68,7 +68,7 @@ public class WabitWelcomeScreen {
 	 * The icon for the "Connect to a Wabit Server" button.
 	 */
 	private static final Icon OPEN_SERVER_ICON = new ImageIcon(
-			WabitWelcomeScreen.class.getClassLoader().getResource("icons/workspace 170 server.png"));
+			WabitWelcomeScreen.class.getClassLoader().getResource("icons/workspace-server-logo.png"));
 	
 	/**
 	 * The icon for the "Open Demonstration Workspace" button.

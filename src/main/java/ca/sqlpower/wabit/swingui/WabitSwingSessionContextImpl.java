@@ -867,7 +867,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         this.headless = headless;
         Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 		
-        frame = new JFrame("Wabit " + WabitVersion.VERSION + " - " + getName());
+        frame = new JFrame("SQL Power Wabit " + WabitVersion.VERSION + " - " + getName());
         
         try {
             sourceListStyle = SourceListStyle.valueOf(
@@ -1777,7 +1777,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     private WabitPanel createEditorPanel(SPObject entryPanelModel) {
         logger.debug("createEditorPanel() starting");
         
-        // TODO show a loading throbber...
+//        final JDialog dialog;
+//        if (!isLoading()) {
+//        	// TODO show a loading throbber...
+//        	final JPanel panel = new JPanel(new BorderLayout());
+//        	final JLabel throbberLabel = new JLabel(WabitIcons.EXPORT_ICON_32);
+//        	final JLabel loadingLabel = new JLabel("Loading...");
+//        	panel.add(throbberLabel, BorderLayout.WEST);
+//        	panel.add(loadingLabel, BorderLayout.EAST);
+//        	dialog = new JDialog(frame, "", false);
+//        	dialog.add(panel);
+//        	dialog.pack();
+//        	dialog.setVisible(true);
+//        } else {
+//        	dialog = null;
+//        }
         
         try {
         	if (getActiveSession() == null) {
@@ -1816,6 +1830,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         	
         	return currentEditorPanel;
         } finally {
+//        	if (dialog != null) {
+//        		dialog.setVisible(false);
+//        		dialog.dispose();
+//        	}
         }
         
     }
