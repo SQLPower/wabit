@@ -808,7 +808,6 @@ public class Chart extends AbstractWabitObject {
     public void refresh() {
     	logger.debug("Refreshing chart");
     	try {
-        	begin("Updating chart data because source query structure changed");
         	if (query == null) {
         		setResultSetHandle(null);
         	} else {
@@ -822,8 +821,6 @@ public class Chart extends AbstractWabitObject {
         	}
         } catch (ResultSetProducerException e) {
             throw new RuntimeException(e);
-        } finally {
-        	commit();
         }
     }
     

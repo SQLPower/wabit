@@ -87,12 +87,32 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	//This property defines the editor and changing this would force all users of each
     	//workspace to view the same editor all the time.
     	ignored.add("editorPanelModel");
+    	
+    	/*
+		 * XXX Because the abstractsplistener bases his transaction lookups
+		 * on the workspace UUID, it will throw an exception here if we try to change
+		 * the UUID of a workspace since he won't find the transaction records 
+		 * in his internal maps. This is an exception we can ignore only for 
+		 * WabitWorkspace and UUID property.
+		 */
+    	ignored.add("UUID");
+    	
     	return ignored;
     }
     
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> notPersisting = super.getPropertiesToNotPersistOnObjectPersist();
+    	
+    	/*
+		 * XXX Because the abstractsplistener bases his transaction lookups
+		 * on the workspace UUID, it will throw an exception here if we try to change
+		 * the UUID of a workspace since he won't find the transaction records 
+		 * in his internal maps. This is an exception we can ignore only for 
+		 * WabitWorkspace and UUID property.
+		 */
+    	notPersisting.add("UUID");
+    	
     	notPersisting.add("charts");
     	notPersisting.add("connections");
     	notPersisting.add("dataSources");
