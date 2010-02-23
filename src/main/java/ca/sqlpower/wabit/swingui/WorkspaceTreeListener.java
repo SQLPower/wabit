@@ -506,6 +506,21 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							WabitAccessManager.Permission.EXECUTE);
 					
 				}
+				
+				if (lastPathComponent instanceof OlapQuery) {
+					
+					objectsMenu(
+							menu,
+							OlapQuery.class.getSimpleName(),  
+							null,
+							new JMenuItem(new AbstractAction("Stop Running") {
+								public void actionPerformed(ActionEvent e) {
+									((OlapQuery) lastPathComponent).cancel();
+								}
+							}),
+							WabitAccessManager.Permission.EXECUTE);
+					
+				}
 			}
 			//For some bizarre reason, you cannot select a node
 			//in the JTree on right-click. So the coordinates for e.getSource()
