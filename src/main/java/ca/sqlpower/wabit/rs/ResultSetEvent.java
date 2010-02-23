@@ -34,7 +34,8 @@ public class ResultSetEvent {
 	
 	public enum EventType {
 		NEW_DATA,
-		EXECUTION_COMPLETED
+		EXECUTION_COMPLETED,
+		EXECUTION_STARTED
 	}
 
     private final ResultSetHandle source;
@@ -52,7 +53,12 @@ public class ResultSetEvent {
     
     public static ResultSetEvent getExecutionCompleteEvent(ResultSetHandle source) 
     {
-    	return new ResultSetEvent(EventType.NEW_DATA, source, null, 0);
+    	return new ResultSetEvent(EventType.EXECUTION_COMPLETED, source, ((CachedRowSet)source.getResultSet()).getData().toArray(), 0);
+    }
+    
+    public static ResultSetEvent getExecutionStartedEvent(ResultSetHandle source) 
+    {
+    	return new ResultSetEvent(EventType.EXECUTION_STARTED, source, new Object[] {}, 0);
     }
     
     ResultSetEvent(
