@@ -199,8 +199,13 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                     r.setIcon(BOX_ICON);
                     r.setText("Empty content box");
                 } else if (cbChild instanceof ResultSetRenderer) {
-                	setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getContent());
-                } else if (cbChild instanceof CellSetRenderer) {
+                	if (((ResultSetRenderer)cbChild).getContent() instanceof OlapQuery) {
+                		r.setIcon(OLAP_QUERY_ICON);
+                    	r.setText(((ResultSetRenderer) cbChild).getContent().getName());
+                	} else {
+                		setupForQueryCache((WorkspaceTreeCellRenderer) r, ((ResultSetRenderer) cbChild).getContent());
+                	}
+                } else if (cbChild instanceof CellSetRenderer) { 
                 	r.setIcon(OLAP_QUERY_ICON);
                 	r.setText(((CellSetRenderer) cbChild).getContent().getName());
                 } else if (cbChild instanceof ImageRenderer) {
@@ -289,14 +294,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
 	}
 
 	private void setupForQueryCache(WorkspaceTreeCellRenderer r, WabitObject wo) {
-		if (((QueryCache) wo).isRunning()) {
-			if (((QueryCache) wo).isStreaming()) {
-				r.setIcon(ComposedIcon.getInstance(QUERY_ICON, STREAMING_QUERY_BADGE));
-			} else {
-			    r.setIcon(QUERY_ICON);
-			}
+		if (((QueryCache) wo).isStreaming()) {
+			r.setIcon(ComposedIcon.getInstance(QUERY_ICON, STREAMING_QUERY_BADGE));
 		} else {
-			r.setIcon(QUERY_ICON);
+		    r.setIcon(QUERY_ICON);
 		}
 		r.setText(wo.getName());
 	}
