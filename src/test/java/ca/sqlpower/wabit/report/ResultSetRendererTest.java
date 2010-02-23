@@ -25,18 +25,36 @@ import java.awt.Graphics2D;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.NamingException;
+
+import org.apache.commons.beanutils.ConversionException;
+import org.olap4j.OlapConnection;
+import org.olap4j.OlapException;
+import org.olap4j.metadata.Catalog;
+import org.olap4j.metadata.Cube;
+import org.olap4j.metadata.Schema;
+
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
+import ca.sqlpower.sql.Olap4jDataSource;
+import ca.sqlpower.sql.PlDotIni;
+import ca.sqlpower.sqlobject.SQLDatabase;
+import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
+import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
+import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
+import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class ResultSetRendererTest extends AbstractWabitObjectTest {
@@ -305,5 +323,79 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         renderer.removeChild(ci);
         
         assertEquals(0, renderer.getChildren().size());
+    }
+    
+    public void testRenderOlapQueryInRsRenderer() throws Exception {
+    	
+    	PlDotIni plIni = new PlDotIni();
+        plIni.read(new File("src/test/java/pl.regression.ini"));
+        final Olap4jDataSource ds = plIni.getDataSource("World Facts OLAP Connection", Olap4jDataSource.class);
+        
+        final SQLDatabase db = new SQLDatabase(ds.getDataSource());
+        
+        final SQLDatabaseMapping dbMapping = new SQLDatabaseMapping() {
+        	
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return db;
+        	}
+        };
+        
+        OlapConnectionProvider connectionMapping = new OlapConnectionProvider() {
+        	
+    		public OlapConnection createConnection(Olap4jDataSource dataSource)
+    				throws SQLException, ClassNotFoundException,
+    				NamingException {
+    			OlapConnectionPool pool = new OlapConnectionPool(ds, dbMapping);
+    			return pool.getConnection();
+    		}
+        	
+        };
+        
+        OlapQuery query = new OlapQuery(
+        				null, 
+        				connectionMapping, 
+        				"Life Expectancy And GNP Correlation", 
+        				"GUI Query", 
+        				"LOCALDB", 
+        				"World", 
+        				"World Countries",
+        				null);
+        
+        query.setOlapDataSource(ds);
+        
+        String catalogName = query.getCatalogName();
+        String schemaName = query.getSchemaName();
+        String cubeName = query.getCubeName();
+        
+		Catalog catalog;
+		try {
+			catalog = connectionMapping.createConnection(ds).getCatalogs().get(catalogName);
+		} catch (Exception ex) {
+			throw new ConversionException("Error connecting to data source " + catalogName + 
+					" to get cube", ex);
+		}
+		Schema schema;
+		try {
+			schema = catalog.getSchemas().get(schemaName);
+			Cube cube = schema.getCubes().get(cubeName);
+			query.setCurrentCube(cube, false);
+			
+		} catch (OlapException e) {
+			throw new ConversionException("The cube could not be retrieved.", e);
+		}
+		
+        getWorkspace().addOlapQuery(query);
+        getWorkspace().addDataSource(query.getOlapDataSource());
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
+        ContentBox parentCB = new ContentBox();
+        parentCB.setContentRenderer(renderer);
+        
+        Report report = new Report("report");
+        report.getPage().addContentBox(parentCB);
+        getWorkspace().addReport(report);
+    	
+        BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = (Graphics2D) image.getGraphics();
+        renderer.renderReportContent(g, parentCB, 1, 1, false, new SPVariableHelper(parentCB));
     }
 }
