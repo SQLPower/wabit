@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,8 +45,6 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell.BorderType;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This class renders the result set. A new renderer should be created each time
@@ -129,7 +128,6 @@ public class ReportPositionRenderer {
      *            set should also be sorted by the columns defined as breaks to
      *            avoid sections that are identified by the same section.
      */
-    @SuppressWarnings("unchecked")
     public List<List<ResultSetCell>> createResultSetLayout(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInfoList,
             ContentBox contentBox, boolean isPrintingGrandTotals) throws SQLException {
         if (hasLayoutStarted) throw new IllegalStateException("The layout of a report position renderer should only " +

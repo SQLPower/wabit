@@ -20,13 +20,12 @@
 package ca.sqlpower.wabit;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import junit.framework.TestCase;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.util.SQLPowerUtils;
-
-import com.rc.retroweaver.runtime.Collections;
 
 public class WabitUtilsTest extends TestCase {
 
@@ -63,7 +62,6 @@ public class WabitUtilsTest extends TestCase {
             children.add(child);
         }
         
-        @SuppressWarnings("unchecked")
         @Override
         public List<? extends WabitObject> getChildren() {
             return Collections.unmodifiableList(children);

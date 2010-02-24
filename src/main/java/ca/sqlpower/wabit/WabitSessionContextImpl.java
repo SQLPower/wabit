@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,8 +58,6 @@ import ca.sqlpower.util.UserPrompter.UserPromptResponse;
 import ca.sqlpower.wabit.enterprise.client.WabitClientSession;
 import ca.sqlpower.wabit.enterprise.client.WorkspaceLocation;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This is the canonical headless implementation of WabitSessionContext
@@ -389,7 +388,6 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         return new DefaultUserPrompter(optionType, defaultResponseType, defaultResponse);
     }
     
-    @SuppressWarnings("unchecked")
     public List<WabitSession> getSessions() {
         return Collections.unmodifiableList(childSessions);
     }

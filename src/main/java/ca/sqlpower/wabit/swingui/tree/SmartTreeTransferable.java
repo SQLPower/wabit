@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.sqlobject.SQLObject;
@@ -38,8 +39,6 @@ import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.swingui.olap.OlapMetadataTransferable;
 import ca.sqlpower.wabit.swingui.report.ReportQueryTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel.Olap4jTreeObject;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This is a transferrable which can take any datatype that is in the left tree,

@@ -20,11 +20,10 @@
 package ca.sqlpower.wabit.swingui;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import ca.sqlpower.object.SPObject;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * Wraps a WabitObject that is a node in a WorkspaceGraphModel so it can
@@ -77,7 +76,6 @@ public class WorkspaceGraphTreeNodeWrapper {
      * Returns an unmodifiable list of the children of this node.
      * @return
      */
-    @SuppressWarnings("unchecked")
     public List<WorkspaceGraphTreeNodeWrapper> getChildren() {
         return Collections.unmodifiableList(children);
     }

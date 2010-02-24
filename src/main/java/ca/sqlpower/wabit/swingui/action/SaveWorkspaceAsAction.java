@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -55,8 +56,6 @@ import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * This action will save the active workspace in the given context to a user
@@ -161,7 +160,6 @@ public class SaveWorkspaceAsAction extends AbstractAction {
      * @return The file the session was saved to. This may be different than the
      *         file given if a Wabit file extension needs to be appended to it.
      */
-    @SuppressWarnings("unchecked")
     static File saveSessionToFile(WabitSwingSessionContext context,
             WabitSwingSession session, File selectedFile) throws SaveException {
         selectedFile = updateFileName(selectedFile);

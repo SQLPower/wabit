@@ -23,6 +23,7 @@ import java.awt.event.ActionEvent;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.util.Collections;
 
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
@@ -34,8 +35,6 @@ import ca.sqlpower.wabit.dao.WorkspaceXMLDAO;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitSwingSessionContext;
-
-import com.rc.retroweaver.runtime.Collections;
 
 /**
  * An action for exporting a {@link WabitObject} into a workspace file. It uses
@@ -74,7 +73,6 @@ public class ExportWabitObjectAction<T extends WabitObject> extends AbstractActi
 		context = (WabitSwingSessionContext) session.getContext();
 	}
 
-	@SuppressWarnings("unchecked")
     public void actionPerformed(ActionEvent e) {
 	    File defaultFile = null;
 	    if (context.getActiveSession() != null) {
