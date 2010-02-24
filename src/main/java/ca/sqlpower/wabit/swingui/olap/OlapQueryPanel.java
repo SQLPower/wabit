@@ -455,7 +455,7 @@ public class OlapQueryPanel implements WabitPanel {
         
         buildUI();
         
-        cellSetViewer.showMessage(query, "Loading your query...");
+        cellSetViewer.showMessage(query, "Loading your query results...");
         
         // Display the panel THEN execute.
         SwingUtilities.invokeLater(new Runnable() {

@@ -564,9 +564,6 @@ public class Chart extends AbstractWabitObject {
             query.addResultSetProducerListener(resultSetProducerListener);
         }
         
-        if (isMagicEnabled()) {
-        	refresh();
-        }
         firePropertyChange("query", oldQuery, newQuery);        	
     }
 

@@ -300,7 +300,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         Collections.synchronizedList(new ArrayList<ActiveRsProducer>());
 	
 	private class ActiveRsProducer {
-        private final TreePath pathToResponsibleObject;
 		private final ResultSetProducer rsProducer;
         
         ActiveRsProducer(@NonNull ResultSetProducer rsProducer) {
@@ -311,8 +310,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 				throw new AssertionError("Program error. Was expecting an instance of SPObject.");
 			}
 			this.rsProducer = rsProducer;
-            pathToResponsibleObject =
-                    workspaceTreeModel.createTreePathForObject((SPObject)this.rsProducer);
+            
         }
 
         /**
@@ -322,6 +320,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
          * currently visible.
          */
         public void repaintInTree() {
+        	TreePath pathToResponsibleObject =
+                	workspaceTreeModel.createTreePathForObject((SPObject)this.rsProducer);
             if (pathToResponsibleObject != null) {
                 Rectangle pathBounds = workspaceTree.getPathBounds(pathToResponsibleObject);
                 if (pathBounds != null) {
@@ -341,9 +341,9 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		public void executionStopped(ResultSetProducerEvent evt) {
 			for (ActiveRsProducer activeRs : activeRsProducers) {
 				if (activeRs == evt.getSource()) {
+					WabitSwingSessionImpl.this.activeRsProducers.remove(activeRs);
 					// Trigger the repaint a last time so it shows it as stopped.
 					activeRs.repaintInTree();
-					WabitSwingSessionImpl.this.activeRsProducers.remove(activeRs);
 					break;
 				}
 			}
@@ -573,17 +573,21 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         
         busyBadgeTimer = new Timer(100, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                renderer.nextBusyBadgeFrame();
-                synchronized (activeWorkers) {
-                    for (ActiveWorker worker : activeWorkers) {
-                        worker.repaintInTree();
-                    }
-                }
-                synchronized (activeRsProducers) {
-					for (ActiveRsProducer activeRs : activeRsProducers) {
-						activeRs.repaintInTree();
+            	SwingUtilities.invokeLater(new Runnable() {
+					public void run() {						
+						renderer.nextBusyBadgeFrame();
+						synchronized (activeWorkers) {
+							for (ActiveWorker worker : activeWorkers) {
+								worker.repaintInTree();
+							}
+						}
+						synchronized (activeRsProducers) {
+							for (ActiveRsProducer activeRs : activeRsProducers) {
+								activeRs.repaintInTree();
+							}
+						}
 					}
-				}
+				});
             }
         });
         busyBadgeTimer.start();

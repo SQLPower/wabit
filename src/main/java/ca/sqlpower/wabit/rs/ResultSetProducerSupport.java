@@ -176,9 +176,6 @@ public class ResultSetProducerSupport {
 			
     		rsh.populate(async);
     		
-    		// Notify listeners, if necessary, that we are now executing something
-    		fireExecutionStarted();
-    		
     		return rsh;
 		}
     }
@@ -231,9 +228,6 @@ public class ResultSetProducerSupport {
 			
     		rsh.populate(async);
     		
-    		// Notify listeners, if necessary, that we are now executing something
-    		fireExecutionStarted();
-    		
     		return rsh;
 		}
     }
@@ -282,12 +276,7 @@ public class ResultSetProducerSupport {
 				isRunning = true;
 			}
 			if (!isRunning) {
-				for (ResultSetHandle rsh : this.handles) {
-					if (rsh.isRunning()) {
-						isRunning = true;
-						break;
-					}
-				}
+				isRunning = isRunning();
 			}			
 		}
 		
@@ -318,7 +307,8 @@ public class ResultSetProducerSupport {
 			}
 		}
 		
-		if (!sourceIsActive && handles.size() == 0) {
+		if (sourceIsActive && handles.size() > 0) {
+			
 			synchronized (listeners) {
 				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
 					rspl.executionStopped(new ResultSetProducerEvent(source));

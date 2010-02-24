@@ -762,6 +762,7 @@ public class ChartPanel implements WabitPanel {
             
             if (queryComboBox.getSelectedItem() != chart.getQuery()) {
                chart.setQuery((WabitResultSetProducer) queryComboBox.getSelectedItem());
+               chart.refresh();
             }
             
         } finally {

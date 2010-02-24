@@ -82,6 +82,8 @@ public class ResultSetHandle {
 	private Exception exception = null;
 
 	private final Task task;
+	
+	private boolean populated = false;
 
 	private final int rowLimit;
     
@@ -149,6 +151,7 @@ public class ResultSetHandle {
 		}
 		public void uncaughtException(Thread t, Throwable e) {
 			ResultSetHandle.this.status = ResultSetStatus.ERROR;
+			exception = new Exception(e);
 			delegate.uncaughtException(t, e);
 		}
 	};
@@ -292,6 +295,18 @@ public class ResultSetHandle {
             	Thread.currentThread().setUncaughtExceptionHandler(
             			new InternalExceptionHandler(handler));
        
+            	final ResultSetEvent evt = 
+        			ResultSetEvent.getExecutionStartedEvent(ResultSetHandle.this);
+        		SwingUtilities.invokeLater(new Runnable() {
+        			public void run() {
+        				synchronized(resultSetListeners) {
+        					for (ResultSetListener listener : resultSetListeners) {
+        						listener.executionStarted(evt);
+        					}
+        				}
+        			}
+        		});
+        		
         		switch (rsType) {
         		
             		case OLAP:
@@ -328,8 +343,9 @@ public class ResultSetHandle {
                 	case RELATIONAL:
                 		statement.setMaxRows(rowLimit);
                 		statement.execute();
-                		if (statement.getResultSet() != null) {
-                			cachedRowSet.populate(statement.getResultSet());                			
+                		final ResultSet rs = statement.getResultSet();
+                		if (rs != null) {
+                			cachedRowSet.populate(rs);                			                			
                 		}
                 		status = ResultSetStatus.SUCCESS;
                 		break;
@@ -345,7 +361,8 @@ public class ResultSetHandle {
             		if (statement != null) {
             			statement.close();
                 	}
-            		if (connection != null && rsType.equals(ResultSetType.OLAP) == false) {
+            		if (connection != null 
+            				&& rsType.equals(ResultSetType.OLAP) == false) {
             			connection.close();
             		}
             	} catch (Exception eX) {
@@ -372,13 +389,20 @@ public class ResultSetHandle {
      */
     public void populate(boolean async) {
     	
+    	if (populated)
+    		throw new RuntimeException("Cannot populate a ResultSetHandle twice.");
+    	
+    	populated = true;
+    	
     	// Streaming queries are always async.
     	if (this.rsType.equals(ResultSetType.STREAMING)) {
     		executorService.execute(task);
+    		return;
     	}
     	
     	if (async && !System.getProperty("java.class.path").contains("junit")) {
     		executorService.execute(task);
+    		return;
     	}
     	
     	ExecutorService adHodExecutor = Executors.newSingleThreadScheduledExecutor();

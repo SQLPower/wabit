@@ -518,6 +518,12 @@ public class WorkspaceTreeModel implements TreeModel {
 				}
 			} else {
                 TreePath treePath = createTreePathForObject(node);
+                
+                if (treePath == null) {
+                	// This object is not part of this tree.
+                	return;
+                }
+                
                 treePath = treePath.getParentPath();
                 int index = node.getParent().getChildren(node.getClass()).indexOf(node);
                 if (index < 0) {
@@ -545,7 +551,13 @@ public class WorkspaceTreeModel implements TreeModel {
 		    if (!appearsInTree(e.getChild())) {
 		        return;
 		    }
+		    
 		    TreePath treePath = createTreePathForObject(e.getChild());
+		    
+		    if (treePath == null) {
+            	// This object is not part of this tree.
+            	return;
+            }
 		    
 			int index;
 			if (e.getChild() instanceof OlapQuery) {
@@ -565,19 +577,24 @@ public class WorkspaceTreeModel implements TreeModel {
             if (!appearsInTree(e.getChild())) {
                 return;
             }
-		    TreePath treePath = createTreePathForObject(e.getChild());
 		    
+            TreePath treePath = createTreePathForObject(e.getChild());
+		    
+            if (treePath == null) {
+            	// This object is not part of this tree.
+            	return;
+            }
+            
 		    int index;
 			if (e.getChild() instanceof OlapQuery) {
 				index = e.getIndex() + workspace.getChildren(QueryCache.class).size();
 			} else {
 				index = e.getIndex();
 			}
-//			if (treePath.getParentPath() != null) {
-//				treePath = treePath.getParentPath();
-//			}
+			
 			TreeModelEvent treeEvent = new TreeModelEvent(this, treePath.getParentPath(),
 					new int[] { index }, new Object[] { e.getChild() });
+			
 			fireTreeNodesRemoved(treeEvent);
 		}
 
@@ -625,10 +642,7 @@ public class WorkspaceTreeModel implements TreeModel {
             }
     	}
     	if (path.get(0) != getRoot()) {
-    	    throw new IllegalArgumentException(
-    	            "The given object cannot be found in this tree. " +
-    	            "Its apparent root is " + path.get(0) + 
-    	            " but this tree's root is " + getRoot());
+    	    return null;
     	}
     	return new TreePath(path.toArray());
     }

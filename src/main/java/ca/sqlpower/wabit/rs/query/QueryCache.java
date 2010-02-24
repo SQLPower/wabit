@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -116,10 +117,14 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      */
     private final QueryChangeListener queryChangeListener = new QueryChangeListener() {
     
+    	private AtomicInteger compoundEdits = new AtomicInteger(0);
+    	
         public void propertyChangeEvent(PropertyChangeEvent evt) {
             firePropertyChangeEvent(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (!evt.getPropertyName().equals(QueryImpl.USER_MODIFIED_QUERY)) {
+	            rsps.fireStructureChanged();
+	            updateVariables();
+            }
         }
     
         public void joinRemoved(QueryChangeEvent evt) {
@@ -172,16 +177,17 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
         public void compoundEditStarted(TransactionEvent evt) {
             fireCompoundEditStarted(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            compoundEdits.incrementAndGet();
         }
     
         public void compoundEditEnded(TransactionEvent evt) {
             fireCompoundEditEnded(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            int nbEdits = compoundEdits.decrementAndGet();
+            if (nbEdits == 0) {
+            	rsps.fireStructureChanged();
+                updateVariables();
+            }
         }
-
     };
     
     private void updateVariables() {
@@ -426,13 +432,11 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
             rsps.removeResultSetListener(listener);
         }
     }
-    
+
     public boolean isRunning() {
     	return rsps.isRunning();
     }
     
-    
-
     public ResultSetHandle execute(
     		SPVariableHelper variableContext, 
     		ResultSetListener listener) throws ResultSetProducerException 
@@ -654,10 +658,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 
     
     //------------------- start Query interface---------------------------------
-    
-    public String getStatement() {
-        return query.generateQuery();
-    }
     
     public String generateQuery() {
         return query.generateQuery();
@@ -1145,12 +1145,23 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     
     private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
+    private ResultSetListener resultSetListener = null;
     private ResultSetHandle internalHandle = null;
     
 
 	public boolean executeStatement() throws SQLException {
+		
+		if (this.internalHandle != null) {
+			this.internalHandle.removeResultSetListener(resultSetListener);
+			this.internalHandle.cancel();
+		}
+		
 		try {
-			this.internalHandle = this.execute(new SPVariableHelper(this), null);
+			this.internalHandle = 
+					this.execute(
+							new SPVariableHelper(this), 
+							this.resultSetListener, 
+							false);
 			return true;
 		} catch (ResultSetProducerException e) {
 			SQLException se = new SQLException();
@@ -1164,7 +1175,9 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 	}
 
 	public ResultSet getResultSet() throws SQLException {
-		return this.internalHandle.getResultSet();
+		if (this.internalHandle != null)
+			return this.internalHandle.getResultSet();
+		else return null;
 	}
 
 	public int getUpdateCount() {
@@ -1177,4 +1190,16 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 	public void addStatementExecutorListener(StatementExecutorListener sel) {
 		this.executorListeners.add(sel);
 	}
+	
+	public void setResultSetListener(ResultSetListener resultSetListener) {
+		this.resultSetListener = resultSetListener;
+	}
+	
+	public ResultSetHandle getInternalHandle() {
+		return this.internalHandle;
+	}
+	
+	public String getStatement() {
+        return query.generateQuery();
+    }
 }

@@ -518,14 +518,16 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             errorMessage.addAll(Arrays.asList(qe.getQuery().split("\n")));
         } else {
             errorMessage.add("Query failed: " + failure);
-            Throwable cause = failure.getCause();
-            while (cause != null) {
-                errorMessage.add("Caused by: " + cause);
-                cause = cause.getCause();
-            }
-            logger.debug("Exception on rendering " + failure.getMessage());
-            for (StackTraceElement ste : failure.getStackTrace()) {
-            	logger.debug(ste);
+            if (failure != null) {
+            	Throwable cause = failure.getCause();
+            	while (cause != null) {
+            		errorMessage.add("Caused by: " + cause);
+            		cause = cause.getCause();
+            	}
+            	logger.debug("Exception on rendering " + failure.getMessage());
+            	for (StackTraceElement ste : failure.getStackTrace()) {
+            		logger.debug(ste);
+            	}            	
             }
         }
         renderMessage(g, contentBox, errorMessage);

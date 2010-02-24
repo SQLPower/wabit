@@ -139,7 +139,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         final JButton colorPickerButton = new JButton("Choose...");
         colourLabel.setOpaque(true);
         colourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        colourLabel.setBackground(renderer.getBackgroundColour());
+        colourLabel.setBackground(renderer.getBackgroundColour() == null ? Color.WHITE : renderer.getBackgroundColour());
         colourLabel.addMouseListener(new MouseListener() {
 			public void mouseReleased(MouseEvent e) {
 				// no op
@@ -277,7 +277,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
     private DataEntryPanel createColumnPropsPanel(final ColumnInfo ci) {
 
     	final FormLayout layout = new FormLayout(
-                "min(pref; 100dlu):grow, 10dlu, min(pref; 100dlu):grow, 4dlu, pref:grow, 10dlu, pref:grow");
+                "80dlu, 10dlu, min(pref; 100dlu):grow, 4dlu, pref:grow, 10dlu, pref:grow");
     	
         DefaultFormBuilder fb = new DefaultFormBuilder(layout);
         
