@@ -790,6 +790,7 @@ public class Chart extends AbstractWabitObject {
         
         if (resultSetHandle != null) {
     		resultSetHandle.removeResultSetListener(resultSetListener);
+    		resultSetHandle.cancel();
     	}
         
         return new CleanupExceptions();
@@ -802,7 +803,7 @@ public class Chart extends AbstractWabitObject {
     	return types;
     }
     
-    public void refresh() {
+    public void refresh(boolean async) {
     	logger.debug("Refreshing chart");
     	try {
         	if (query == null) {
@@ -814,11 +815,16 @@ public class Chart extends AbstractWabitObject {
         		setResultSetHandle(
             			query.execute(
             					new SPVariableHelper(Chart.this.variablesContextSource), 
-            					Chart.this.resultSetListener));
+            					Chart.this.resultSetListener,
+            					async));
         	}
         } catch (ResultSetProducerException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    public void refresh() {
+    	refresh(true);
     }
     
     /**

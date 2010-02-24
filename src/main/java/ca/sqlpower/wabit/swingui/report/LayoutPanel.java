@@ -68,6 +68,7 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -533,6 +534,12 @@ public class LayoutPanel implements WabitPanel, MouseState {
         		zoomToFit();
         	}
         });
+        
+        SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				refreshDataAction.actionPerformed(null);
+			}
+		});
     }
     
     /**
