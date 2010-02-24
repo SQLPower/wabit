@@ -25,9 +25,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -112,7 +111,7 @@ public class ResultSetHandle {
      */
     @GuardedBy("resultSetListeners")
     private final List<ResultSetListener> resultSetListeners = 
-    	Collections.synchronizedList(new ArrayList<ResultSetListener>());
+    		new CopyOnWriteArrayList<ResultSetListener>();
     
     /**
      * Internal listener to forward row updates to
@@ -126,11 +125,9 @@ public class ResultSetHandle {
 									e.getRowNumber());
 			SwingUtilities.invokeLater(new Runnable() {
 	    		public void run() {
-	    			synchronized(resultSetListeners) {
-	    				for (ResultSetListener listener : resultSetListeners) {
-							listener.newData(rse);
-						}
-	    			}
+    				for (ResultSetListener listener : resultSetListeners) {
+						listener.newData(rse);
+					}
 	    		}
 	    	});
 		}
@@ -299,11 +296,9 @@ public class ResultSetHandle {
         			ResultSetEvent.getExecutionStartedEvent(ResultSetHandle.this);
         		SwingUtilities.invokeLater(new Runnable() {
         			public void run() {
-        				synchronized(resultSetListeners) {
-        					for (ResultSetListener listener : resultSetListeners) {
-        						listener.executionStarted(evt);
-        					}
-        				}
+    					for (ResultSetListener listener : resultSetListeners) {
+    						listener.executionStarted(evt);
+    					}
         			}
         		});
         		
@@ -372,11 +367,9 @@ public class ResultSetHandle {
             			ResultSetEvent.getExecutionCompleteEvent(ResultSetHandle.this);
             		SwingUtilities.invokeLater(new Runnable() {
             			public void run() {
-            				synchronized(resultSetListeners) {
-            					for (ResultSetListener listener : resultSetListeners) {
-            						listener.executionComplete(evt);
-            					}
-            				}
+        					for (ResultSetListener listener : resultSetListeners) {
+        						listener.executionComplete(evt);
+        					}
             			}
             		});
             	}
@@ -424,9 +417,7 @@ public class ResultSetHandle {
      * This cannot be null.
      */
     public void addResultSetListener(@Nonnull ResultSetListener l) {
-        synchronized(resultSetListeners) {
-            resultSetListeners.add(l);
-        }
+        resultSetListeners.add(l);
     }
 
     /**
@@ -434,9 +425,7 @@ public class ResultSetHandle {
      * queries have stopped streaming in this collection.
      */
     public void removeResultSetListener(ResultSetListener l) {
-        synchronized(resultSetListeners) {
-            resultSetListeners.remove(l);
-        }
+        resultSetListeners.remove(l);
     }
     
     /**

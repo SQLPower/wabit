@@ -121,10 +121,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     	
         public void propertyChangeEvent(PropertyChangeEvent evt) {
             firePropertyChangeEvent(evt);
-            if (!evt.getPropertyName().equals(QueryImpl.USER_MODIFIED_QUERY)) {
-	            rsps.fireStructureChanged();
-	            updateVariables();
-            }
         }
     
         public void joinRemoved(QueryChangeEvent evt) {

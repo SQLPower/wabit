@@ -57,7 +57,9 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	
 	private final ChartDataListener chartListener = new ChartDataListener() {
         public void chartDataChanged(ChartDataChangedEvent evt) {
-            getParent().repaint();
+        	if (getParent() != null) {
+        		getParent().repaint();
+        	}
         }
     };
     

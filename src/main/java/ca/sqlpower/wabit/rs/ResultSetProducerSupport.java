@@ -21,12 +21,12 @@ package ca.sqlpower.wabit.rs;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.swing.SwingUtilities;
 
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
@@ -44,11 +44,9 @@ import ca.sqlpower.wabit.rs.ResultSetHandle.ResultSetType;
  */
 public class ResultSetProducerSupport {
 
-	private final List<ResultSetHandle> handles = 
-		Collections.synchronizedList(new ArrayList<ResultSetHandle>());
+	private final List<ResultSetHandle> handles = new CopyOnWriteArrayList<ResultSetHandle>();
 	
-    private final List<ResultSetProducerListener> listeners = 
-    	Collections.synchronizedList(new ArrayList<ResultSetProducerListener>());
+    private final List<ResultSetProducerListener> listeners = new CopyOnWriteArrayList<ResultSetProducerListener>();
 
 	private final ResultSetProducerStatusInformant informant;
 	
@@ -59,12 +57,9 @@ public class ResultSetProducerSupport {
 	     * to listen to the child handles. Do not call this from any other class.
 	     */
 		public void executionComplete(ResultSetEvent evt) {
-			
-			synchronized (handles) {
-				// We get called here when one of our handles has completed it's work.
-				handles.remove(evt.getSourceHandle());
-				ResultSetProducerSupport.this.fireExecutionComplete();
-			}
+			// We get called here when one of our handles has completed it's work.
+			handles.remove(evt.getSourceHandle());
+			ResultSetProducerSupport.this.fireExecutionComplete();
 		}
 		
 		/**
@@ -117,15 +112,11 @@ public class ResultSetProducerSupport {
         if (listener == null) {
             throw new NullPointerException("Null listener not allowed");
         }
-        synchronized (listeners) {
-        	listeners.add(listener);
-		}
+    	listeners.add(listener);
     }
 
     public void removeResultSetListener(ResultSetProducerListener listener) {
-        synchronized (listeners) {
-        	listeners.remove(listener);
-		}
+    	listeners.remove(listener);
     }
     
     /**
@@ -154,30 +145,28 @@ public class ResultSetProducerSupport {
             @Nullable final ResultSetListener listener,
             boolean async) throws SQLException
     {
-    	synchronized (handles) {
     		
-    		ResultSetHandle rsh = 
-    			new ResultSetHandle(
-    					connectionProvider,
-    					dataSource,
-    					query,
-    					variablesContext,
-    					type,
-    					rowLimit,
-    					null);
-    		
-    		rsh.addResultSetListener(internalListener);
-    		if (listener != null) {
-    			rsh.addResultSetListener(listener);
-    		}
-    		
-    		// Save this new one
-    		this.handles.add(rsh);
-			
-    		rsh.populate(async);
-    		
-    		return rsh;
+		ResultSetHandle rsh = 
+			new ResultSetHandle(
+					connectionProvider,
+					dataSource,
+					query,
+					variablesContext,
+					type,
+					rowLimit,
+					null);
+		
+		rsh.addResultSetListener(internalListener);
+		if (listener != null) {
+			rsh.addResultSetListener(listener);
 		}
+		
+		// Save this new one
+		this.handles.add(rsh);
+		
+		rsh.populate(async);
+		
+		return rsh;
     }
     
     /**
@@ -206,42 +195,37 @@ public class ResultSetProducerSupport {
             @Nullable final ResultSetListener listener,
             boolean async) throws SQLException
     {
-    	synchronized (handles) {
-    		
-    		ResultSetHandle rsh = 
-    			new ResultSetHandle(
-    					connectionProvider,
-    					dataSource,
-    					query,
-    					variablesContext,
-    					type,
-    					rowLimit,
-    					null);
-    		
-    		rsh.addResultSetListener(internalListener);
-    		if (listener != null) {
-    			rsh.addResultSetListener(listener);
-    		}
-    		
-    		// Save this new one
-    		this.handles.add(rsh);
-			
-    		rsh.populate(async);
-    		
-    		return rsh;
+		ResultSetHandle rsh = 
+			new ResultSetHandle(
+					connectionProvider,
+					dataSource,
+					query,
+					variablesContext,
+					type,
+					rowLimit,
+					null);
+		
+		rsh.addResultSetListener(internalListener);
+		if (listener != null) {
+			rsh.addResultSetListener(listener);
 		}
+		
+		// Save this new one
+		this.handles.add(rsh);
+		
+		rsh.populate(async);
+		
+		return rsh;
     }
     
     /**
      * Cancels the execution of every handle.
      */
     public void cancel() {
-    	synchronized (handles) {
-    		for (int i = this.handles.size()-1; i >= 0; i--) {
-    			ResultSetHandle rsh = this.handles.get(i);
-    			rsh.cancel();
-    			this.handles.remove(i);
-    		}
+		for (int i = this.handles.size()-1; i >= 0; i--) {
+			ResultSetHandle rsh = this.handles.get(i);
+			rsh.cancel();
+			this.handles.remove(i);
 		}
     }
 
@@ -250,11 +234,13 @@ public class ResultSetProducerSupport {
      * changed and the subsequent handles will be different.
      */
 	public synchronized void fireStructureChanged() {
-		synchronized (listeners) {
-			for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
-				rspl.structureChanged(new ResultSetProducerEvent(source));
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+					rspl.structureChanged(new ResultSetProducerEvent(source));
+				}
 			}
-		}
+		});
 	}
 	
 	/**
@@ -269,23 +255,23 @@ public class ResultSetProducerSupport {
 		
 		boolean isRunning = false;
 
-		synchronized (handles) {
 		
-			if (this.informant != null &&
-					this.informant.isRunning()) {
-				isRunning = true;
-			}
-			if (!isRunning) {
-				isRunning = isRunning();
-			}			
+		if (this.informant != null &&
+			this.informant.isRunning()) {
+			isRunning = true;
 		}
+		if (!isRunning) {
+			isRunning = isRunning();
+		}			
 		
 		if (isRunning) {
-			synchronized (listeners) {
-				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
-					rspl.executionStarted(new ResultSetProducerEvent(source));
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+						rspl.executionStarted(new ResultSetProducerEvent(source));
+					}
 				}
-			}
+			});
 		}
 	}
 	
@@ -297,7 +283,6 @@ public class ResultSetProducerSupport {
 		
 		boolean sourceIsActive = false;
 		
-		synchronized (handles) {
 			
 			// Notify listeners if necessary that the last
 			// handle has stopped executing
@@ -305,28 +290,24 @@ public class ResultSetProducerSupport {
 					informant.isRunning()) {
 				sourceIsActive = true;
 			}
-		}
 		
 		if (sourceIsActive && handles.size() > 0) {
-			
-			synchronized (listeners) {
-				for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
-					rspl.executionStopped(new ResultSetProducerEvent(source));
+			SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
+						rspl.executionStopped(new ResultSetProducerEvent(source));
+					}
 				}
-			}
+			});
 		}
 	}
 	
 	public boolean isRunning() {
 		boolean running = false;
-		synchronized (handles) {
-			for (int i = this.handles.size()-1; i >= 0; i--) {
-				ResultSetHandle rsh = this.handles.get(i);
-				if (rsh.isRunning()) {
-					running = true;
-				} else {
-					handles.remove(rsh);
-				}
+		for (int i = this.handles.size()-1; i >= 0; i--) {
+			ResultSetHandle rsh = this.handles.get(i);
+			if (rsh.isRunning()) {
+				running = true;
 			}
 		}
 		return running;
