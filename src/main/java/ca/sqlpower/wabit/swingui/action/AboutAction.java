@@ -48,7 +48,7 @@ public class AboutAction extends AbstractAction {
 	private final JFrame parentFrame;
 
 	public AboutAction(JFrame parentFrame) {
-		super("About Wabit", ABOUT_ICON);
+		super("About SQL Power Wabit", ABOUT_ICON);
 		this.parentFrame = parentFrame;
 	}
 	
@@ -57,12 +57,12 @@ public class AboutAction extends AbstractAction {
 		// with a call to DataEntryPanelBuilder, because an About
 		// box must have only ONE button...
 		final JDialog d = new JDialog(parentFrame,
-									  "About Wabit");
+									  "About SQL Power Wabit");
 		JPanel cp = new JPanel(new BorderLayout(12,12));
 		cp.setBorder(BorderFactory.createEmptyBorder(12,12,12,12));
 		
 		ImageIcon icon = SPSUtils.createIcon("wabit-128", "Wabit Logo");
-		final AboutPanel aboutPanel = new AboutPanel(icon, "Wabit", "ca/sqlpower/wabit/wabit.properties", WabitVersion.VERSION.toString());
+		final AboutPanel aboutPanel = new AboutPanel(icon, "SQL Power Wabit", "ca/sqlpower/wabit/wabit.properties", WabitVersion.VERSION.toString());
 		cp.add(aboutPanel, BorderLayout.CENTER);
 
 		JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));

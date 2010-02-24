@@ -232,7 +232,7 @@ public class WabitWelcomeScreen {
             }
 
 			public String getTitle() {
-				return "Wabit " + WabitVersion.VERSION;
+				return "SQL Power Wabit " + WabitVersion.VERSION;
 			}
 
             public JToolBar getToolbar() {
