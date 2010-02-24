@@ -741,18 +741,22 @@
         <dependency>
             <groupId>pentaho</groupId>
             <artifactId>mondrian</artifactId>
-            <version>3.1.6</version>
+            <version>3.2.0.13406</version>
         </dependency>
         <dependency>
             <groupId>org.olap4j</groupId>
             <artifactId>olap4j</artifactId>
             <version>0.9.8-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-		  	<groupId>javacup</groupId>
-		  	<artifactId>javacup</artifactId>
-		  	<version>10k</version>
-            <scope>compile</scope>
+            <exclusions>
+            	<exclusion>
+		        	<groupId>retroweaver</groupId>
+		        	<artifactId>retroweaver</artifactId>
+		        </exclusion>
+		        <exclusion>
+		        	<groupId>retroweaver</groupId>
+		        	<artifactId>retroweaver-rt</artifactId>
+		        </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
 		  	<groupId>commons-math</groupId>
