@@ -186,7 +186,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
             if (e.getY() < comboBoxHeight) {
                 yPosition = 0;
                 try {
-					if (findNumericAndDateCols().contains(chartColumn.getName())) {
+					if (findNumericAndDateCols().contains(chartColumn.getName().toUpperCase())) {
 					    clickedBox = columnRoleBox;
 					    clickedBox.setSelectedItem(chartColumn.getRoleInChart());
 
@@ -213,7 +213,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         			}
                 	for (ChartColumn info : getChartColumns()) {
                 		if (info.getRoleInChart() == ColumnRole.NONE &&
-                				numericColumns.contains(info.getColumnName())) {
+                				numericColumns.contains(info.getColumnName().toUpperCase())) {
                 			clickedBox.addItem(info.getColumnName());
                 		}
                 	}
@@ -295,7 +295,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
      */
     private JComponent makeRoleBox(ChartColumn chartColumn) {
         try {
-			if (findNumericAndDateCols().contains(chartColumn.getName())) { 
+			if (findNumericAndDateCols().contains(chartColumn.getName().toUpperCase())) { 
 			    JComboBox box = new JComboBox();
 			    box.addItem(chartColumn.getRoleInChart());
 			    box.setSelectedItem(chartColumn.getRoleInChart());
@@ -336,7 +336,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 			}
         	for (ChartColumn info : getChartColumns()) {
         		if (info.getRoleInChart() == ColumnRole.NONE &&
-        				numericColumns.contains(info.getColumnName())) {
+        				numericColumns.contains(info.getColumnName().toUpperCase())) {
         			box.addItem(info.getColumnName());
         		}
         	}
@@ -364,6 +364,9 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         return placeholder;
     }
 
+    /**
+     * Searches and returns all numeric/date typed column names in upper case.
+     */
     private List<String> findNumericAndDateCols() throws SQLException {
         // XXX it would be better to store data type in column identifiers
         ResultSet rs = chartPanel.getChart().getUnfilteredResultSet();
@@ -374,7 +377,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         	for (int i = 1; i <= rsmd.getColumnCount(); i++) {
         		int columnType = rsmd.getColumnType(i);
         		if (SQL.isNumeric(columnType) || SQL.isDate(columnType)) {
-        			cols.add(rsmd.getColumnName(i));
+        			cols.add(rsmd.getColumnName(i).toUpperCase());
         			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is numeric or date. type=" + columnType);
         		} else {
         			logger.debug("Column " + i + " (" + rsmd.getColumnName(i) + ") is not numeric or date. type=" + columnType);
