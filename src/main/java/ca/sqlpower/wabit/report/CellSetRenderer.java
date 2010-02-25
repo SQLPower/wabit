@@ -286,13 +286,13 @@ public class CellSetRenderer extends AbstractWabitObject implements
         
         g.setFont(getHeaderFont());
         
-        if (getCellSet() == null) {
-        	g.drawString(EMPTY_CELL_SET_MESSAGE, 0, g.getFontMetrics().getHeight());
+        if (this.errorMessage != null) {
+        	g.drawString(this.errorMessage, 0, g.getFontMetrics().getHeight());
         	return false;
         }
         
-        if (this.errorMessage != null) {
-        	g.drawString(this.errorMessage, 0, g.getFontMetrics().getHeight());
+        if (getCellSet() == null) {
+        	g.drawString(EMPTY_CELL_SET_MESSAGE, 0, g.getFontMetrics().getHeight());
         	return false;
         }
         

@@ -116,7 +116,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		try {
 		    jFreeChart = ChartSwingUtil.createChartFromQuery(chartCache);
 			if (jFreeChart == null) {
-			    g.drawString("Empty Chart", 0, g.getFontMetrics().getHeight());
+			    g.drawString("Loading...", 0, g.getFontMetrics().getHeight());
 			    return false;
 			}
 

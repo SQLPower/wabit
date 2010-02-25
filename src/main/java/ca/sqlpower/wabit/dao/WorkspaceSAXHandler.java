@@ -100,6 +100,7 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
@@ -1027,7 +1028,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("content-result-set")) {
         	String queryID = attributes.getValue("query-id");
         	checkMandatory("query-id", queryID);
-        	QueryCache query = session.getWorkspace().findByUuid(queryID, QueryCache.class);
+        	WabitResultSetProducer query = session.getWorkspace().findByUuid(queryID, WabitResultSetProducer.class);
         	rsRenderer = new ResultSetRenderer(query);
         	createdObject = rsRenderer;
          	for (int i = 0; i < attributes.getLength(); i++) {
