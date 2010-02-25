@@ -362,11 +362,12 @@ public class ChartPanel implements WabitPanel {
         
         buildUI();
 
+        chartPanel.setChart(null);
         chart.addSPListener(chartListener);
         chart.addChartDataListener(chartDataListener);
         
-        updateGUIFromChart();
         chart.refresh();
+        updateGUIFromChart();
     }
 
     /**
@@ -379,7 +380,6 @@ public class ChartPanel implements WabitPanel {
      *            become invisible.
      */
     private void showError(Exception ex) {
-    	chartPanel.setChart(null);
     	if (ex != null) {
             logger.debug("Showing exception message in chart editor", ex);
             chartError.setText(
@@ -390,6 +390,7 @@ public class ChartPanel implements WabitPanel {
             chartError.setText(null);
             chartError.setVisible(false);
         }
+    	chartPanel.setChart(null);
     }
 
 	/**
@@ -533,11 +534,13 @@ public class ChartPanel implements WabitPanel {
         	
         	if (chart.getQuery() == null) {
         		showError(new Exception("No query was selected to feed this chart."));
+        		chartPanel.setChart(null);
         		return;
         	}
         	
         	if (chart.getUnfilteredResultSet() == null) {
         		showError(new Exception("The selected query does not return any data."));
+        		chartPanel.setChart(null);
         		return;
         	}
         	
@@ -546,10 +549,12 @@ public class ChartPanel implements WabitPanel {
         					|| chart.getType() == ChartType.PIE
         					|| chart.getType() == ChartType.CATEGORY_LINE)) {
         		showError(new Exception("Chart has no category."));
+        		chartPanel.setChart(null);
         		return;
         	}
         	if (chart.findRoleColumns(ColumnRole.SERIES).isEmpty()) {
         		showError(new Exception("Chart has no series."));
+        		chartPanel.setChart(null);
         		return;
         	}
         	
