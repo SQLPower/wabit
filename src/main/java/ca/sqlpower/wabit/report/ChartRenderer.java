@@ -88,7 +88,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
         this.chart.addSPListener(chartStructureListener);
 		setName("Renderer of: " + chart.getName());
 		
-		refresh();
+		needsRefresh = true;
 	}
     
 	public Color getBackgroundColour() {
