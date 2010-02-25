@@ -125,50 +125,66 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
         public void joinRemoved(QueryChangeEvent evt) {
             fireJoinRemoved(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void joinPropertyChangeEvent(PropertyChangeEvent evt) {
             fireJoinPropertyChangeEvent(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void joinAdded(QueryChangeEvent evt) {
             fireJoinAdded(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void itemRemoved(QueryChangeEvent evt) {
             fireItemRemoved(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
             fireItemPropertyChangeEvent(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void itemAdded(QueryChangeEvent evt) {
             fireItemAdded(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void containerRemoved(QueryChangeEvent evt) {
             fireContainerRemoved(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void containerAdded(QueryChangeEvent evt) {
             fireContainerAdded(evt);
-            rsps.fireStructureChanged();
-            updateVariables();
+            if (compoundEdits.get() == 0){
+            	rsps.fireStructureChanged();
+            	updateVariables();
+            }
         }
     
         public void compoundEditStarted(TransactionEvent evt) {
