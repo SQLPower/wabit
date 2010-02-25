@@ -535,11 +535,11 @@ public class LayoutPanel implements WabitPanel, MouseState {
         	}
         });
         
-        SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				refreshDataAction.actionPerformed(null);
-			}
-		});
+//        SwingUtilities.invokeLater(new Runnable() {
+//			public void run() {
+//				refreshDataAction.actionPerformed(null);
+//			}
+//		});
     }
     
     /**

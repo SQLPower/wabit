@@ -107,14 +107,13 @@ public class Chart extends AbstractWabitObject {
      * chart. The common reason for columns being missing is that the user
      * created a chart, modified the query and removed columns in use in the
      * chart, and then went to modify or use the chart.
-     * <p>
-     * NOTE: this is a holdover from a previous incarnation of the charting
-     * system. It is not presently in use, but it still seems like a good idea.
-     * It's kept here as a reminder that we need to reinstate this
-     * functionality.
      */
     private final List<ChartColumn> missingColumns = new ArrayList<ChartColumn>();
 
+    /**
+     * Tells if this chart reflects the current RS structure.
+     */
+    private boolean needsRefresh = true;
 
     /**
      * This is a listener placed on the ResultSetProducer to find if columns removed from
@@ -122,7 +121,7 @@ public class Chart extends AbstractWabitObject {
      */
     private final ResultSetProducerListener resultSetProducerListener = new ResultSetProducerListener() {
 		public void structureChanged(ResultSetProducerEvent evt) {
-			refresh();
+			needsRefresh = true;
 		}
 		public void executionStopped(ResultSetProducerEvent evt) {
 			// not interested
@@ -818,6 +817,7 @@ public class Chart extends AbstractWabitObject {
             					Chart.this.resultSetListener,
             					async));
         	}
+        	needsRefresh = false;
         } catch (ResultSetProducerException e) {
             throw new RuntimeException(e);
         }

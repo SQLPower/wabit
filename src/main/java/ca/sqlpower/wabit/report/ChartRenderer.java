@@ -105,19 +105,11 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	    
 		if (printing) {
 			refresh(false);
-		} else {
-			
-			if (needsRefresh)
-			{
-				refresh();
-			}
-			
-			if (this.chartCache == null) {
-				// No chart loaded. Doing a refresh will trigger a new 
-				// redraw later on.
-				refresh();
-				return false;
-			}
+		} else if (needsRefresh || this.chartCache == null) {
+			// No chart loaded. Doing a refresh will trigger a new 
+			// redraw later on.
+			refresh();
+			return false;
 		}
 		
 		JFreeChart jFreeChart = null;
