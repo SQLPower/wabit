@@ -293,7 +293,7 @@ public class Chart extends AbstractWabitObject {
      * @see #getResultSet()
      */
     public ResultSet getUnfilteredResultSet() {
-    	if (resultSetHandle == null) {
+    	if (needsRefresh || resultSetHandle == null) {
     		refresh();
     	}
     	if (resultSetHandle == null) {
@@ -301,32 +301,6 @@ public class Chart extends AbstractWabitObject {
     	} else {
     		return resultSetHandle.getResultSet();
     	}
-    }
-    
-    /**
-     * This ultimately the correct and lowest-level way to update the result set
-     * that this chart is based on.
-     * <p>
-     * This method fires a property change event for the property
-     * "unfilteredResultSet". The result sets it passes around are not recreated
-     * for each listener, so relying on the current row cursor position or
-     * attempting to manipulate it will lead to unpredictable results.
-     * 
-     * @param rs
-     *            the new unfiltered result set to base the chart data on.
-     * @throws SQLException 
-     */
-    private void setResultSetHandle(ResultSetHandle rs) {
-    	
-        if (resultSetHandle != null) {
-            resultSetHandle.removeResultSetListener(resultSetListener);
-            resultSetHandle.cancel();
-        }
-        resultSetHandle = rs;
-        
-        if (resultSetHandle != null) {
-            resultSetHandle.addResultSetListener(resultSetListener);
-        }
     }
     
     private void syncWithRs(ResultSet rs) {
@@ -803,19 +777,24 @@ public class Chart extends AbstractWabitObject {
     }
     
     public void refresh(boolean async) {
+
     	logger.debug("Refreshing chart");
+    	
+    	if (resultSetHandle != null) {
+            resultSetHandle.removeResultSetListener(resultSetListener);
+            resultSetHandle.cancel();
+        }
+    	
     	try {
-        	if (query == null) {
-        		setResultSetHandle(null);
-        	} else {
+        	if (query != null) {
         		if (Chart.this.variablesContextSource == null) {
         			throw new AssertionError("Program error. Chart objects need a variables context defined.");
         		}
-        		setResultSetHandle(
-            			query.execute(
+        		this.resultSetHandle = 
+        				query.execute(
             					new SPVariableHelper(Chart.this.variablesContextSource), 
             					Chart.this.resultSetListener,
-            					async));
+            					async);
         	}
         	needsRefresh = false;
         } catch (ResultSetProducerException e) {

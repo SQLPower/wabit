@@ -318,8 +318,8 @@ public class ResultSetHandle {
             		default:
             			throw new RuntimeException("Program error.");
             			
-        		}            	
-            	
+        		}
+        		
             	switch (rsType) {
             	
                 	case OLAP:
@@ -331,8 +331,8 @@ public class ResultSetHandle {
                 	case STREAMING:
                 		statement.execute();
                 		final ResultSet streamingRS = statement.getResultSet();
+                		status = ResultSetStatus.SUCCESS;
             			cachedRowSet.follow(streamingRS, rowLimit);
-            			status = ResultSetStatus.SUCCESS;
             			break;
                 	
                 	case RELATIONAL:

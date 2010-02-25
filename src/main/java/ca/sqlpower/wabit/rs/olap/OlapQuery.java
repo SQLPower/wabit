@@ -1314,6 +1314,10 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
         rsps.removeResultSetListener(listener);
     }
     
+    public boolean isStreaming() {
+    	return false;
+    }
+    
     public ResultSetHandle execute(
     		@Nullable SPVariableHelper variablesContext,
     		@Nullable ResultSetListener listener) throws ResultSetProducerException

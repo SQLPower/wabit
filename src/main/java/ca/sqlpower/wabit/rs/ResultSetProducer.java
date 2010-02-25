@@ -89,6 +89,11 @@ public interface ResultSetProducer {
      * handles. 
      */
     boolean isRunning();
+    
+    /**
+     * Tells if this producer is a streaming source.
+     */
+    boolean isStreaming();
 
     /**
      * Calling this method will stop the execution of all distributed handles.

@@ -104,7 +104,12 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
 	    
 		if (printing) {
-			refresh(false);
+			// If we're printing a streaming query, we have to
+			// print whatever's displayed.
+			if (this.chartCache == null ||
+					(this.chartCache != null && !this.chartCache.getQuery().isStreaming())) {
+				refresh(false);
+			}
 		} else if (needsRefresh || this.chartCache == null) {
 			// No chart loaded. Doing a refresh will trigger a new 
 			// redraw later on.
