@@ -50,6 +50,7 @@ import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 public class ChartRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
 		
 	private static final Logger logger = Logger.getLogger(ChartRenderer.class);
+	private boolean needsRefresh = false;
 
 	private final Chart chart;
 	
@@ -64,8 +65,9 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
     };
     
     private final AbstractSPListener chartStructureListener = new AbstractSPListener() {
-    	protected void propertyChangeImpl(java.beans.PropertyChangeEvent evt) {
-    		refresh();
+
+		protected void propertyChangeImpl(java.beans.PropertyChangeEvent evt) {
+    		needsRefresh  = true;
     	};
 	};
     
@@ -104,6 +106,12 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		if (printing) {
 			refresh(false);
 		} else {
+			
+			if (needsRefresh)
+			{
+				refresh();
+			}
+			
 			if (this.chartCache == null) {
 				// No chart loaded. Doing a refresh will trigger a new 
 				// redraw later on.
@@ -187,6 +195,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 		this.chartCache = new Chart(ChartRenderer.this.chart, this);
 		this.chartCache.addChartDataListener(chartListener);
 		this.chartCache.refresh(async);
+		needsRefresh = false;
 	}
 
     @Override
