@@ -90,6 +90,7 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
     	notPersisting.add("running");
     	notPersisting.add("slicerMember");
     	notPersisting.add("variableResolver");
+    	notPersisting.add("streaming");
     	return notPersisting;
     }
     
