@@ -94,32 +94,12 @@
 									<addClasspath>true</addClasspath>
 									<mainClass>ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl</mainClass>
 									<classpathPrefix>lib/</classpathPrefix>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 								</manifest>
 								<manifestEntries>
 									<Class-Path>
 										jdbc/
-										lib/apache-mime4j-0.5.jar
-										lib/architect-dbtree.jar
-										lib/architect-core.jar
-										lib/commons-math-1.0.jar
-										lib/commons-vfs.jar
-										lib/eigenbase-properties.jar
-										lib/eigenbase-resgen.jar
-										lib/eigenbase-xom.jar
-										lib/javacup.jar
-										lib/jcommon-1.0.15.jar
-										lib/jfreechart-1.0.12.jar
-										lib/jmdns.jar
-										lib/miglayout-3.7.jar
-										lib/mondrian.jar
-										lib/olap4j.jar
-										lib/wabit-osx.jar
-										lib/piccolo.jar
-										lib/piccolox.jar
-										lib/rsyntaxtextarea.jar
-										lib/simple-jndi-0.11.4.1.jar
-										lib/wabit-help.jar
-			                            </Class-Path>
+									</Class-Path>
 								</manifestEntries>
 							</archive>
 						</configuration>
