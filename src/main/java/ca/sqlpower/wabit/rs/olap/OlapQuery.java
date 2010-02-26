@@ -65,7 +65,6 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.OlapConnectionProvider;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -140,32 +139,24 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     	}
 		public void updateVars() {
 			try {
-				execute(
+				ResultSetHandle handle = execute(
 						new SPVariableHelper(OlapQuery.this),
-						new ResultSetListener() {
-							public void newData(ResultSetEvent evt) {
-								// not interested
+						null,
+						false);
+				try {
+					variables.clear();
+					ResultSet rs = handle.getResultSet();
+					if (rs != null &&
+							rs.first()) {
+				        do {
+							for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+								store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
 							}
-							public void executionStarted(ResultSetEvent evt) {
-								// don't care.
-							};
-							public void executionComplete(ResultSetEvent evt) {
-								try {
-									variables.clear();
-									ResultSet rs = evt.getResults();
-									if (rs != null &&
-											rs.first()) {
-								        do {
-											for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-												store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-											}
-										} while (rs.next());
-									}
-								} catch (SQLException e) {
-									logger.error("Failed to resolve available variables from a query.", e);
-								}
-							}
-						});
+						} while (rs.next());
+					}
+				} catch (SQLException e) {
+					logger.error("Failed to resolve available variables from a query.", e);
+				}
 				
 			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
@@ -197,7 +188,8 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
             				oldOlapQuery.getCatalogName(), 
             				oldOlapQuery.getSchemaName(), 
             				oldOlapQuery.getCubeName(),
-            				oldOlapQuery.getModifiedOlapQuery());
+            				oldOlapQuery.getModifiedOlapQuery(),
+            				oldOlapQuery.actsAsVariableProvider);
             
             newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
             newQuery.setName(oldOlapQuery.getName());
@@ -294,7 +286,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
      * Because reports nest their own version of the OLAP query,
      * we have to prevent those nested ones form exposing variables.
      */
-	private final boolean actsAsVariableProvider;
+	private boolean actsAsVariableProvider;
     
     /**
      * Creates a new, empty query with no set persistent object ID.
@@ -1392,6 +1384,10 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		if (actsAsVariableProvider) {
 			this.variableProvider = new OlapVariableResolver(this, this.uuid, "OLAP Query - " + this.getName());
 		}
+	}
+	
+	public void setActsAsVariableProvider(boolean actsAsVariableProvider) {
+		this.actsAsVariableProvider = actsAsVariableProvider;
 	}
 	
 	private void fireStructureChanged() {

@@ -59,7 +59,6 @@ import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
 import ca.sqlpower.wabit.rs.ResultSetProducerException;
@@ -245,43 +244,56 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     	}
 		private void updateVars() {
 			try {
-				execute(
+				ResultSetHandle variablesHandle = execute(
 						new SPVariableHelper(QueryCache.this),
-						new ResultSetListener() {
-							public void newData(ResultSetEvent evt) {
-								if (isStreaming()) {
-									update(evt.getSourceHandle().getResultSet());
-								}
-							}
-							public void executionStarted(ResultSetEvent evt) {
-								// don't care.
-							};
-							public void executionComplete(ResultSetEvent evt) {
-								update(evt.getResults());
-							}
-							private void update(ResultSet rs) {
-								try {
-									variables.clear();
-									if (rs != null &&
-											rs.first()) {
-										do {
-											for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-												QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-											}
-										} while (rs.next());
-									}
-								} catch (SQLException e) {
-									logger.error("Failed to resolve available variables from a query.", e);
-								}
-							}
-						});
+						null,
+						false);
 				
-			} catch (ResultSetProducerException e) {
+				variables.clear();
+				ResultSet rs = variablesHandle.getResultSet();
+				if (rs != null &&
+						rs.first()) {
+					do {
+						for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+							QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+						}
+					} while (rs.next());
+				}
+				
+			} catch (Exception e) {
 				logger.error("Failed to resolve available variables from a query.", e);
 			} finally {
 				this.updateNeeded = false;
 			}
 		}
+//		private ResultSetListener variablesRsListener = new ResultSetListener() {
+//			public void newData(ResultSetEvent evt) {
+//				if (isStreaming()) {
+//					update(evt.getSourceHandle().getResultSet());
+//				}
+//			}
+//			public void executionStarted(ResultSetEvent evt) {
+//				// don't care.
+//			};
+//			public void executionComplete(ResultSetEvent evt) {
+//				update(evt.getResults());
+//			}
+//			private void update(ResultSet rs) {
+//				try {
+//					variables.clear();
+//					if (rs != null &&
+//							rs.first()) {
+//						do {
+//							for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+//								QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+//							}
+//						} while (rs.next());
+//					}
+//				} catch (SQLException e) {
+//					logger.error("Failed to resolve available variables from a query.", e);
+//				}
+//			}
+//		};
     }
     
     /**

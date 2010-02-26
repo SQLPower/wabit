@@ -123,13 +123,18 @@ public class ResultSetHandle {
 									ResultSetHandle.this, 
 									e.getRow(), 
 									e.getRowNumber());
-			SwingUtilities.invokeLater(new Runnable() {
+			Runnable runnable = new Runnable() {
 	    		public void run() {
     				for (ResultSetListener listener : resultSetListeners) {
 						listener.newData(rse);
 					}
 	    		}
-	    	});
+			};
+			if (SwingUtilities.isEventDispatchThread()) {
+				runnable.run();
+			} else {
+				SwingUtilities.invokeLater(runnable);
+			}
 		}
 	};
 	
@@ -294,13 +299,18 @@ public class ResultSetHandle {
        
             	final ResultSetEvent evt = 
         			ResultSetEvent.getExecutionStartedEvent(ResultSetHandle.this);
-        		SwingUtilities.invokeLater(new Runnable() {
+            	Runnable runnable = new Runnable() {
         			public void run() {
     					for (ResultSetListener listener : resultSetListeners) {
     						listener.executionStarted(evt);
     					}
         			}
-        		});
+        		};
+        		if (SwingUtilities.isEventDispatchThread()) {
+        			runnable.run();
+        		} else {
+        			SwingUtilities.invokeLater(runnable);
+        		}
         		
         		switch (rsType) {
         		
@@ -365,13 +375,18 @@ public class ResultSetHandle {
             	} finally {
             		final ResultSetEvent evt = 
             			ResultSetEvent.getExecutionCompleteEvent(ResultSetHandle.this);
-            		SwingUtilities.invokeLater(new Runnable() {
+            		Runnable task = new Runnable() {
             			public void run() {
         					for (ResultSetListener listener : resultSetListeners) {
         						listener.executionComplete(evt);
         					}
             			}
-            		});
+            		};
+            		if (SwingUtilities.isEventDispatchThread()) {
+            			task.run();
+            		} else {
+            			SwingUtilities.invokeLater(task);
+            		}
             	}
             }
         }
@@ -402,7 +417,7 @@ public class ResultSetHandle {
     	adHodExecutor.execute(task);
     	try {
     		adHodExecutor.shutdown();
-			boolean completed = adHodExecutor.awaitTermination(60, TimeUnit.SECONDS);System.getProperties();
+			boolean completed = adHodExecutor.awaitTermination(60, TimeUnit.SECONDS);
 			if (!completed) {
 				throw new RuntimeException("Query Execution Timeout");
 			}
