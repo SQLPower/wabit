@@ -36,6 +36,7 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 
 public abstract class CopyAction extends AbstractAction {
 
@@ -77,7 +78,7 @@ public abstract class CopyAction extends AbstractAction {
 	};
 	
 	public CopyAction(WabitObject target, Window dialogOwner){
-		super("Copy " + target.getName());
+		super("Copy " + target.getName(), WabitIcons.COPY_16);
 		this.target = target;
 		this.dialogOwner = dialogOwner;
 		nameField = new JTextField("Copy of " + target.getName());

@@ -161,7 +161,11 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
             if (spo instanceof WabitDataSource) {
                 SPDataSource ds = ((WabitDataSource) spo).getSPDataSource();
                 if (ds instanceof JDBCDataSource) {
-                    r.setIcon(DB_ICON);
+                    if (((JDBCDataSource) ds).getParentType().getSupportsStreamQueries()) {
+                    	r.setIcon(WabitIcons.CONNECTION_STREAM_16);
+                    } else {
+                    	r.setIcon(DB_ICON);                    	
+                    }
                 } else if (ds instanceof Olap4jDataSource) {
                     r.setIcon(OLAP_DB_ICON);
                 } else {

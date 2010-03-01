@@ -50,6 +50,7 @@ import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WorkspaceGraphTreeModel;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
@@ -102,7 +103,7 @@ public class DeleteFromTreeAction extends AbstractAction {
      */
     public DeleteFromTreeAction(WabitWorkspace workspace, SPObject node, 
             Component parent, UserPrompterFactory upf) {
-        super("Delete");
+        super("Delete", WabitIcons.DELETE_ICON_16);
         this.workspace = workspace;
         item = node;
         this.parent = parent;

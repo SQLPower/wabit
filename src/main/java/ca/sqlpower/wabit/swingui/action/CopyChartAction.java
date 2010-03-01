@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, SQL Power Group Inc.
+ * Copyright (c) 2009, SQL Power Group Inc.
  *
  * This file is part of Wabit.
  *
@@ -19,29 +19,24 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
-import java.awt.event.ActionEvent;
+import java.awt.Window;
 
-import javax.swing.AbstractAction;
-import javax.swing.JTree;
+import ca.sqlpower.wabit.WabitSession;
+import ca.sqlpower.wabit.report.chart.Chart;
 
-import ca.sqlpower.wabit.AbstractWabitObject;
-import ca.sqlpower.wabit.swingui.WabitIcons;
-
-/**
- * Allows editing of the name of the currently selected tree cell.
- * Only {@link AbstractWabitObject}s can have their name edited. 
- */
-public class EditCellAction extends AbstractAction {
+public class CopyChartAction extends CopyAction {
+	private WabitSession session;
+	private final Chart chart;
 	
-	private final JTree tree;
-
-	public EditCellAction(JTree tree) {
-		super("Rename", WabitIcons.RENAME_16);
-		this.tree = tree;
+	public CopyChartAction(Chart chart, WabitSession session, Window dialogOwner) {
+		super(chart, dialogOwner);
+		this.chart = chart;
+		this.session = session;
 	}
-
-	public void actionPerformed(ActionEvent e) {
-		tree.startEditingAtPath(tree.getSelectionPath());
+	
+	public void copy(String name) {
+		Chart chart = new Chart(this.chart);
+		chart.setName(name);
+		session.getWorkspace().addChart(chart);
 	}
-
 }

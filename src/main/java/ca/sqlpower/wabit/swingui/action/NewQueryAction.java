@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.action;
 
 import java.awt.event.ActionEvent;
-import java.util.List;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -56,7 +55,7 @@ public class NewQueryAction extends AbstractAction {
 	 *            the new query will be added to.
 	 */
     public NewQueryAction(WabitSwingSession session) {
-        this(session, getFirstAvailableDataSource(session));
+        this(session, null);
     }
 
 	/**
@@ -83,14 +82,5 @@ public class NewQueryAction extends AbstractAction {
 		JTree tree = session.getTree();
 		int queryIndex = tree.getModel().getIndexOfChild(workspace, query);
 		tree.setSelectionRow(queryIndex + 1);
-    }
-    
-    /**
-     * Returns the first available {@link JDBCDataSource} from a given {@link WabitSwingSession}
-     * or null if one does not exist.
-     */
-    private static JDBCDataSource getFirstAvailableDataSource(WabitSwingSession session) {
-    	List<JDBCDataSource> connections = session.getDataSources().getConnections(JDBCDataSource.class);
-    	return connections.isEmpty()? null : connections.get(0);
     }
 }

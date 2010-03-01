@@ -59,8 +59,8 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
+import ca.sqlpower.wabit.swingui.action.CopyChartAction;
 import ca.sqlpower.wabit.swingui.action.CopyImageAction;
-import ca.sqlpower.wabit.swingui.action.CopyOlapDatasource;
 import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportTaskAction;
@@ -189,130 +189,263 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		if (lastPathComponent != null) {
 			JTree tree = (JTree) e.getSource();
 			if (lastPathComponent instanceof FolderNode) {
+				
 				FolderNode lastFolderNode = (FolderNode) lastPathComponent;
+				
 				if (lastFolderNode.getFolderType().equals(FolderType.CONNECTIONS)) {
-					menu.add(new AbstractAction("Database Connection Manager...") {
+					
+					menu.add(new AbstractAction("Database Connection Manager...", WabitIcons.CONNECTION_16) {
 						public void actionPerformed(ActionEvent e) {
 							session.getDbConnectionManager().showDialog(context.getFrame());
 						}
 					});
+					
 					objectsMenu(
 							menu, 
 							WabitDataSource.class.getSimpleName(), 
 							null,
 							createDataSourcesMenu(), 
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,WabitDataSource.class.getSimpleName(),null);
+					
+					menu.addSeparator();
+					
+					boolean sep = securityMenu(menu,WabitDataSource.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.QUERIES)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu, 
 							QueryCache.class.getSimpleName(), 
 							null, 
 							newQuery,
 							WabitAccessManager.Permission.CREATE);
-					objectsMenu(
+					sep |= objectsMenu(
 							menu, 
 							OlapQuery.class.getSimpleName(),  
 							null,
 							newOlapQuery,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,QueryCache.class.getSimpleName(),null);
-					securityMenu(menu,OlapQuery.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,QueryCache.class.getSimpleName(),null);
+					
+					sep |= securityMenu(menu,OlapQuery.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+				
 				} else if (lastFolderNode.getFolderType().equals(FolderType.IMAGES)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu, 
 							WabitImage.class.getSimpleName(),  
 							null,
 							newImage,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,WabitImage.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,WabitImage.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.CHARTS)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu,
 							Chart.class.getSimpleName(),  
 							null,
 							newChart,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,Chart.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,Chart.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTS)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu,
 							Report.class.getSimpleName(),  
 							null,
 							newReport,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,Report.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,Report.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.TEMPLATES)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu,
 							Template.class.getSimpleName(),  
 							null,
 							newTemplate,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,Template.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,Template.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.REPORTTASK)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu,
 							ReportTask.class.getSimpleName(),  
 							null,
 							newReportTask,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,ReportTask.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,ReportTask.class.getSimpleName(),null);
+				
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.USERS)) {
-					objectsMenu(
+					
+					boolean sep =objectsMenu(
 							menu,
 							User.class.getSimpleName(),  
 							null,
 							newUser,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,User.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,User.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
 				} else if (lastFolderNode.getFolderType().equals(FolderType.GROUPS)) {
-					objectsMenu(
+					
+					boolean sep = objectsMenu(
 							menu,
 							Group.class.getSimpleName(),  
 							null,
 							newGroup,
 							WabitAccessManager.Permission.CREATE);
-					securityMenu(menu,Group.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
+					
+					sep = securityMenu(menu,Group.class.getSimpleName(),null);
+					
+					if (sep) menu.addSeparator();
 				}
 			} else {
 			    if (lastPathComponent instanceof SPObject) {
+			    	
 			        JMenuItem editItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
 			                (SPObject) lastPathComponent));
+			        
 			        objectsMenu(
 							menu,
 							lastPathComponent.getClass().getSimpleName(),  
 							((SPObject)lastPathComponent).getUUID(),
 							editItem,
 							WabitAccessManager.Permission.MODIFY);
-			        securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
+			    
+			        if (!(lastPathComponent instanceof ContentBox)) {
+			        	
+			        	objectsMenu(
+			        			menu,
+			        			lastPathComponent.getClass().getSimpleName(),  
+			        			null,
+			        			new JMenuItem(new EditCellAction(tree)),
+			        			WabitAccessManager.Permission.MODIFY);
+			        	
+			        	objectsMenu(
+			        			menu,
+			        			lastPathComponent.getClass().getSimpleName(),  
+			        			null,
+			        			new JMenuItem(new DeleteFromTreeAction(session.getWorkspace(), 
+			        					(SPObject) lastPathComponent, context.getFrame(), context)),
+			        					WabitAccessManager.Permission.DELETE);
+			        	
+			        }
+			        
+			        menu.addSeparator();
+			        
+			        boolean sep = securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
+			        sep = securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
+			        if (sep) menu.addSeparator();
+			        
+			        sep = false;
+			        if (lastPathComponent instanceof QueryCache) {
+						
+						sep = objectsMenu(
+								menu,
+								QueryCache.class.getSimpleName(),  
+								null,
+								new JMenuItem(new AbstractAction("Stop Running", WabitIcons.STOP_16) {
+									public void actionPerformed(ActionEvent e) {
+										((QueryCache) lastPathComponent).cancel();
+									}
+								}),
+								WabitAccessManager.Permission.EXECUTE);
+						
+					}
+					
+					if (lastPathComponent instanceof OlapQuery) {
+						
+						sep = objectsMenu(
+								menu,
+								OlapQuery.class.getSimpleName(),  
+								null,
+								new JMenuItem(new AbstractAction("Stop Running", WabitIcons.STOP_16) {
+									public void actionPerformed(ActionEvent e) {
+										((OlapQuery) lastPathComponent).cancel();
+									}
+								}),
+								WabitAccessManager.Permission.EXECUTE);
+						
+					}
+					
+					if (sep) {
+						menu.addSeparator();
+					}
 			    }
 			    
+				
+				
 				if (lastPathComponent instanceof WabitDataSource) {
 					SPDataSource ds = ((WabitDataSource) lastPathComponent).getSPDataSource();
 					if (ds instanceof JDBCDataSource) {
 						NewQueryAction newQueryOnDS = new NewQueryAction(session, (JDBCDataSource) ds);
 						JMenuItem newQueryItem = new JMenuItem(newQueryOnDS);
 						newQueryItem.setIcon(WorkspaceTreeCellRenderer.QUERY_ICON);
-						objectsMenu(
+						if (objectsMenu(
 								menu,
 								QueryCache.class.getSimpleName(),  
 								null,
 								newQueryItem,
-								WabitAccessManager.Permission.CREATE);
+								WabitAccessManager.Permission.CREATE)) {
+							menu.addSeparator();
+						}
 					}
 					if (ds instanceof Olap4jDataSource) {
 						NewOLAPQueryAction newOlapQueryOnDS = new NewOLAPQueryAction(session, (Olap4jDataSource) ds);
 						JMenuItem newOlapQueryItem = new JMenuItem(newOlapQueryOnDS);
 						newOlapQueryItem.setIcon(WorkspaceTreeCellRenderer.OLAP_QUERY_ICON);
-						objectsMenu(
+						if (objectsMenu(
 								menu,
 								OlapQuery.class.getSimpleName(),  
 								null,
 								newOlapQueryItem,
-								WabitAccessManager.Permission.CREATE);
+								WabitAccessManager.Permission.CREATE)) {
+							menu.addSeparator();
+						}
 					}
-					menu.add(new AbstractAction("Database Connection Manager...") {
+					menu.add(new AbstractAction("Database Connection Manager...", WabitIcons.CONNECTION_16) {
 						public void actionPerformed(ActionEvent e) {
 							session.getDbConnectionManager().showDialog(context.getFrame());
 						}
@@ -324,41 +457,45 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							null,
 							createDataSourcesMenu(),
 							WabitAccessManager.Permission.CREATE);
-					objectsMenu(
-							menu,
-							WabitDataSource.class.getSimpleName(),  
-							null,
-							new JMenuItem(new CopyOlapDatasource(session, (WabitDataSource) lastPathComponent)),
-							WabitAccessManager.Permission.CREATE);
+					
 					menu.addSeparator();
+					
 				} else if (lastPathComponent instanceof QueryCache || lastPathComponent instanceof OlapQuery) {
+					
 					objectsMenu(
 							menu,
 							QueryCache.class.getSimpleName(),  
 							null,
 							newQuery,
 							WabitAccessManager.Permission.CREATE);
+					
 					objectsMenu(
 							menu,
 							OlapQuery.class.getSimpleName(),  
 							null,
 							newOlapQuery,
 							WabitAccessManager.Permission.CREATE);
+					
 					if (lastPathComponent instanceof QueryCache) {
+						
 						objectsMenu(
 								menu,
 								QueryCache.class.getSimpleName(),  
 								null,
 								new JMenuItem(new CopyQueryAction((WabitObject) lastPathComponent, session, session.getContext().getFrame())),
 								WabitAccessManager.Permission.CREATE);
+					
 					} else if (lastPathComponent instanceof OlapQuery) {
+						
 						objectsMenu(
 								menu,
 								OlapQuery.class.getSimpleName(),  
 								null,
 								new JMenuItem(new CopyQueryAction((WabitObject) lastPathComponent, session, session.getContext().getFrame())),
 								WabitAccessManager.Permission.CREATE);
+					
 					}
+				
 				} else if (lastPathComponent instanceof Report) {
 					
 					objectsMenu(
@@ -469,81 +606,44 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							newChart,
 							WabitAccessManager.Permission.CREATE);
 					
-					//TODO Copy charts action
-				}
-				
-				if (lastPathComponent instanceof SPObject &&
-				        !(lastPathComponent instanceof ContentBox)) {
-					
 					objectsMenu(
 							menu,
-							lastPathComponent.getClass().getSimpleName(),  
+							Chart.class.getSimpleName(),  
 							null,
-							new JMenuItem(new EditCellAction(tree)),
-							WabitAccessManager.Permission.MODIFY);
-					
-					objectsMenu(
-							menu,
-							lastPathComponent.getClass().getSimpleName(),  
-							null,
-							new JMenuItem(new DeleteFromTreeAction(session.getWorkspace(), 
-							        (SPObject) lastPathComponent, context.getFrame(), context)),
-							WabitAccessManager.Permission.DELETE);
-					
-				}
-				
-				if (lastPathComponent instanceof QueryCache) {
-					
-					objectsMenu(
-							menu,
-							QueryCache.class.getSimpleName(),  
-							null,
-							new JMenuItem(new AbstractAction("Stop Running") {
-								public void actionPerformed(ActionEvent e) {
-									((QueryCache) lastPathComponent).cancel();
-								}
-							}),
-							WabitAccessManager.Permission.EXECUTE);
-					
-				}
-				
-				if (lastPathComponent instanceof OlapQuery) {
-					
-					objectsMenu(
-							menu,
-							OlapQuery.class.getSimpleName(),  
-							null,
-							new JMenuItem(new AbstractAction("Stop Running") {
-								public void actionPerformed(ActionEvent e) {
-									((OlapQuery) lastPathComponent).cancel();
-								}
-							}),
-							WabitAccessManager.Permission.EXECUTE);
+							new JMenuItem(new CopyChartAction((Chart)lastPathComponent, session, session.getContext().getFrame())),
+							WabitAccessManager.Permission.CREATE);
 					
 				}
 			}
+			
 			//For some bizarre reason, you cannot select a node
 			//in the JTree on right-click. So the coordinates for e.getSource()
 			//are different from e.getPoint().setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
 			tree.setSelectionRow(tree.getRowForLocation(e.getX(), e.getY()));
+		
 		} else {
-			menu.add(new AbstractAction("Database Connection Manager...") {
+
+			menu.add(new AbstractAction("Database Connection Manager...", WabitIcons.CONNECTION_16) {
 
 				public void actionPerformed(ActionEvent e) {
 					session.getDbConnectionManager().showDialog(context.getFrame());
 				}
 			});
 
-			objectsMenu(
+			boolean sep = objectsMenu(
 					menu,
 					WabitDataSource.class.getSimpleName(),  
 					null,
 					createDataSourcesMenu(),
-					true,
 					WabitAccessManager.Permission.CREATE);
-
-			securityMenu(menu, WabitWorkspace.class.getSimpleName(), this.session.getWorkspace());
-			securityMenu(menu, WabitWorkspace.class.getSimpleName(), null);
+			
+			if (sep) menu.addSeparator();
+			
+			sep = securityMenu(menu, WabitWorkspace.class.getSimpleName(), this.session.getWorkspace());
+			
+			sep |= securityMenu(menu, WabitWorkspace.class.getSimpleName(), null);
+			
+			if (sep) menu.addSeparator();
 			
 			if (this.session.getWorkspace().isSystemWorkspace()) {
 				
@@ -621,12 +721,21 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				menu.getComponentCount() > 0) {
 			menu.show(e.getComponent(), e.getX(), e.getY());
 		}
+		
+		// Prevent orphan separator at the end of the menu.
+		if (menu.getComponent(menu.getComponentCount()-1) instanceof JPopupMenu.Separator) {
+			menu.remove(menu.getComponentCount()-1);
+			menu.pack();
+		}
 	}
+
 	
 	/**
 	 * Will decide if we must insert or not in the menu a given menu item
 	 * based on access rights and object simple class name. 
+	 * 
 	 * If we are not in a server workspace, we insert all options.
+	 * 
 	 * @param menu The menu into which we insert if needed
 	 * @param simpleName The simple class name of the WabitObject concerned 
 	 * by the menu option
@@ -634,39 +743,17 @@ public class WorkspaceTreeListener extends MouseAdapter {
 	 * @param menuItem The menu item we might add to the menu.
 	 * @param permissions Permissions to lookup
 	 */
-	private void objectsMenu(
-			JPopupMenu menu, 
-			String simpleName, 
-			@Nullable String subjectUuid,
-			JMenuItem menuItem,
-			WabitAccessManager.Permission permission) {
-		this.objectsMenu(menu, simpleName, subjectUuid, menuItem, false, permission);
-	}
-	
-	/**
-	 * Will decide if we must insert or not in the menu a given menu item
-	 * based on access rights and object simple class name. 
-	 * If we are not in a server workspace, we insert all options.
-	 * @param menu The menu into which we insert if needed
-	 * @param simpleName The simple class name of the WabitObject concerned 
-	 * by the menu option
-	 * @param subjectUuid the particular object's UUID we want to check permissions for.
-	 * @param menuItem The menu item we might add to the menu.
-	 * @param appendSeparator Wether to append a separator after the menu item or not.
-	 * @param permissions Permissions to lookup
-	 */
-	private void objectsMenu(
+	private boolean objectsMenu(
 			JPopupMenu menu, 
 			String simpleName,
 			@Nullable String subjectUuid,
 			JMenuItem menuItem,
-			boolean appendSeparator,
 			WabitAccessManager.Permission permission) {
 		
 		// If we are not in a server session, we display everything.
 		if (!session.isEnterpriseServerSession()) {
 			menu.add(menuItem);
-			return;
+			return true;
 		}
 		
 		if (this.currentUser==null) {
@@ -674,7 +761,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			if (this.currentUser==null) {
 				// No way to resolve this. We add all menus
 				menu.add(menuItem);
-				return;
+				return true;
 			}
 		}
 		
@@ -699,14 +786,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							false, 
 							true))) {
 				menu.add(menuItem);
-				if (appendSeparator) {
-					menu.addSeparator();
-				}
 			} else if (accessManager.isGranted(simpleName,EnumSet.of(permission))) {
 				menu.add(menuItem);
-				if (appendSeparator) {
-					menu.addSeparator();
-				}
+				return true;
 			}
 		} else {
 			if (WabitAccessManager.Permission.GRANT.equals(permission) &&
@@ -720,16 +802,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							false, 
 							true))) {
 				menu.add(menuItem);
-				if (appendSeparator) {
-					menu.addSeparator();
-				}
+				return true;
 			} else if (accessManager.isGranted(subjectUuid,simpleName,EnumSet.of(permission))) {
 				menu.add(menuItem);
-				if (appendSeparator) {
-					menu.addSeparator();
-				}
+				return true;
 			}
 		}
+		return false;
 	}
 	
 	/**
@@ -758,13 +837,13 @@ public class WorkspaceTreeListener extends MouseAdapter {
     	return currentUser;
 	}
 
-	private void securityMenu(JPopupMenu menu, String simpleName, SPObject object) {
+	private boolean securityMenu(JPopupMenu menu, String simpleName, SPObject object) {
     	
     	WabitWorkspace systemWorkspace = this.session.getSystemWorkspace();
     	
     	if (!this.session.isEnterpriseServerSession() ||
     			systemWorkspace == null) {
-    		return;
+    		return false;
     	}
     	
 
@@ -795,7 +874,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			} else {
 				throw new IllegalStateException(simpleName);
 			}
-			objectsMenu(
+			return objectsMenu(
 				menu, 
 				simpleName,
 				null,
@@ -816,7 +895,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					object instanceof Report ||
 					object instanceof Template ||
 					object instanceof ReportTask) {
-				objectsMenu(
+				return objectsMenu(
 					menu, 
 					simpleName,
 					object.getUUID(),
@@ -829,7 +908,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							object.getName())),
 					WabitAccessManager.Permission.GRANT);
 			} else if (object instanceof WabitWorkspace) {
-				objectsMenu(
+				 return objectsMenu(
 					menu, 
 					simpleName,
 					object.getUUID(),
@@ -846,6 +925,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		} else {
 			throw new IllegalStateException();
 		}
+		return false;
 	}
 
 	/**
@@ -872,7 +952,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
         		if (dbcs instanceof Olap4jDataSource) {
         			newMenuItem.setIcon(OLAP_DB_ICON);
         		} else if (dbcs instanceof JDBCDataSource) {
-        			newMenuItem.setIcon(DB_ICON);
+        			if (((JDBCDataSource)dbcs).getParentType().getSupportsStreamQueries()) {
+        				newMenuItem.setIcon(WabitIcons.CONNECTION_STREAM_16);
+        			} else {
+        				newMenuItem.setIcon(DB_ICON);
+        			}
         		}
         		dbcsMenu.add(newMenuItem);
         	}

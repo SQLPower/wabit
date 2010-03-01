@@ -25,6 +25,7 @@ import javax.swing.AbstractAction;
 
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 
 /**
  * Calling this action will display the editor of the given WabitObject.
@@ -35,7 +36,7 @@ public class ShowEditorAction extends AbstractAction {
     private final WabitWorkspace workspace;
 
     public ShowEditorAction(WabitWorkspace workspace, SPObject objectToEdit) {
-        super("Edit");
+        super("Edit " + objectToEdit.getName(), WabitIcons.EDIT);
         this.workspace = workspace;
         this.objectToEdit = objectToEdit;
     }

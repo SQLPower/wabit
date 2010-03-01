@@ -46,10 +46,16 @@ public class WabitIcons {
 	public static final Icon SECURITY_ICON_32 = makeIcon("32x32/badge-32");
 	public static final Icon GROUP_ICON_16 = makeIcon("group-16");
 	public static final Icon DELETE_ICON_32 = makeIcon("32x32/cancel");
+	public static final Icon DELETE_ICON_16 = makeIcon("delete");
+	public static final Icon STOP_16 = makeIcon("stop");
 	public static final Icon SERVER_ICON_32 = makeIcon("32x32/wabitServer-32");
 	public static final Icon CLOSE_WORKSPACE = makeIcon("closeWorkspace-12");
 	public static final Icon EDIT = makeIcon("edit-16");
 	public static final Icon QUERY_32 = makeIcon("32x32/query");
+	public static final Icon COPY_16 = makeIcon("page_white_stack");
+	public static final Icon CONNECTION_16 = makeIcon("connection-16");
+	public static final Icon CONNECTION_STREAM_16 = makeIcon("connection-stream-16");
+	public static final Icon RENAME_16 = makeIcon("label-16");
 	
 	 
 	
