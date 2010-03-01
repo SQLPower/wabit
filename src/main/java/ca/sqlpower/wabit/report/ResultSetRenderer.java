@@ -387,11 +387,17 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
         	for (ColumnInfo info : columnInfo) {
         		logger.debug("Loaded key " + info.getColumnInfoItem());
-        		colKeyToInfoMap.put(info.getColumnInfoItem(), info);
+        		if (info.getColumnInfoItem() != null) {
+        			colKeyToInfoMap.put(info.getColumnInfoItem(), info);
+        		}
         	}
         	Map<String, ColumnInfo> colAliasToInfoMap = new HashMap<String, ColumnInfo>();
         	for (ColumnInfo info : columnInfo) {
-        		colAliasToInfoMap.put(info.getColumnAlias(), info);
+        		colAliasToInfoMap.put(
+        				info.getColumnAlias() == null
+        						? info.getName()
+        						: info.getColumnAlias(), 
+        				info);
         	}
         	
         	//sort column info into the new desired positions.
@@ -403,20 +409,24 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         		
         		ColumnInfo ci;
         		
-        		String columnKey = rsmd.getColumnLabel(col);
+        		String columnKey = rsmd.getColumnLabel(col).toUpperCase();
         		if (colAliasToInfoMap.get(columnKey) != null) {
+        			
         			ci = colAliasToInfoMap.get(columnKey);
+        		
         		} else {
+        		
         			ci = new ColumnInfo(columnKey);
+        			
+        			ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
+            		
+            		if (ci.getDataType().equals(DataType.NUMERIC)) {
+            			ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
+            		}
+            		
+            		ci.setParent(ResultSetRenderer.this);
         		}
         		
-        		ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
-        		
-        		if (ci.getDataType().equals(DataType.NUMERIC)) {
-        			ci.setHorizontalAlignment(HorizontalAlignment.RIGHT);
-        		}
-        		
-        		ci.setParent(ResultSetRenderer.this);
         		newColumnInfo.add(ci);
         	}
         	
@@ -433,18 +443,32 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         			logger.debug("Adding column info to position " + i);
         			addChild(newColumnInfo.get(i), i);
         			
-        		} else if (!newColumnInfo.get(i).getColumnAlias().equalsIgnoreCase(columnInfo.get(i).getColumnAlias())) {
+        		} else {
         			
-        			ColumnInfo oldInfo = columnInfo.get(i);
-        			ColumnInfo newInfo = newColumnInfo.get(i);
-        			removeChild(oldInfo);
-        			for (ColumnInfo currentColumn : columnInfo) {
-        				if (newInfo.getColumnAlias().equalsIgnoreCase(currentColumn.getColumnAlias())) {
-        					removeChild(currentColumn);
-        					break;
-        				}
+        			String newColumnName = newColumnInfo.get(i).getColumnAlias();
+        			if (newColumnName == null) {
+        				newColumnName = newColumnInfo.get(i).getName();
         			}
-        			addChild(newInfo, i);        			
+        			
+        			String oldColumnName = columnInfo.get(i).getColumnAlias();
+        			if (oldColumnName == null) {
+        				oldColumnName = columnInfo.get(i).getName();
+        			}
+        			
+        			if (!oldColumnName.equalsIgnoreCase(newColumnName)) {
+        				
+        				ColumnInfo oldInfo = columnInfo.get(i);
+        				ColumnInfo newInfo = newColumnInfo.get(i);
+        				removeChild(oldInfo);
+        				for (ColumnInfo currentColumn : columnInfo) {
+        					if (newInfo.getColumnAlias().equalsIgnoreCase(currentColumn.getColumnAlias())) {
+        						removeChild(currentColumn);
+        						break;
+        					}
+        				}
+        				addChild(newInfo, i);        			
+        				
+        			}
         		}
         	}
         	
