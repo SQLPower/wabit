@@ -31,6 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -122,13 +123,13 @@ public class ResultSetHandle {
      */
     private class InternalRowSetListener implements RowSetChangeListener {
     	
-    	private boolean hasUpdates = false;
+    	private AtomicBoolean hasUpdates = new AtomicBoolean(false);
     	
-    	private final Timer timer = new Timer(1000, new ActionListener() {
+    	private final Timer timer = new Timer(500, new ActionListener() {
 			
     		public void actionPerformed(ActionEvent e) {
 				
-				if (hasUpdates) {
+				if (hasUpdates.get()) {
 					
 					final ResultSetEvent rse = ResultSetEvent.getNewDataEvent(
 							ResultSetHandle.this);
@@ -137,7 +138,7 @@ public class ResultSetHandle {
 						listener.newData(rse);
 					}
 				
-					hasUpdates = false;
+					hasUpdates.set(false);
 				}
 			}
 		});
@@ -154,7 +155,7 @@ public class ResultSetHandle {
     	}
     	
 		public void rowAdded(RowSetChangeEvent e) {
-			hasUpdates = true;
+			hasUpdates.set(true);
 		}
 	};
 	

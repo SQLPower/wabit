@@ -688,14 +688,27 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	    }
     	}
     	
-    	rs.sort(comparator);
-	    autosizeColumnInformation(g, contentBox, rs);
+    	CachedRowSet rsCopy = rs.sort(comparator);
+    	
+	    autosizeColumnInformation(g, contentBox, rsCopy);
 	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
     	
-        final ReportPositionRenderer reportPositionRenderer = new ReportPositionRenderer(getHeaderFont(), getBodyFont(), borderType, (int) getParent().getWidth(), nullString);
+        final ReportPositionRenderer reportPositionRenderer = 
+        		new ReportPositionRenderer(
+        				getHeaderFont(), 
+        				getBodyFont(), 
+        				borderType, 
+        				(int) getParent().getWidth(), 
+        				nullString);
         
         List<List<ResultSetCell>> createResultSetLayout = 
-        		reportPositionRenderer.createResultSetLayout(zeroClipGraphics, rs, getColumnInfoList(), getParent(), isPrintingGrandTotals());
+        		reportPositionRenderer.createResultSetLayout(
+        				zeroClipGraphics, 
+        				rsCopy, 
+        				getColumnInfoList(), 
+        				getParent(), 
+        				isPrintingGrandTotals());
+        
         pageCells.set(createResultSetLayout);
     }
     
