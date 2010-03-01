@@ -840,10 +840,6 @@ public class QueryPanel implements WabitPanel {
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
-					VariableLabel.insertLabels(
-							new SPVariableHelper(queryCache), 
-							queryUIComponents.getQueryArea().getDocument(), 
-							queryUIComponents.getQueryArea());
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
