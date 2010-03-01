@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.rs;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -39,7 +38,6 @@ import net.jcip.annotations.GuardedBy;
 
 import org.apache.log4j.Logger;
 import org.olap4j.CellSet;
-import org.olap4j.OlapConnection;
 import org.olap4j.PreparedOlapStatement;
 
 import ca.sqlpower.object.SPVariableHelper;
@@ -288,7 +286,6 @@ public class ResultSetHandle {
 			}
 		}
 		public void run() {
-			Connection connection = null;
 			try {
             	
             	status = ResultSetStatus.RUNNING;
@@ -315,14 +312,12 @@ public class ResultSetHandle {
         		switch (rsType) {
         		
             		case OLAP:
-            			connection = olapConnectionProvider.createConnection(olapDataSource);
-                		statement = variablesContext.substituteForDb((OlapConnection)connection, query);
+            			statement = olapConnectionProvider.createPreparedStatement(olapDataSource, query, variablesContext);
                 		break;
                 		
             		case RELATIONAL:
             		case STREAMING:
-            			connection = sqlConnectionProvider.createConnection(jdbcDataSource);
-            			statement = variablesContext.substituteForDb(connection, query);
+            			statement = sqlConnectionProvider.createPreparedStatement(jdbcDataSource, query, variablesContext);
             			break;
             			
             		default:
@@ -366,10 +361,6 @@ public class ResultSetHandle {
             		if (statement != null) {
             			statement.close();
                 	}
-            		if (connection != null 
-            				&& rsType.equals(ResultSetType.OLAP) == false) {
-            			connection.close();
-            		}
             	} catch (Exception eX) {
             		logger.debug("Exception ecountered while closing the statement's connection", eX);
             	} finally {

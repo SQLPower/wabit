@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.Map.Entry;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
@@ -102,7 +103,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
      * The connection pools we've created due to calling {@link #createConnection(Olap4jDataSource)}.
      */
     private final Map<Olap4jDataSource, OlapConnectionPool> olapConnectionPools = 
-        new HashMap<Olap4jDataSource, OlapConnectionPool>();
+    		new HashMap<Olap4jDataSource, OlapConnectionPool>();
+    
+    private final Map<JDBCDataSource, Connection> sqlConnections = 
+        	new HashMap<JDBCDataSource, Connection>();
     
     /**
      * The database instances we've created due to calls to {@link #getDatabase(SPDataSource)}.
@@ -272,6 +276,13 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 	        } catch (IOException e) {
 	            logger.error("Couldn't save PL.INI file!", e); //$NON-NLS-1$
 	        }
+	    }
+	    for (Entry<JDBCDataSource, Connection> entry : this.sqlConnections.entrySet()) {
+	    	try {
+				entry.getValue().close();
+			} catch (SQLException e) {
+				logger.error(e);
+			}
 	    }
 	    if (writeDSCollectionPathToPrefs) {
 	    	prefs.put(PREFS_PL_INI_PATH, getPlDotIniPath());
@@ -474,17 +485,16 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 			String sql,
 			SPVariableHelper helper) throws SQLObjectException 
 	{
-    	Connection conn = getDatabase(dataSource).getConnection();
+    	Connection conn = this.sqlConnections.get(dataSource);
+    	if (conn == null) {
+    		conn = getDatabase(dataSource).getConnection();
+    		this.sqlConnections.put(dataSource, conn);
+    	}
+    	
     	try {
 			return helper.substituteForDb(conn, sql);
 		} catch (SQLException e) {
 			throw new SQLObjectException(e);
-		} finally {
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				throw new SQLObjectException(e);
-			}
 		}
     }
     

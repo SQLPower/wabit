@@ -197,22 +197,24 @@ public class StubWabitSessionContext implements WabitSessionContext {
 		return getDatabase(dataSource).getConnection();
 	}
 	
+	private final Map<JDBCDataSource, Connection> sqlConnections = 
+    	new HashMap<JDBCDataSource, Connection>();
+	
 	public PreparedStatement createPreparedStatement(
 			JDBCDataSource dataSource,
 			String sql,
 			SPVariableHelper helper) throws SQLObjectException 
 	{
-    	Connection conn = getDatabase(dataSource).getConnection();
+    	Connection conn = this.sqlConnections.get(dataSource);
+    	if (conn == null) {
+    		conn = getDatabase(dataSource).getConnection();
+    		this.sqlConnections.put(dataSource, conn);
+    	}
+    	
     	try {
 			return helper.substituteForDb(conn, sql);
 		} catch (SQLException e) {
 			throw new SQLObjectException(e);
-		} finally {
-			try {
-				conn.close();
-			} catch (SQLException e) {
-				throw new SQLObjectException(e);
-			}
 		}
     }
 
