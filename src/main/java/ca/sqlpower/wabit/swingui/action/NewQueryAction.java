@@ -78,6 +78,10 @@ public class NewQueryAction extends AbstractAction {
     public void actionPerformed(ActionEvent e) {
         QueryCache query = new QueryCache(session.getContext(), true, null, ds);
         query.setName(newQueryName);
+        if (ds != null) {
+        	query.setStreaming(
+        			ds.getParentType().getSupportsStreamQueries());
+        }
 		workspace.addQuery(query, session);
 		JTree tree = session.getTree();
 		int queryIndex = tree.getModel().getIndexOfChild(workspace, query);
