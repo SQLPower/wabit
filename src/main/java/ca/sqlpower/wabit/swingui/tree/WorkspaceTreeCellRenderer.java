@@ -144,6 +144,7 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
     @Override
     public Component getTreeCellRendererComponent(JTree tree, Object value,
             boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+    	
     	DefaultTreeCellRenderer r = (DefaultTreeCellRenderer) super.getTreeCellRendererComponent(
     			tree, value, sel, expanded, leaf, row, hasFocus);
         
@@ -235,6 +236,10 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
             } else if (spo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, (WabitImage) spo);
+            } else if (value instanceof SQLObject) {
+            	Component delegateComponent = delegateSQLTreeCellRenderer.getTreeCellRendererComponent(tree, value, sel, 
+            			expanded, leaf, row, hasFocus);
+    			r = (DefaultTreeCellRenderer) delegateComponent;
             }
 
             if (spo instanceof WabitResultSetProducer) {
@@ -251,10 +256,8 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
         	Component delegateComponent = delegateOlap4jRenderer.getTreeCellRendererComponent(tree, 
         			olapObject, sel, expanded, leaf, row, hasFocus);
 			r = (DefaultTreeCellRenderer) delegateComponent;
-        } else if (value instanceof SQLObject) {
-        	Component delegateComponent = delegateSQLTreeCellRenderer.getTreeCellRendererComponent(tree, value, sel, 
-        			expanded, leaf, row, hasFocus);
-			r = (DefaultTreeCellRenderer) delegateComponent;
+        } else {
+        	logger.warn("Cannot render object in tree of class " + value.getClass().getSimpleName());
         }
         
         if (originalValue instanceof WorkspaceGraphTreeNodeWrapper) {
