@@ -353,9 +353,12 @@ public class ResultSetHandle {
             			throw new RuntimeException("Program error.");
             	}
             	
-            } catch (Exception e) {
-                logger.error("Exception ecountered while executing the query", e);
+            } catch (Throwable t) {
+                logger.error("Exception ecountered while executing the query", t);
                 status = ResultSetStatus.ERROR;
+                SQLException e = new SQLException();
+                e.initCause(t);
+                exception = e;
             } finally {
             	try {
             		if (statement != null) {

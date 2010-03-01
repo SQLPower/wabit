@@ -74,6 +74,7 @@ import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListModel;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.table.JTableHeader;
@@ -461,6 +462,15 @@ public class QueryPanel implements WabitPanel {
 		public void executionComplete(ResultSetEvent evt) {
 			columnNameLabel.setIcon(null);
 			queryUIComponents.getStopButton().setEnabled(false);
+			if (evt.getSourceHandle().getException() != null) {
+				String errorMessage = SQLQueryUIComponents.createErrorStringMessage(evt.getSourceHandle().getException());
+    			queryUIComponents.getLogTextArea().append(errorMessage + "\n");
+    			SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						queryUIComponents.getResultTabPane().setSelectedIndex(0);
+					}
+				});
+			}
 		}
 	};
 	
