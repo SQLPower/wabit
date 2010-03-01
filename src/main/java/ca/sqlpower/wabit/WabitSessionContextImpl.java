@@ -24,6 +24,7 @@ import java.beans.PropertyChangeSupport;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,9 +41,11 @@ import javax.naming.NamingException;
 
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
+import org.olap4j.PreparedOlapStatement;
 
 import ca.sqlpower.dao.SPPersistenceException;
 import ca.sqlpower.enterprise.client.SPServerInfo;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -446,9 +449,43 @@ public class WabitSessionContextImpl implements WabitSessionContext {
         return olapConnectionPool.getConnection();
     }
     
+    public PreparedOlapStatement createPreparedStatement(
+    		Olap4jDataSource dataSource, String mdx, SPVariableHelper helper) 
+    {
+    	try {
+    		OlapConnection conn = createConnection(dataSource);
+			return helper.substituteForDb(conn, mdx);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (NamingException e) {
+			throw new RuntimeException(e);
+		}
+    }
+    
     public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException {
     	if (dataSource == null) return null;
     	return getDatabase(dataSource).getConnection();
+    }
+    
+    public PreparedStatement createPreparedStatement(
+			JDBCDataSource dataSource,
+			String sql,
+			SPVariableHelper helper) throws SQLObjectException 
+	{
+    	Connection conn = getDatabase(dataSource).getConnection();
+    	try {
+			return helper.substituteForDb(conn, sql);
+		} catch (SQLException e) {
+			throw new SQLObjectException(e);
+		} finally {
+			try {
+				conn.close();
+			} catch (SQLException e) {
+				throw new SQLObjectException(e);
+			}
+		}
     }
     
     public UserPrompter createDatabaseUserPrompter(String question,

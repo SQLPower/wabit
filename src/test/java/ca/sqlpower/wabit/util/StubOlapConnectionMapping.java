@@ -24,7 +24,9 @@ import java.sql.SQLException;
 import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
+import org.olap4j.PreparedOlapStatement;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.wabit.OlapConnectionProvider;
 
@@ -35,4 +37,18 @@ public class StubOlapConnectionMapping implements OlapConnectionProvider {
         return null;
     }
 
+    public PreparedOlapStatement createPreparedStatement(
+    		Olap4jDataSource dataSource, String mdx, SPVariableHelper helper) 
+    {
+    	try {
+    		OlapConnection conn = createConnection(dataSource);
+			return helper.substituteForDb(conn, mdx);
+		} catch (SQLException e) {
+			throw new RuntimeException(e);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		} catch (NamingException e) {
+			throw new RuntimeException(e);
+		}
+    }
 }

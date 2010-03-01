@@ -20,7 +20,9 @@
 package ca.sqlpower.wabit;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.sqlobject.SQLObjectException;
@@ -32,5 +34,10 @@ public interface SqlConnectionProvider extends SQLDatabaseMapping {
 	 * @param dataSource The data source to use.
 	 */
 	public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException; 
+	
+	public PreparedStatement createPreparedStatement(
+			JDBCDataSource dataSource,
+			String sql,
+			SPVariableHelper helper) throws SQLObjectException; 
 	
 }

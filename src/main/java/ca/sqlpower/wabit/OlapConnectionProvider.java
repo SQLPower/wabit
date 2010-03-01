@@ -24,7 +24,9 @@ import java.sql.SQLException;
 import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
+import org.olap4j.PreparedOlapStatement;
 
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.Olap4jDataSource;
 
 /**
@@ -39,6 +41,10 @@ public interface OlapConnectionProvider {
      * objects may be using it to access the data source.
      */
     public OlapConnection createConnection(Olap4jDataSource dataSource) 
-    throws SQLException, ClassNotFoundException, NamingException;
-
+    		throws SQLException, ClassNotFoundException, NamingException;
+    
+    public PreparedOlapStatement createPreparedStatement(
+    		Olap4jDataSource dataSource,
+    		String mdx,
+    		SPVariableHelper helper);
 }

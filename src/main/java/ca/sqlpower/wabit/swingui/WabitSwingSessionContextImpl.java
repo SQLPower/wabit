@@ -56,6 +56,7 @@ import java.lang.reflect.Method;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -118,6 +119,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 import org.olap4j.OlapConnection;
+import org.olap4j.PreparedOlapStatement;
 
 import ca.sqlpower.architect.ArchitectUtils;
 import ca.sqlpower.enterprise.client.Grant;
@@ -127,6 +129,7 @@ import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -2164,8 +2167,18 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         return delegateContext.createConnection(dataSource);
     }
     
+    public PreparedOlapStatement createPreparedStatement(
+    		Olap4jDataSource dataSource, String mdx, SPVariableHelper helper) {
+    	return delegateContext.createPreparedStatement(dataSource, mdx, helper);
+    }
+    
     public Connection createConnection(JDBCDataSource dataSource) throws SQLObjectException {
     	return delegateContext.createConnection(dataSource);
+    }
+    
+    public PreparedStatement createPreparedStatement(JDBCDataSource dataSource,
+    		String sql, SPVariableHelper helper) throws SQLObjectException {
+    	return delegateContext.createPreparedStatement(dataSource, sql, helper);
     }
  
     /**

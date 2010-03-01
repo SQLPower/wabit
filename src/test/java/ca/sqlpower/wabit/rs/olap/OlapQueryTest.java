@@ -32,6 +32,7 @@ import org.apache.commons.beanutils.ConversionException;
 import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
+import org.olap4j.PreparedOlapStatement;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Member;
@@ -76,6 +77,21 @@ public class OlapQueryTest extends AbstractWabitObjectTest {
 			OlapConnectionPool pool = new OlapConnectionPool(ds, dbMapping);
 			return pool.getConnection();
 		}
+		
+		public PreparedOlapStatement createPreparedStatement(
+	    		Olap4jDataSource dataSource, String mdx, SPVariableHelper helper) 
+	    {
+	    	try {
+	    		OlapConnection conn = createConnection(dataSource);
+				return helper.substituteForDb(conn, mdx);
+			} catch (SQLException e) {
+				throw new RuntimeException(e);
+			} catch (ClassNotFoundException e) {
+				throw new RuntimeException(e);
+			} catch (NamingException e) {
+				throw new RuntimeException(e);
+			}
+	    }
     	
     };
     
