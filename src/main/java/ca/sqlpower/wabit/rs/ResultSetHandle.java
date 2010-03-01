@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.rs;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.swing.SwingUtilities;
+import javax.swing.Timer;
 
 import net.jcip.annotations.GuardedBy;
 
@@ -111,28 +114,47 @@ public class ResultSetHandle {
     private final List<ResultSetListener> resultSetListeners = 
     		new CopyOnWriteArrayList<ResultSetListener>();
     
+    private InternalRowSetListener internalListener = new InternalRowSetListener();
+    
     /**
      * Internal listener to forward row updates to
      * our own listeners
      */
-    private RowSetChangeListener internalListener = new RowSetChangeListener() {
-		public void rowAdded(RowSetChangeEvent e) {
-			final ResultSetEvent rse = ResultSetEvent.getNewDataEvent(
-									ResultSetHandle.this, 
-									e.getRow(), 
-									e.getRowNumber());
-			Runnable runnable = new Runnable() {
-	    		public void run() {
-    				for (ResultSetListener listener : resultSetListeners) {
+    private class InternalRowSetListener implements RowSetChangeListener {
+    	
+    	private boolean hasUpdates = false;
+    	
+    	private final Timer timer = new Timer(1000, new ActionListener() {
+			
+    		public void actionPerformed(ActionEvent e) {
+				
+				if (hasUpdates) {
+					
+					final ResultSetEvent rse = ResultSetEvent.getNewDataEvent(
+							ResultSetHandle.this);
+					
+					for (ResultSetListener listener : resultSetListeners) {
 						listener.newData(rse);
 					}
-	    		}
-			};
-			if (SwingUtilities.isEventDispatchThread()) {
-				runnable.run();
-			} else {
-				SwingUtilities.invokeLater(runnable);
+				
+					hasUpdates = false;
+				}
 			}
+		});
+    	
+    	public InternalRowSetListener() {
+    		this.timer.setInitialDelay(0);
+    		this.timer.setCoalesce(true);
+    		this.timer.setRepeats(true);
+    		this.timer.start();
+    	}
+    	
+    	public void cleanup() {
+    		this.timer.stop();
+    	}
+    	
+		public void rowAdded(RowSetChangeEvent e) {
+			hasUpdates = true;
 		}
 	};
 	
@@ -364,6 +386,7 @@ public class ResultSetHandle {
             		if (statement != null) {
             			statement.close();
                 	}
+            		ResultSetHandle.this.internalListener.cleanup();
             	} catch (Exception eX) {
             		logger.debug("Exception ecountered while closing the statement's connection", eX);
             	} finally {
@@ -473,6 +496,7 @@ public class ResultSetHandle {
     	if (this.isRunning()) {
     		this.task.cancel();
     	}
+    	this.internalListener.cleanup();
     }
     
     /**

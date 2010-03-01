@@ -40,37 +40,29 @@ public class ResultSetEvent {
 
     private final ResultSetHandle source;
 	private final EventType eventType;
-	private final Object[] row;
-	private final int rowNumber;
 
     public static ResultSetEvent getNewDataEvent(
-    		ResultSetHandle source,
-            Object[] row,
-            int rowNumber) 
+    		ResultSetHandle source) 
     {
-    	return new ResultSetEvent(EventType.NEW_DATA, source, row, rowNumber);
+    	return new ResultSetEvent(EventType.NEW_DATA, source);
     }
     
     public static ResultSetEvent getExecutionCompleteEvent(ResultSetHandle source) 
     {
-    	return new ResultSetEvent(EventType.EXECUTION_COMPLETED, source, ((CachedRowSet)source.getResultSet()).getData().toArray(), 0);
+    	return new ResultSetEvent(EventType.EXECUTION_COMPLETED, source);
     }
     
     public static ResultSetEvent getExecutionStartedEvent(ResultSetHandle source) 
     {
-    	return new ResultSetEvent(EventType.EXECUTION_STARTED, source, new Object[] {}, 0);
+    	return new ResultSetEvent(EventType.EXECUTION_STARTED, source);
     }
     
     ResultSetEvent(
     		EventType eventType,
-            ResultSetHandle source,
-            Object[] row,
-            int rowNumber) 
+            ResultSetHandle source) 
     {
 		this.eventType = eventType;
         this.source = source;
-        this.row = row;
-        this.rowNumber = rowNumber;
     }
 
     /**
@@ -102,13 +94,5 @@ public class ResultSetEvent {
      */
     public EventType getEventType() {
 		return eventType;
-	}
-    
-    public Object[] getRow() {
-		return row;
-	}
-
-	public int getRowNumber() {
-		return rowNumber;
 	}
 }
