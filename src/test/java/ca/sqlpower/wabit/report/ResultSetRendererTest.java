@@ -36,12 +36,14 @@ import java.util.Set;
 import javax.naming.NamingException;
 
 import org.apache.commons.beanutils.ConversionException;
+import org.olap4j.Axis;
 import org.olap4j.OlapConnection;
 import org.olap4j.OlapException;
 import org.olap4j.PreparedOlapStatement;
 import org.olap4j.metadata.Catalog;
 import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Schema;
+import org.olap4j.query.Selection.Operator;
 
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -56,6 +58,10 @@ import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
 import ca.sqlpower.wabit.rs.olap.OlapConnectionPool;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
+import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
+import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
+import ca.sqlpower.wabit.rs.olap.WabitOlapInclusion;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 
 public class ResultSetRendererTest extends AbstractWabitObjectTest {
@@ -111,6 +117,132 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     @Override
     public WabitObject getObjectUnderTest() {
         return renderer;
+    }
+    
+    public void testRenderOlapContent() throws Exception {
+    	
+    	OlapQuery query;
+        PlDotIni plIni;
+        final Olap4jDataSource ds;
+        final SQLDatabase db;
+        OlapConnectionPool connectionPool;
+        
+        plIni = new PlDotIni();
+        plIni.read(new File("src/test/java/pl.regression.ini"));
+        ds = plIni.getDataSource("World Facts OLAP Connection", Olap4jDataSource.class);
+        
+        db = new SQLDatabase(ds.getDataSource());
+        
+        final SQLDatabaseMapping dbMapping = new SQLDatabaseMapping() {
+        	public SQLDatabase getDatabase(JDBCDataSource ds) {
+        		return db;
+        	}
+        };
+        
+        OlapConnectionProvider connectionMapping = new OlapConnectionProvider() {
+    		public OlapConnection createConnection(Olap4jDataSource dataSource)
+    				throws SQLException, ClassNotFoundException,
+    				NamingException {
+    			OlapConnectionPool pool = new OlapConnectionPool(ds, dbMapping);
+    			return pool.getConnection();
+    		}
+    		public PreparedOlapStatement createPreparedStatement(
+    	    		Olap4jDataSource dataSource, String mdx, SPVariableHelper helper) 
+    	    {
+    	    	try {
+    	    		OlapConnection conn = createConnection(dataSource);
+    				return helper.substituteForDb(conn, mdx);
+    			} catch (SQLException e) {
+    				throw new RuntimeException(e);
+    			} catch (ClassNotFoundException e) {
+    				throw new RuntimeException(e);
+    			} catch (NamingException e) {
+    				throw new RuntimeException(e);
+    			}
+    	    }
+        	
+        };
+        
+
+        
+        query = new OlapQuery(
+        				null, 
+        				connectionMapping, 
+        				"Life Expectancy And GNP Correlation", 
+        				"GUI Query", 
+        				"LOCALDB", 
+        				"World", 
+        				"World Countries",
+        				null);
+        
+        query.setOlapDataSource(ds);
+        
+        connectionPool = new OlapConnectionPool(ds, 
+                new SQLDatabaseMapping() {
+            private final SQLDatabase sqlDB = new SQLDatabase(ds.getDataSource());
+            public SQLDatabase getDatabase(JDBCDataSource ds) {
+                return sqlDB;
+            }
+        });
+        
+        String catalogName = query.getCatalogName();
+        String schemaName = query.getSchemaName();
+        String cubeName = query.getCubeName();
+        
+		Catalog catalog;
+		try {
+			catalog = connectionMapping.createConnection(ds).getCatalogs().get(catalogName);
+		} catch (Exception ex) {
+			throw new ConversionException("Error connecting to data source " + catalogName + 
+					" to get cube", ex);
+		}
+		Schema schema;
+		try {
+			schema = catalog.getSchemas().get(schemaName);
+			Cube cube = schema.getCubes().get(cubeName);
+			query.setCurrentCube(cube, false);
+			
+		} catch (OlapException e) {
+			throw new ConversionException("The cube could not be retrieved.", e);
+		}
+		
+        getWorkspace().addOlapQuery(query);
+        getWorkspace().addDataSource(query.getOlapDataSource());
+        
+        WabitOlapAxis rowsAxis = new WabitOlapAxis(Axis.ROWS);
+        WabitOlapDimension rowsDimension = new WabitOlapDimension("Geography");
+        rowsAxis.addDimension(rowsDimension);
+        WabitOlapInclusion rowsInclusion = new WabitOlapInclusion(Operator.MEMBER, "[Geography].[World]");
+        WabitOlapExclusion rowsExclusion = new WabitOlapExclusion(Operator.MEMBER, "[Geography].[World].[Africa]");
+        rowsDimension.addExclusion(rowsExclusion);
+        rowsDimension.addInclusion(rowsInclusion);
+        
+        WabitOlapAxis columnsAxis = new WabitOlapAxis(Axis.COLUMNS);
+        WabitOlapDimension columnsDimension = new WabitOlapDimension("Measures");
+        columnsAxis.addDimension(columnsDimension);
+        WabitOlapInclusion colInclusion = new WabitOlapInclusion(Operator.MEMBER, "[Measures].[Life Expectancy]");
+        columnsDimension.addInclusion(colInclusion);
+        
+        query.addAxis(columnsAxis);
+        query.addAxis(rowsAxis);
+        
+        Report report = new Report("report");
+        getWorkspace().addReport(report);
+        
+        ContentBox cb = new ContentBox();
+        report.getPage().addContentBox(cb);
+        cb.setWidth(100);
+        cb.setHeight(200);
+        ResultSetRenderer renderer = new ResultSetRenderer(query);
+        renderer.setParent(cb);
+        renderer.refresh();
+        
+        Graphics2D contentGraphics = (Graphics2D) graphics.create(
+                (int) cb.getX(), (int) cb.getY(),
+                (int) cb.getWidth(), (int) cb.getHeight());
+        
+        renderer.renderReportContent(contentGraphics, cb, 1, 0, true, new SPVariableHelper(renderer));
+    	
     }
     
     /**

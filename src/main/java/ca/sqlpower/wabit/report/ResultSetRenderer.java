@@ -503,6 +503,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 			}
     	}
     	
+    	if (this.resultSetHandle == null) {
+    		renderMessage(
+    				g, 
+    				contentBox, 
+    				Collections.singletonList("The associated query does not return any results."));
+    		return false;
+    	}
+    	
     	initColumns(resultSetHandle.getResultSet());
     	
     	if (this.resultSetHandle.getStatus().equals(ResultSetStatus.ERROR)) {

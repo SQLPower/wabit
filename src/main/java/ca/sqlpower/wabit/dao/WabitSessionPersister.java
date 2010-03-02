@@ -816,11 +816,12 @@ public class WabitSessionPersister implements SPPersister {
 			spo = new ReportTask();
 
 		} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
+			
 			String contentID = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "content"), String.class);
 
-			QueryCache query = (QueryCache) converter.convertToComplexType(
-					contentID, QueryCache.class);
+			WabitResultSetProducer query = (WabitResultSetProducer) converter.convertToComplexType(
+					contentID, WabitResultSetProducer.class);
 
 			if (query == null) {
 				throw new SPPersistenceException(uuid,
