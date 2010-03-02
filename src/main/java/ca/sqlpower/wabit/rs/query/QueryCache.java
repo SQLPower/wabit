@@ -495,7 +495,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     				sql,
     				helper,
     				isStreaming() ? ResultSetType.STREAMING : ResultSetType.RELATIONAL,
-    				getStreamingRowLimit(),
+    				isStreaming() ? getStreamingRowLimit() : query.getRowLimit(),
     				listener,
     				async);
     		
@@ -749,9 +749,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
         return query.isStreaming();
     }
     
-    /**
-     * This will set the row limit on the query. This also clears the cache.
-     */
     public void setRowLimit(int rowLimit) {
         query.setRowLimit(rowLimit);
     }
