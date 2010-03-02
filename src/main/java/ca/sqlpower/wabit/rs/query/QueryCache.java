@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import net.jcip.annotations.GuardedBy;
@@ -224,26 +225,27 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      * initialize the variables before trying to resolve them.
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
-    	private boolean updateNeeded = true;
+    	private AtomicBoolean updateNeeded = new AtomicBoolean(true);
     	public QueryVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
 		}
     	public void setUpdateNeeded(boolean updateNeeded) {
-    		this.updateNeeded = updateNeeded;
+    		this.updateNeeded.set(updateNeeded);
     	}
     	protected void beforeLookups(String key) {
-    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
-    				&& this.updateNeeded) {
+    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))) {
     			this.updateVars();
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.updateNeeded) {
     			this.updateVars();
-    		}
     	}
 		private void updateVars() {
 			try {
+				
+				if (!updateNeeded.get()) return;
+				this.updateNeeded.set(false);
+				
 				ResultSetHandle variablesHandle = execute(
 						new SPVariableHelper(QueryCache.this),
 						null,
@@ -262,8 +264,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 				
 			} catch (Exception e) {
 				logger.error("Failed to resolve available variables from a query.", e);
-			} finally {
-				this.updateNeeded = false;
 			}
 		}
 //		private ResultSetListener variablesRsListener = new ResultSetListener() {

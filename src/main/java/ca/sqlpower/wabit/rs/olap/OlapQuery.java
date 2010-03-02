@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.annotation.Nullable;
 
@@ -118,27 +119,28 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     
     private final class OlapVariableResolver extends SPSimpleVariableResolver {
     	
-    	private boolean updateNeeded = true;
+    	private AtomicBoolean updateNeeded = new AtomicBoolean(true);
     	
     	public OlapVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
 		}
     	public void setUpdateNeeded(boolean updateNeeded) {
-    		this.updateNeeded = updateNeeded;
+    		this.updateNeeded.set(updateNeeded);
     	}
     	protected void beforeLookups(String key) {
-    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))
-    				&& this.updateNeeded) {
+    		if (this.resolvesNamespace(SPVariableHelper.getNamespace(key))) {
     			this.updateVars();
     		}
     	}
     	protected void beforeKeyLookup(String namespace) {
-    		if (this.updateNeeded) {
     			this.updateVars();
-    		}
     	}
 		public void updateVars() {
 			try {
+				
+				if (!this.updateNeeded.get()) return;
+				this.updateNeeded.set(false);
+				
 				ResultSetHandle handle = execute(
 						new SPVariableHelper(OlapQuery.this),
 						null,
@@ -160,8 +162,6 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 				
 			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
-			} finally {
-				this.updateNeeded = false;
 			}
 		}
     }
