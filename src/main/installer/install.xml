@@ -2,10 +2,10 @@
 	<!-- comment -->
 	<info>
 		<appname>Wabit</appname>
-		<appversion>1.1.1</appversion>
+		<appversion>1.2.0</appversion>
 		<url>http://code.google.com/p/wabit
 		</url>
-		<javaversion>1.5</javaversion>
+		<javaversion>1.6</javaversion>
 	</info>
 	<guiprefs height="600" resizable="yes" width="800">
 		<laf name="metouia">

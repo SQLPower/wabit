@@ -1,5 +1,19 @@
 SQL Power Wabit Release Notes
 
+Noteworthy changes in 1.2.0
+
+  Improvements
+    * Full support of variables in queries
+    * Variables are displayed as "pretty boxes"
+    * Queries now run on background threads
+    * All queries share a common data access API
+    * OLAP queries can be rendered in a relational way
+    * Re-designed the relational result set renderer properties panel
+    
+  Bug Fixes
+    * Fixes bugs with new data events in the GUI. Events are now buffered and coalesced.
+    * Fixes bug with global row limit
+
 Noteworthy Changes in 1.1.1
 
   Improvements:

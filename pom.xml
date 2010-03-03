@@ -14,7 +14,7 @@
 	<groupId>ca.sqlpower.wabit</groupId>
 	<artifactId>wabit</artifactId>
 	<packaging>jar</packaging>
-	<version>1.1.1</version>
+	<version>1.2.0</version>
 	<name>wabit</name>
 	<url>http://code.google.com/p/wabit</url>
 
@@ -37,7 +37,7 @@
 					<!-- <executable>${JAVA_HOME}/bin/javac</executable> -->
 					<compilerVersion>1.5</compilerVersion>
 					<source>1.5</source>
-					<target>1.5</target>
+					<target>1.6</target>
 				</configuration>
 			</plugin>
 			<plugin>
