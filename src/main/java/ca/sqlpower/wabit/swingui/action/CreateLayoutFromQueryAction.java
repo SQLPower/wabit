@@ -24,6 +24,7 @@ import java.awt.event.ActionEvent;
 import javax.swing.AbstractAction;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
+import javax.swing.JOptionPane;
 
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -38,6 +39,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 
 public class CreateLayoutFromQueryAction extends AbstractAction {
     
@@ -71,7 +73,29 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         if (objectToLayout instanceof QueryCache) {
             contentRenderer = new ResultSetRenderer((QueryCache) objectToLayout);
         } else if (objectToLayout instanceof OlapQuery) {
-            contentRenderer = new CellSetRenderer((OlapQuery) objectToLayout);
+        	
+        	//Custom button text
+			Object[] options = {"OLAP Viewer", "Relational Viewer"};
+			
+			final int n = JOptionPane.showOptionDialog(null,
+			    "In what type of component would you like to render this query?",
+			    "",
+			    JOptionPane.YES_NO_OPTION,
+			    JOptionPane.QUESTION_MESSAGE,
+			    WabitIcons.QUERY_32,
+			    options,
+			    options[0]);
+			
+			if (n == JOptionPane.CLOSED_OPTION) {
+				return;
+			} else if (n == 0) {
+				contentRenderer = new CellSetRenderer((OlapQuery) objectToLayout);
+			} else if (n == 1) {
+				contentRenderer = new ResultSetRenderer((OlapQuery) objectToLayout);
+			} else {
+				throw new AssertionError();
+			}
+			
         } else {
             throw new IllegalStateException("Don't know how to create layouts for components of type " + objectToLayout.getClass() + ", object is " + objectToLayout.getName());
         }
