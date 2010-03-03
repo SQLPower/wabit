@@ -359,8 +359,8 @@ public class ResultSetHandle {
                 	case STREAMING:
                 		statement.execute();
                 		final ResultSet streamingRS = statement.getResultSet();
-                		status = ResultSetStatus.SUCCESS;
             			cachedRowSet.follow(streamingRS, rowLimit);
+            			status = ResultSetStatus.SUCCESS;
             			break;
                 	
                 	case RELATIONAL:
