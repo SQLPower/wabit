@@ -58,7 +58,6 @@ public class ResultSetProducerSupport {
 	     */
 		public void executionComplete(ResultSetEvent evt) {
 			// We get called here when one of our handles has completed it's work.
-			handles.remove(evt.getSourceHandle());
 			ResultSetProducerSupport.this.fireExecutionComplete();
 		}
 		
@@ -260,9 +259,8 @@ public class ResultSetProducerSupport {
 			this.informant.isRunning()) {
 			isRunning = true;
 		}
-		if (!isRunning) {
-			isRunning = isRunning();
-		}			
+		
+		isRunning |= isRunning();
 		
 		if (isRunning) {
 			SwingUtilities.invokeLater(new Runnable() {
@@ -281,17 +279,18 @@ public class ResultSetProducerSupport {
 	 */
 	public synchronized void fireExecutionComplete() {
 		
-		boolean sourceIsActive = false;
-		
+		boolean isRunning = false;
 			
-			// Notify listeners if necessary that the last
-			// handle has stopped executing
-			if (informant != null &&
-					informant.isRunning()) {
-				sourceIsActive = true;
-			}
+		// Notify listeners if necessary that the last
+		// handle has stopped executing
+		if (informant != null &&
+				informant.isRunning()) {
+			isRunning = true;
+		}
 		
-		if (sourceIsActive && handles.size() > 0) {
+		isRunning |= isRunning();
+		
+		if (!isRunning) {
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run() {
 					for (ResultSetProducerListener rspl : ResultSetProducerSupport.this.listeners) {
@@ -308,6 +307,8 @@ public class ResultSetProducerSupport {
 			ResultSetHandle rsh = this.handles.get(i);
 			if (rsh.isRunning()) {
 				running = true;
+			} else {
+				this.handles.remove(rsh);
 			}
 		}
 		return running;

@@ -1165,7 +1165,6 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     // XXX All this stuff will have to be removed once the SQLP lib has cleared up his act.
     
     
-    private final List<StatementExecutorListener> executorListeners = new ArrayList<StatementExecutorListener>();
     private ResultSetListener resultSetListener = null;
     private ResultSetHandle internalHandle = null;
     
@@ -1173,17 +1172,20 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 	public boolean executeStatement() throws SQLException {
 		
 		if (this.internalHandle != null) {
-			this.internalHandle.removeResultSetListener(resultSetListener);
 			this.internalHandle.cancel();
+			this.internalHandle.removeResultSetListener(resultSetListener);
 		}
 		
 		try {
+			
 			this.internalHandle = 
 					this.execute(
 							new SPVariableHelper(this), 
 							this.resultSetListener, 
 							false);
+			
 			return true;
+			
 		} catch (ResultSetProducerException e) {
 			SQLException se = new SQLException();
 			se.initCause(e);
@@ -1206,10 +1208,10 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 	}
 
 	public void removeStatementExecutorListener(StatementExecutorListener sel) {
-		this.executorListeners.remove(sel);
+		// don't care
 	}
 	public void addStatementExecutorListener(StatementExecutorListener sel) {
-		this.executorListeners.add(sel);
+		// don't care
 	}
 	
 	public void setResultSetListener(ResultSetListener resultSetListener) {
