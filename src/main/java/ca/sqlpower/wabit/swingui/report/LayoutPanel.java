@@ -269,7 +269,6 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					dtde.dropComplete(false);
 					dtde.rejectDrop();
 					resetUIAfterDrag();
-					throw new IllegalStateException("Unknown item dragged into the report layout. Object was " + wabitObject.getClass());
 				}
 				if (focusedCBNode == null) {
 					Point2D location = canvas.getCamera().localToView(dtde.getLocation());
