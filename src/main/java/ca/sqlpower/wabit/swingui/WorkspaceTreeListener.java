@@ -344,24 +344,26 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			} else {
 			    if (lastPathComponent instanceof SPObject) {
 			    	
-			        JMenuItem editItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
-			                (SPObject) lastPathComponent));
-			        
-			        objectsMenu(
-							menu,
-							lastPathComponent.getClass().getSimpleName(),  
-							((SPObject)lastPathComponent).getUUID(),
-							editItem,
-							WabitAccessManager.Permission.MODIFY);
-			    
+			    	if (!(lastPathComponent instanceof WabitDataSource)) {
+			    		JMenuItem editItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
+			    				(SPObject) lastPathComponent));
+			    		objectsMenu(
+			    				menu,
+			    				lastPathComponent.getClass().getSimpleName(),  
+			    				((SPObject)lastPathComponent).getUUID(),
+			    				editItem,
+			    				WabitAccessManager.Permission.MODIFY);
+			    	}
 			        if (!(lastPathComponent instanceof ContentBox)) {
 			        	
-			        	objectsMenu(
-			        			menu,
-			        			lastPathComponent.getClass().getSimpleName(),  
-			        			null,
-			        			new JMenuItem(new EditCellAction(tree)),
-			        			WabitAccessManager.Permission.MODIFY);
+			        	if (!(lastPathComponent instanceof WabitDataSource)) {
+				        	objectsMenu(
+				        			menu,
+				        			lastPathComponent.getClass().getSimpleName(),  
+				        			null,
+				        			new JMenuItem(new EditCellAction(tree)),
+				        			WabitAccessManager.Permission.MODIFY);
+			        	}
 			        	
 			        	objectsMenu(
 			        			menu,
