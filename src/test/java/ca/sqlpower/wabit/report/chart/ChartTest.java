@@ -32,7 +32,8 @@ public class ChartTest extends AbstractWabitObjectTest {
     @Override
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
-    	
+    
+    	ignored.add("streaming");
     	ignored.add("resultSet");
     	ignored.add("seriesColours");
     	ignored.add("unfilteredResultSet");
