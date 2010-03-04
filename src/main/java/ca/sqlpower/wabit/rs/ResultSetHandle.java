@@ -429,20 +429,9 @@ public class ResultSetHandle {
     	if (async && !System.getProperty("java.class.path").contains("junit")) {
     		executorService.execute(task);
     		return;
+    	} else {
+    		task.run();
     	}
-    	
-    	ExecutorService adHodExecutor = Executors.newSingleThreadScheduledExecutor();
-    	adHodExecutor.execute(task);
-    	try {
-    		adHodExecutor.shutdown();
-			boolean completed = adHodExecutor.awaitTermination(60, TimeUnit.SECONDS);
-			if (!completed) {
-				throw new RuntimeException("Query Execution Timeout");
-			}
-		} catch (InterruptedException e) {
-			task.cancel();
-		}
-		
     }
 
     /**
