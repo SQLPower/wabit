@@ -261,9 +261,9 @@ public class Chart extends AbstractWabitObject {
      *         
      * @see #getUnfilteredResultSet()
      */
-    private ResultSet getResultSet() throws SQLException {
+    private ResultSet getResultSet(boolean async) throws SQLException {
         
-        ResultSet rs = getUnfilteredResultSet();
+        ResultSet rs = getUnfilteredResultSet(async);
         
         if (rs == null) {
         	return null;
@@ -293,8 +293,11 @@ public class Chart extends AbstractWabitObject {
      * @see #getResultSet()
      */
     public ResultSet getUnfilteredResultSet() {
+    	return this.getUnfilteredResultSet(true);
+    }
+    public ResultSet getUnfilteredResultSet(boolean async) {
     	if (needsRefresh || resultSetHandle == null) {
-    		refresh();
+    		refresh(async);
     	}
     	if (resultSetHandle == null) {
     		return null;
@@ -385,8 +388,11 @@ public class Chart extends AbstractWabitObject {
      * @see #setType(ChartType)
      */
     public Dataset createDataset() {
+    	return this.createDataset(true);
+    }
+    public Dataset createDataset(boolean async) {
         try {
-            ResultSet rs = getResultSet();
+            ResultSet rs = getResultSet(async);
             if (rs == null) {
                 logger.debug("Returning null data set because getResultSet() returned null");
                 return null;
