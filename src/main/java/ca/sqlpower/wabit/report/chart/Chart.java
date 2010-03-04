@@ -808,6 +808,14 @@ public class Chart extends AbstractWabitObject {
         }
     }
     
+    /**
+     * Tells this chart that it should refresh the underlying data
+     * next time it tries to render itself or it generates a dataset.
+     */
+    public void refreshLater() {
+    	this.needsRefresh = true;
+    }
+    
     public void refresh() {
     	refresh(true);
     }
