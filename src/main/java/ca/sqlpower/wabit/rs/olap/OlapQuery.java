@@ -120,6 +120,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     private final class OlapVariableResolver extends SPSimpleVariableResolver {
     	
     	private AtomicBoolean updateNeeded = new AtomicBoolean(true);
+    	private AtomicBoolean isUpdating = new AtomicBoolean(false);
     	
     	public OlapVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
@@ -138,8 +139,10 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		public void updateVars() {
 			try {
 				
-				if (!this.updateNeeded.get()) return;
-				this.updateNeeded.set(false);
+				if (!this.updateNeeded.get()
+						|| isUpdating.get()) return;
+				
+				isUpdating.set(true);
 				
 				ResultSetHandle handle = execute(
 						new SPVariableHelper(OlapQuery.this),
@@ -160,8 +163,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 					logger.error("Failed to resolve available variables from a query.", e);
 				}
 				
+				this.updateNeeded.set(false);
+				
 			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
+			} finally {
+				isUpdating.set(false);
 			}
 		}
     }

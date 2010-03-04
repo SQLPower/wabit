@@ -226,6 +226,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
      */
     private final class QueryVariableResolver extends SPSimpleVariableResolver {
     	private AtomicBoolean updateNeeded = new AtomicBoolean(true);
+    	private AtomicBoolean isUpdating = new AtomicBoolean(false);
     	public QueryVariableResolver(SPObject owner, String namespace, String userFriendlyName) {
 			super(owner, namespace, userFriendlyName);
 		}
@@ -240,60 +241,46 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     	protected void beforeKeyLookup(String namespace) {
     			this.updateVars();
     	}
-		private void updateVars() {
+		private synchronized void updateVars() {
 			try {
 				
-				if (!updateNeeded.get()) return;
-				this.updateNeeded.set(false);
+				if (isStreaming()) {
+					// XXX We can't use streaming queries as variables providers
+					variables.clear();
+					return;
+				}
+				
+				if (!updateNeeded.get() ||
+						isUpdating.get()) return;
+				
+				isUpdating.set(true);
 				
 				ResultSetHandle variablesHandle = execute(
 						new SPVariableHelper(QueryCache.this),
 						null,
 						false);
 				
-				variables.clear();
-				ResultSet rs = variablesHandle.getResultSet();
-				if (rs != null &&
-						rs.first()) {
-					do {
-						for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-							QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-						}
-					} while (rs.next());
+				synchronized (variables) {
+					variables.clear();
+					ResultSet rs = variablesHandle.getResultSet();
+					if (rs != null &&
+							rs.first()) {
+						do {
+							for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+								this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+							}
+						} while (rs.next());
+					}					
 				}
+				
+				this.updateNeeded.set(false);
 				
 			} catch (Exception e) {
 				logger.error("Failed to resolve available variables from a query.", e);
+			} finally {
+				isUpdating.set(false);
 			}
 		}
-//		private ResultSetListener variablesRsListener = new ResultSetListener() {
-//			public void newData(ResultSetEvent evt) {
-//				if (isStreaming()) {
-//					update(evt.getSourceHandle().getResultSet());
-//				}
-//			}
-//			public void executionStarted(ResultSetEvent evt) {
-//				// don't care.
-//			};
-//			public void executionComplete(ResultSetEvent evt) {
-//				update(evt.getResults());
-//			}
-//			private void update(ResultSet rs) {
-//				try {
-//					variables.clear();
-//					if (rs != null &&
-//							rs.first()) {
-//						do {
-//							for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-//								QueryVariableResolver.this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-//							}
-//						} while (rs.next());
-//					}
-//				} catch (SQLException e) {
-//					logger.error("Failed to resolve available variables from a query.", e);
-//				}
-//			}
-//		};
     }
     
     /**
