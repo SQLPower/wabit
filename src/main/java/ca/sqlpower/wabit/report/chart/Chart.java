@@ -809,6 +809,18 @@ public class Chart extends AbstractWabitObject {
     }
     
     /**
+     * Tells if this chart is a streaming chart or not.
+     */
+    public boolean isStreaming() {
+    	if (this.query != null &&
+    			this.query.isStreaming()) {
+    		return true;
+    	} else {
+    		return false;
+    	}
+    }
+    
+    /**
      * Tells this chart that it should refresh the underlying data
      * next time it tries to render itself or it generates a dataset.
      */
