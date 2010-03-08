@@ -221,10 +221,17 @@ public class ResultSetProducerSupport {
      * Cancels the execution of every handle.
      */
     public void cancel() {
-		for (int i = this.handles.size()-1; i >= 0; i--) {
-			ResultSetHandle rsh = this.handles.get(i);
-			rsh.cancel();
-			this.handles.remove(i);
+    	Throwable rethrown = null;
+		for (ResultSetHandle rsh : this.handles) {
+			try {
+				rsh.cancel();				
+			} catch (Throwable t) {
+				rethrown = t;
+			}
+			this.handles.remove(rsh);
+		}
+		if (rethrown != null) {
+			throw new RuntimeException(rethrown);
 		}
     }
 
@@ -303,10 +310,10 @@ public class ResultSetProducerSupport {
 	
 	public boolean isRunning() {
 		boolean running = false;
-		for (int i = this.handles.size()-1; i >= 0; i--) {
-			ResultSetHandle rsh = this.handles.get(i);
+		for (ResultSetHandle rsh : this.handles) {
 			if (rsh.isRunning()) {
 				running = true;
+				break;
 			} else {
 				this.handles.remove(rsh);
 			}
