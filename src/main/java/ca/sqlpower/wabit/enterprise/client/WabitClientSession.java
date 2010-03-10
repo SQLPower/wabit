@@ -159,6 +159,17 @@ public class WabitClientSession extends WabitSessionImpl {
         MessageSender<JSONObject> httpSender = new JSONHttpMessageSender(outboundHttpClient, workspaceLocation.getServiceInfo(),
         		workspaceLocation.getUuid());
 		jsonPersister = new WabitJSONPersister(httpSender);
+		
+		try {
+			ServerInfoProvider.getServerVersion(
+					this.workspaceLocation.getServiceInfo().getServerAddress(), 
+					String.valueOf(this.workspaceLocation.getServiceInfo().getPort()), 
+					this.workspaceLocation.getServiceInfo().getPath(), 
+					this.workspaceLocation.getServiceInfo().getUsername(), 
+					this.workspaceLocation.getServiceInfo().getPassword());
+		} catch (Exception e) {
+			throw new AssertionError("Exception encountered while verifying the server license:" + e.getMessage());
+		}
     }
 
 	public static HttpClient createHttpClient(SPServerInfo serviceInfo) {

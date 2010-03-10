@@ -26,6 +26,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.HttpOptions;
@@ -122,7 +125,7 @@ public abstract class ServerInfoProvider {
 			// Decode the message
 			String serverVersion;
 			Boolean licensedServer;
-			String watermarkMessage;
+			final String watermarkMessage;
 			try {
 				JSONObject jsonObject = new JSONObject(responseBody);
 				serverVersion = jsonObject.getString(ServerProperties.SERVER_VERSION.toString());
@@ -136,6 +139,19 @@ public abstract class ServerInfoProvider {
 			version.put(generateServerKey(url, username, password), new Version(serverVersion));
 			licenses.put(generateServerKey(url, username, password), licensedServer);
 			watermarkMessages.put(generateServerKey(url, username, password), watermarkMessage);
+			
+			// Notify the user if the server is not licensed.
+			if (!licensedServer) {
+				SwingUtilities.invokeLater(new Runnable() {
+					public void run() {
+						JOptionPane.showMessageDialog(
+								null, 
+								watermarkMessage, 
+								"SQL Power Wabit Server License",
+								JOptionPane.WARNING_MESSAGE);						
+					}
+				});
+			}
 			
 		} catch (URISyntaxException e) {
 			throw new IOException(e.getLocalizedMessage());
