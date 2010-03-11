@@ -71,6 +71,7 @@ import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
@@ -259,10 +260,15 @@ public class WorkspaceTreeModel implements TreeModel {
      */
 	private List<WabitObject> getLayoutsChildren(Layout parent) {
 		List<WabitObject> layoutChildren = new ArrayList<WabitObject>();
-		List<Page> page = ((Layout) parent).getChildren();
-		for (WabitObject wo : ((Page) page.get(0)).getChildren()) {
+		Page page = ((Layout) parent).getPage();
+		for (WabitObject wo : page.getChildren()) {
 			if (wo instanceof ContentBox) {
 				layoutChildren.add(wo);
+			}
+		}
+		if (parent instanceof Report) {
+			for (Selector selector : ((Report)parent).getSelectors()) {
+				layoutChildren.add(selector);
 			}
 		}
 		return layoutChildren;

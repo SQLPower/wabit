@@ -261,8 +261,8 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 						false);
 				
 				synchronized (variables) {
-					variables.clear();
 					ResultSet rs = variablesHandle.getResultSet();
+					variables.clear();
 					if (rs != null &&
 							rs.first()) {
 						do {

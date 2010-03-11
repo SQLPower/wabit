@@ -114,13 +114,16 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         Object newValue;
         
         if (valueType.equals(SPObject.class) || valueType.equals(WabitObject.class)) {
-        	WabitImage image = new WabitImage();
         	
         	if (!propName.equals("addImage")) {
+        		Report report = new Report("test report");
+        		workspace.addReport(report);
+        		newValue = report;
+        	} else {
+        		WabitImage image = new WabitImage();
         		workspace.addImage(image);
+        		newValue = image;
         	}
-        	
-            newValue = image;
             
         } else if (valueType.equals(WabitDataSource.class)) {
             final JDBCDataSource ds = new JDBCDataSource(new PlDotIni());

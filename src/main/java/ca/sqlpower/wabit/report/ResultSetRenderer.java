@@ -351,7 +351,9 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     }
     
     public void resetToFirstPage() {
-    	this.refresh();
+    	this.pageCells.remove();
+		this.executeException = null;
+		this.internalError = null;
     }
     
     private void setResultSetHandle(ResultSetHandle rsh) {
@@ -365,6 +367,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	}
     	
     	refresh();
+    	
 		this.resultSetHandle = rsh;
     }
 	
@@ -487,7 +490,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         }
     }
 
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+    public synchronized boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
     	
     	if (resultSetHandle == null || dirty) {
     		try {
@@ -954,6 +957,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
 		this.pageCells.remove();
 		this.executeException = null;
 		this.internalError = null;
+		this.dirty = true;
 	}
 
     /**

@@ -571,7 +571,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         //persist the object
         wo.setParent(parent);
         listener.transactionStarted(null);
-        listener.childAdded(new SPChildEvent(parent, wo.getClass(), wo, 0, EventType.ADDED));
+        listener.childAdded(new SPChildEvent(parent, wo.getClass(), wo, parent.getChildren().size(), EventType.ADDED));
         listener.transactionEnded(null);
         
         //the object must now be added to the super parent

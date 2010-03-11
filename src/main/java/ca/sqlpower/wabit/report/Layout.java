@@ -159,8 +159,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         }
     }
 
-    public List<Page> getChildren() {
-        return Collections.singletonList(page);
+    public List<WabitObject> getChildren() {
+        return Collections.singletonList((WabitObject)page);
     }
     
     @Override

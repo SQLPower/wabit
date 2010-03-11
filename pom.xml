@@ -580,12 +580,14 @@
 		<dependency>
 			<groupId>ca.sqlpower.architect</groupId>
 			<artifactId>architect-core</artifactId>
-			<version>0.9.12-alpha</version>
+			<version>0.9.17</version>
+			<classifier>SNAPSHOT</classifier>
 		</dependency>
 		<dependency>
 			<groupId>ca.sqlpower.architect</groupId>
 			<artifactId>architect-dbtree</artifactId>
-			<version>0.9.14-alpha</version>
+			<version>0.9.17</version>
+			<classifier>SNAPSHOT</classifier>
 		</dependency>
 		<dependency>
             <groupId>jfree</groupId>
@@ -747,6 +749,12 @@
         <dependency>
 		  	<groupId>commons-vfs</groupId>
 		  	<artifactId>commons-vfs</artifactId>
+		  	<version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+		  	<groupId>commons-lang</groupId>
+		  	<artifactId>commons-lang</artifactId>
 		  	<version>1.0</version>
             <scope>compile</scope>
         </dependency>

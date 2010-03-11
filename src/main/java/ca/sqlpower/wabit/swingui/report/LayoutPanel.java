@@ -68,7 +68,6 @@ import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -328,7 +327,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 	
-	private final WabitSwingSession session;
+	protected final WabitSwingSession session;
 	private final JFrame parentFrame;
 	
 	private final AbstractAction addHorizontalGuideAction = new AbstractAction("",  LayoutPanel.CREATE_HORIZONTAL_GUIDE_ICON){
@@ -357,14 +356,17 @@ public class LayoutPanel implements WabitPanel, MouseState {
 		}
 	};
 		
-	private final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
+	protected final Action refreshDataAction = new AbstractAction("", REFRESH_ICON) {
 		public void actionPerformed(ActionEvent e) {
-			for (Page page: layout.getChildren()) {
-				for (ContentBox content: page.getContentBoxes()){
-					ReportContentRenderer r = content.getContentRenderer();
-					if (r != null) {
-						r.refresh();
-						//TODO: Catch exceptions and call a new ReportContentRenderer 'renderError' method
+			for (WabitObject child: layout.getChildren()) {
+				if (child instanceof Page) {
+					Page page = (Page)child;
+					for (ContentBox content: page.getContentBoxes()){
+						ReportContentRenderer r = content.getContentRenderer();
+						if (r != null) {
+							r.refresh();
+							//TODO: Catch exceptions and call a new ReportContentRenderer 'renderError' method
+						}
 					}
 				}
 			}
@@ -545,7 +547,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
      * Frees any resources and references that would not have been freed otherwise (by virtue
      * of this panel being removed from the GUI).
      */
-    private void cleanup() {
+    protected void cleanup() {
         recursiveCleanup(pageNode);
     }
     

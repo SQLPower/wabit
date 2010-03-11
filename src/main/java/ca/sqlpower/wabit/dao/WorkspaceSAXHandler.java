@@ -100,6 +100,9 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.Selector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
@@ -255,6 +258,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private final DataSourceCollection<SPDataSource> dsCollection;
 
 	private boolean isInLayout = false;
+
+	private Selector selector;
 	
     /**
      * Creates a new SAX handler which is capable of reading in a series of
@@ -1154,6 +1159,44 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	} else {
         		throw new IllegalStateException("There is no date format defined for the parent " + xmlContext.get(xmlContext.size() - 2));
         	}
+        
+        } else if (name.equals("selector")) {
+        	
+        	String type = attributes.getValue("type");
+        	
+        	if (type.equals(ComboBoxSelector.class.getSimpleName())) {
+        		this.selector = new ComboBoxSelector();
+        	} else if (type.equals(TextBoxSelector.class.getSimpleName())) {
+        		this.selector = new TextBoxSelector();
+        	} else {
+        		throw new IllegalStateException("Cannot create a selector of type " + type);
+        	}
+        	
+        	if (layout instanceof Report) {
+        		layout.addChild(selector, ((Report) layout).getSelectors().size());
+        	} else {
+        		throw new IllegalStateException("Selectors can only be added to reports.");
+        	}
+        	
+        	createdObject = this.selector;
+        
+        } else if (name.equals("selector-config")) {
+        	
+        	String type = attributes.getValue("type");
+        	
+        	if (selector instanceof ComboBoxSelector) {
+        		((ComboBoxSelector) selector).setSourceKey(attributes.getValue("sourceKey"));
+        		((ComboBoxSelector) selector).setStaticValues(attributes.getValue("staticValues"));
+        		((ComboBoxSelector) selector).setDefaultValue(attributes.getValue("defaultValue"));
+        		((ComboBoxSelector) selector).setAlwaysIncludeDefaultValue(Boolean.valueOf(attributes.getValue("alwaysIncludeDefaultValue")));
+        	} else if (selector instanceof TextBoxSelector) {
+        		((TextBoxSelector) selector).setDefaultValue(attributes.getValue("defaultValue"));
+        	} else {
+        		throw new IllegalStateException("Cannot create a selector of type " + type);
+        	}
+        	
+        	createdObject = null;
+        	
         } else if (name.equals("cell-set-renderer")) {
             String queryUUID = attributes.getValue("olap-query-uuid");
             OlapQuery newQuery = null;

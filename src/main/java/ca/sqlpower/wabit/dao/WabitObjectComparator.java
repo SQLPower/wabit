@@ -44,6 +44,9 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.Selector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
@@ -118,6 +121,9 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ImageRenderer.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Label.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Guide.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ComboBoxSelector.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(TextBoxSelector.class)));
+        
     }
 
     public int compare(WabitObject o1, WabitObject o2) {

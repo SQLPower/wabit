@@ -23,6 +23,8 @@ import java.util.Set;
 
 import ca.sqlpower.wabit.AbstractWabitObjectTest;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 
 public class LayoutTest extends AbstractWabitObjectTest {
 
@@ -35,6 +37,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("page");
     	ignored.add("variableResolver");
     	ignored.add("variables");
+    	ignored.add("selectors");
     	return ignored;
     }
     
@@ -50,6 +53,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     	ignored.add("zoomLevel");
     	ignored.add("variableResolver");
     	ignored.add("variables");
+    	ignored.add("selectors");
     	return ignored;
     }
     
@@ -57,6 +61,7 @@ public class LayoutTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToIgnoreForPersisting() {
     	Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
     	ignored.add("zoomLevel");
+    	ignored.add("selectors");
     	return ignored;
     }
     
@@ -64,6 +69,8 @@ public class LayoutTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         layout = new Report("test layout");
+        layout.addChild(new ComboBoxSelector(), layout.getSelectors().size());
+        layout.addChild(new TextBoxSelector(), layout.getSelectors().size());
         getWorkspace().addChild(layout, 0);
     }
     

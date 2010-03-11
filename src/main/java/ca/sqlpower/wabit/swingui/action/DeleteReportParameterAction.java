@@ -23,57 +23,47 @@ import java.awt.Component;
 import java.awt.event.ActionEvent;
 
 import javax.swing.AbstractAction;
-import javax.swing.JDialog;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
-import ca.sqlpower.swingui.DataEntryPanel;
-import ca.sqlpower.swingui.DataEntryPanelBuilder;
-import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
-import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.swingui.WabitIcons;
-import ca.sqlpower.wabit.swingui.report.selectors.ComboBoxSelectorPanel;
-import ca.sqlpower.wabit.swingui.report.selectors.TextBoxSelectorPanel;
 
-public class EditReportParameterAction extends AbstractAction {
+public class DeleteReportParameterAction extends AbstractAction {
 
 	private final Component dialogOwner;
 	private final Selector selector;
+	private final Runnable reportRefresher;
 
-	public EditReportParameterAction(
+	public DeleteReportParameterAction(
 			Component dialogOwner,
-			Selector selector) 
+			Selector selector, 
+			Runnable reportRefresher) 
 	{
-		super("", WabitIcons.EDIT);
+		super("", WabitIcons.CLOSE_WORKSPACE);
 		this.dialogOwner = dialogOwner;
 		this.selector = selector;
+		this.reportRefresher = reportRefresher;
 	}
 	
 	public void actionPerformed(ActionEvent e) {
 		
-		final DataEntryPanel dep;
-		if (selector instanceof ComboBoxSelector) {
-			dep = new ComboBoxSelectorPanel(
-						dialogOwner,
-						selector.getParent(), 
-						(ComboBoxSelector)selector);
-		} else if (selector instanceof TextBoxSelector) {
-			
-			dep = new TextBoxSelectorPanel(
-					dialogOwner, 
-					(TextBoxSelector)selector);
-			
-		} else {
-			throw new AssertionError();
+		int result = 
+				JOptionPane.showConfirmDialog(
+						dialogOwner, 
+						"Delete this parameter?",
+						"",
+						JOptionPane.YES_NO_OPTION);
+		
+		if (result == JOptionPane.YES_OPTION) {
+			try {
+				selector.cleanup();
+				selector.getParent().removeChild(selector);
+				SwingUtilities.invokeLater(reportRefresher);
+			} catch (Exception e1) {
+				throw new RuntimeException(e1);
+			}
 		}
-		
-		JDialog dialog = 
-			DataEntryPanelBuilder.createDataEntryPanelDialog(
-				dep,
-		        this.dialogOwner, 
-		        "", 
-		        "OK");
-		
-		dialog.setVisible(true);
 	}
 
 }

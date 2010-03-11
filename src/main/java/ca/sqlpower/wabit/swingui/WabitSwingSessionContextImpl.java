@@ -213,6 +213,7 @@ import ca.sqlpower.wabit.swingui.enterprise.UserPanel;
 import ca.sqlpower.wabit.swingui.enterprise.action.RefreshWorkspaceAction;
 import ca.sqlpower.wabit.swingui.olap.OlapQueryPanel;
 import ca.sqlpower.wabit.swingui.report.LayoutPanel;
+import ca.sqlpower.wabit.swingui.report.ReportPanel;
 import ca.sqlpower.wabit.swingui.tree.SmartTreeTransferable;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeModel;
@@ -402,7 +403,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
          */
         DOCKED("Docked") {
             @Override
-            void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
+            void apply(final WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
                 super.apply(context, wabitPanel);
                 
                 context.sourceListDialog.setVisible(false);
@@ -411,14 +412,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 JComponent panel = wabitPanel.getPanel();
                 
                 if (sourceComponent != null) {
-                    JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+                    final JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
                     sp.setBorder(BorderFactory.createEmptyBorder());
                     sp.setLeftComponent(panel);
                     sp.setRightComponent(sourceComponent);
-                    sp.setDividerLocation(context.prefs.getInt(
-                            WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
-                            context.frame.getWidth() * 3 / 4));
-
+                    
+                    SwingUtilities.invokeLater(new Runnable() {
+						public void run() {
+							// TODO This stuff doesn't work properly
+//							sp.setDividerLocation(prefs.getInt(
+//		                            WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
+//		                            (context.frame.getWidth() * 3 / 4)));
+							sp.setDividerLocation(0.75d);
+						}
+					});
+                    
                     safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), sp);
                 } else {
                     safelySetRightComponent(context.wabitPane, wabitPanel.getToolbar(), panel);
@@ -468,7 +476,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         @OverrideMustInvoke
         void apply(WabitSwingSessionContextImpl context, WabitPanel wabitPanel) {
             context.sourceListStyle = this;
-            context.prefs.put(SOURCE_LIST_STYLE, name());
+            prefs.put(SOURCE_LIST_STYLE, name());
         }
 
         /**
@@ -637,7 +645,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	/**
 	 * This is the prefs for the entire context.
 	 */
-	private final Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionContextImpl.class);
+	private final static Preferences prefs = Preferences.userNodeForPackage(WabitSwingSessionContextImpl.class);
 	
 	/**
 	 * This is the main frame of the context.
@@ -1807,9 +1815,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         		currentEditorPanel = new ChartPanel(getActiveSwingSession(), (Chart) entryPanelModel);
         	} else if (entryPanelModel instanceof WabitImage) {
         		currentEditorPanel = new WabitImagePanel((WabitImage) entryPanelModel, this);
-        		// XXX Only activate this when the report parameters are completed.
-        		//} else if (entryPanelModel instanceof Report) {
-        		//    currentEditorPanel = new ReportPanel(getActiveSwingSession(), (Report) entryPanelModel);
+    		} else if (entryPanelModel instanceof Report) {
+        		    currentEditorPanel = new ReportPanel(getActiveSwingSession(), (Report) entryPanelModel);
         	} else if (entryPanelModel instanceof Layout) {
         		currentEditorPanel = new LayoutPanel(getActiveSwingSession(), (Layout) entryPanelModel);
         	} else if (entryPanelModel instanceof ReportTask) {
@@ -1859,10 +1866,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         
         if (currentEditorPanel != null) {
             
-            if (wabitPane.getRightComponent() instanceof JSplitPane) {
-                JSplitPane sp = (JSplitPane) wabitPane.getRightComponent();
-                prefs.putInt(SOURCE_LIST_DIVIDER_LOCATON, sp.getDividerLocation());
-            }
+        	// TODO This stuff doesn't work.
+//        	prefs.putInt(SOURCE_LIST_DIVIDER_LOCATON, wabitPane.getDividerLocation());
             
             if (sourceListDialog != null) {
                 prefs.putInt(SOURCE_LIST_DIALOG_X, sourceListDialog.getX());

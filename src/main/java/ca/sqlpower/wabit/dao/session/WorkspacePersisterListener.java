@@ -71,6 +71,8 @@ import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
@@ -813,6 +815,48 @@ public class WorkspacePersisterListener implements SPListener {
 		} else if (child instanceof WabitWorkspace) {
 			logger.info("Sending workspace created event");
 			//no current properties
+			
+		} else if(child instanceof ComboBoxSelector) {
+			
+			ComboBoxSelector cbs = (ComboBoxSelector) child;
+			
+			this.persistProperty(
+					uuid, 
+					"sourceKey", 
+					DataType.STRING, 
+					converter.convertToBasicType(cbs.getSourceKey()));
+			
+			this.persistProperty(
+					uuid, 
+					"staticValues", 
+					DataType.STRING, 
+					converter.convertToBasicType(cbs.getStaticValues()));
+			
+			this.persistProperty(
+					uuid, 
+					"defaultValue", 
+					DataType.STRING, 
+					converter.convertToBasicType(cbs.getDefaultValue()));
+			
+			this.persistProperty(
+					uuid, 
+					"alwaysIncludeDefaultValue", 
+					DataType.STRING, 
+					converter.convertToBasicType(cbs.isAlwaysIncludeDefaultValue()));
+		
+		} else if(child instanceof TextBoxSelector) {
+			
+			TextBoxSelector tbs = (TextBoxSelector) child;
+			
+			this.persistProperty(
+					uuid, 
+					"defaultValue", 
+					DataType.STRING, 
+					converter.convertToBasicType(tbs.getDefaultValue()));
+			
+		} else {
+			
+			logger.debug("Cannot persist child of type " + child.getClass().getCanonicalName());
 			
 		}
 		

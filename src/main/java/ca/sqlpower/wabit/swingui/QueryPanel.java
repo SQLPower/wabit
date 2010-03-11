@@ -105,13 +105,14 @@ import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.dbtree.SQLObjectSelection;
 import ca.sqlpower.swingui.object.InsertVariableAction;
 import ca.sqlpower.swingui.object.VariableInserter;
-import ca.sqlpower.swingui.object.VariableLabel;
 import ca.sqlpower.swingui.query.SQLQueryUIComponents;
 import ca.sqlpower.swingui.query.TableChangeEvent;
 import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.util.SPSession;
+import ca.sqlpower.util.SessionNotFoundException;
 import ca.sqlpower.validation.swingui.StatusComponent;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.rs.ResultSetEvent;
@@ -485,6 +486,13 @@ public class QueryPanel implements WabitPanel {
 			// don't care
 		}
 	};
+	
+	private class CustomSQLObjectRoot extends SQLObjectRoot {
+		@Override
+		public SPSession getSession() throws SessionNotFoundException {
+			return session;
+		}
+	}
     
 	public QueryPanel(WabitSwingSession session, QueryCache cache) {
 		logger.debug("Constructing new QueryPanel@" + System.identityHashCode(this));
@@ -563,7 +571,7 @@ public class QueryPanel implements WabitPanel {
 			}
 		};
 		dragTree.setRootVisible(false);
-		rootNode = new SQLObjectRoot();
+		rootNode = new CustomSQLObjectRoot();
 		reportComboBox.addActionListener(new AbstractAction() {
 			public void actionPerformed(ActionEvent event) {
 				try {

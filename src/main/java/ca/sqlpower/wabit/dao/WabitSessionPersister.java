@@ -104,6 +104,8 @@ import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
@@ -812,9 +814,12 @@ public class WabitSessionPersister implements SPPersister {
 			} catch (IllegalArgumentException e) {
 				spo = new Report(name, uuid);
 			}
+		} else if (type.equals(ComboBoxSelector.class.getSimpleName())) {
+			spo = new ComboBoxSelector(); 
+		} else if (type.equals(TextBoxSelector.class.getSimpleName())) {
+			spo = new TextBoxSelector(); 
 		} else if (type.equals(ReportTask.class.getSimpleName())) {
 			spo = new ReportTask();
-
 		} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
 			
 			String contentID = (String) converter.convertToComplexType(
@@ -1184,6 +1189,12 @@ public class WabitSessionPersister implements SPPersister {
 					propertyName, newValue);
 		} else if (spo instanceof WabitTableContainer) {
 			commitWabitTableContainerProperty((WabitTableContainer) spo,
+					propertyName, newValue);
+		} else if (spo instanceof ComboBoxSelector) {
+			commitComboBoxSelectorProperty((ComboBoxSelector) spo,
+					propertyName, newValue);
+		} else if (spo instanceof TextBoxSelector) {
+			commitTextBoxSelectorProperty((TextBoxSelector) spo,
 					propertyName, newValue);
 		} else if (spo instanceof WabitWorkspace) {
 			commitWabitWorkspaceProperty((WabitWorkspace) spo,
@@ -1571,6 +1582,12 @@ public class WabitSessionPersister implements SPPersister {
 				} else if (spo instanceof WabitTableContainer) {
 					propertyValue = getWabitTableContainerProperty(
 							(WabitTableContainer) spo, propertyName);
+				} else if (spo instanceof ComboBoxSelector) {
+					propertyValue = getComboBoxSelectorProperty(
+							(ComboBoxSelector) spo, propertyName);
+				} else if (spo instanceof TextBoxSelector) {
+					propertyValue = getTextBoxSelectorProperty(
+							(TextBoxSelector) spo, propertyName);
 				} else if (spo instanceof WabitWorkspace) {
 					propertyValue = getWabitWorkspaceProperty((WabitWorkspace) spo,
 							propertyName);
@@ -2063,7 +2080,41 @@ public class WabitSessionPersister implements SPPersister {
 							propertyName));
 		}
 	}
+	
+	private Object getComboBoxSelectorProperty(ComboBoxSelector selector, String propertyName) 
+				throws SPPersistenceException {
+		if (propertyName.equals("sourceKey")) {
+			return converter.convertToBasicType(selector.getSourceKey());
 
+		} else if (propertyName.equals("staticValues")) {
+			return converter.convertToBasicType(selector.getStaticValues());
+			
+		} else if (propertyName.equals("defaultValue")) {
+			return converter.convertToBasicType(selector.getDefaultValue());
+			
+		} else if (propertyName.equals("alwaysIncludeDefaultValue")) {
+			return converter.convertToBasicType(selector.isAlwaysIncludeDefaultValue());
+
+		} else {
+			throw new SPPersistenceException(selector.getUUID(),
+					getSPPersistenceExceptionMessage(selector,
+							propertyName));
+		}
+	}
+	
+	private Object getTextBoxSelectorProperty(TextBoxSelector selector, String propertyName) 
+			throws SPPersistenceException 
+	{
+		if (propertyName.equals("defaultValue")) {
+			return converter.convertToBasicType(selector.getDefaultValue());
+		
+		} else {
+			throw new SPPersistenceException(selector.getUUID(),
+				getSPPersistenceExceptionMessage(selector,
+						propertyName));
+		}
+	}
+	
 	/**
 	 * Commits a persisted {@link WabitTableContainer} object property
 	 * 
@@ -2095,6 +2146,50 @@ public class WabitSessionPersister implements SPPersister {
 							propertyName));
 		}
 	}
+	
+	private void commitComboBoxSelectorProperty(
+			ComboBoxSelector selector, String propertyName,
+			Object newValue) throws SPPersistenceException {
+
+		if (propertyName.equals("staticValues")) {
+			selector.setStaticValues((String) converter
+					.convertToComplexType(newValue, String.class));
+
+		} else if (propertyName.equals("sourceKey")) {
+			selector.setSourceKey((String) converter
+					.convertToComplexType(newValue, String.class));
+
+		} else if (propertyName.equals("defaultValue")) {
+			selector.setDefaultValue((String) converter
+					.convertToComplexType(newValue, String.class));
+			
+		} else if (propertyName.equals("alwaysIncludeDefaultValue")) {
+			selector.setAlwaysIncludeDefaultValue((Boolean) converter
+					.convertToComplexType(newValue, Boolean.class));
+
+		} else {
+			throw new SPPersistenceException(selector.getUUID(),
+					getSPPersistenceExceptionMessage(selector,
+							propertyName));
+		}
+	}
+	
+	
+	private void commitTextBoxSelectorProperty(
+			TextBoxSelector selector, String propertyName,
+			Object newValue) throws SPPersistenceException {
+
+		if (propertyName.equals("defaultValue")) {
+			selector.setDefaultValue((String) converter
+					.convertToComplexType(newValue, String.class));
+
+		} else {
+			throw new SPPersistenceException(selector.getUUID(),
+					getSPPersistenceExceptionMessage(selector,
+							propertyName));
+		}
+	}
+	
 
 	/**
 	 * Retrieves a property value from a {@link WabitItem} object based on the

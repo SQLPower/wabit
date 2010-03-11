@@ -69,10 +69,14 @@ import ca.sqlpower.wabit.report.ImageRenderer;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
+import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.Selector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
@@ -461,9 +465,44 @@ public class WorkspaceXMLDAO {
 		xml.indent--;
 		xml.println(out, "</layout-page>");
 		
+		
+		if (layout instanceof Report) {
+			for (Selector selector : ((Report) layout).getSelectors()) {
+				saveSelector(selector);
+			}
+		}
+		
+		
 		xml.indent--;
 		xml.println(out, "</layout>");
 	}
+	
+	
+	private void saveSelector(Selector selector) {
+		
+		xml.print(out, "<selector");
+        printCommonAttributes(selector);
+		
+        printAttribute("type", selector.getClass().getSimpleName());
+        
+        xml.niprintln(out, ">");
+        xml.indent++;
+        
+        xml.print(out, "<selector-config");
+        if (selector instanceof ComboBoxSelector) {
+        	printAttribute("sourceKey", ((ComboBoxSelector) selector).getSourceKey());
+        	printAttribute("staticValues", ((ComboBoxSelector) selector).getStaticValues());
+        	printAttribute("defaultValue", ((ComboBoxSelector) selector).getDefaultValue());
+        	printAttribute("alwaysIncludeDefaultValue", ((ComboBoxSelector) selector).isAlwaysIncludeDefaultValue());
+        } else if (selector instanceof TextBoxSelector) {
+        	printAttribute("defaultValue", ((TextBoxSelector) selector).getDefaultValue());
+        }
+        xml.niprintln(out, "/>");
+        
+        xml.indent--;
+        xml.niprintln(out, "</selector>");
+	}
+	
 	
 	private void saveChart(Chart chart) {
 	    xml.print(out, "<chart");
@@ -825,6 +864,16 @@ public class WorkspaceXMLDAO {
 
     public void printAttribute(String name, boolean value) {
         xml.niprint(out, " " + name + "=\"" + value + "\"");
+    }
+    
+    public void printAttribute(String name, Object value) {
+    	if (value == null) return;
+    	if (value instanceof String) printAttribute(name, (String)value);
+    	else if (value instanceof Double) printAttribute(name, (Double)value);
+    	else if (value instanceof Integer) printAttribute(name, (Integer)value);
+    	else if (value instanceof Boolean) printAttribute(name, (Boolean)value);
+    	else
+    		throw new RuntimeException("Unknown class type for DAO class converter.");
     }
 
     /**
