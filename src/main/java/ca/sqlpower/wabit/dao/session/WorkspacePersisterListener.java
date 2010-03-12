@@ -443,6 +443,21 @@ public class WorkspacePersisterListener implements SPListener {
 					converter.convertToBasicType(chart.getYaxisName()));
 			this.persistProperty(uuid, "backgroundColour", DataType.STRING,
 					converter.convertToBasicType(chart.getBackgroundColour()));
+			
+			this.persistProperty(uuid, "autoXAxisRange", DataType.BOOLEAN,
+					converter.convertToBasicType(chart.isAutoXAxisRange()));
+			this.persistProperty(uuid, "autoYAxisRange", DataType.BOOLEAN,
+					converter.convertToBasicType(chart.isAutoYAxisRange()));
+			
+			this.persistProperty(uuid, "XAxisMaxRange", DataType.DOUBLE,
+					converter.convertToBasicType(chart.getXAxisMaxRange()));
+			this.persistProperty(uuid, "YAxisMaxRange", DataType.DOUBLE,
+					converter.convertToBasicType(chart.getYAxisMaxRange()));
+			this.persistProperty(uuid, "XAxisMinRange", DataType.DOUBLE,
+					converter.convertToBasicType(chart.getXAxisMinRange()));
+			this.persistProperty(uuid, "YAxisMinRange", DataType.DOUBLE,
+					converter.convertToBasicType(chart.getYAxisMinRange()));
+			
 
 		} else if (child instanceof ChartRenderer) {
 			//The only argument to this class is handled later by the

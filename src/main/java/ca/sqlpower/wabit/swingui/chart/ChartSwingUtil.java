@@ -34,6 +34,7 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.PieToolTipGenerator;
 import org.jfree.chart.labels.StandardPieToolTipGenerator;
@@ -298,7 +299,7 @@ public class ChartSwingUtil {
         // following cast should always work
         CategoryDataset dataset = (CategoryDataset) c.createDataset();
         
-        return createCategoryChartFromDataset(dataset, c.getType(), 
+        return createCategoryChartFromDataset(c, dataset, c.getType(), 
                 legendPosition, chartName, yaxisName, xaxisName);
     }
 
@@ -310,6 +311,7 @@ public class ChartSwingUtil {
      * <p>
      * Given a dataset and other chart properties this will create an
      * appropriate JFreeChart.
+     * @param c 
      * 
      * @param dataset
      *            The data to create a chart from.
@@ -326,7 +328,7 @@ public class ChartSwingUtil {
      * @return A JFreeChart that represents the dataset given.
      */
     private static JFreeChart createCategoryChartFromDataset( 
-            CategoryDataset dataset, ChartType chartType, LegendPosition legendPosition, 
+            Chart c, CategoryDataset dataset, ChartType chartType, LegendPosition legendPosition, 
             String chartName, String yaxisName, String xaxisName) {
         
         if (chartType == null || dataset == null) {
@@ -352,7 +354,6 @@ public class ChartSwingUtil {
             chart = ChartFactory.createLineChart(
                     chartName, xaxisName, yaxisName, dataset, PlotOrientation.VERTICAL,
                     showLegend, true, false);
-            
         } else {
             throw new IllegalArgumentException("Unknown chart type " + chartType + " for a category dataset.");
         }
@@ -371,6 +372,13 @@ public class ChartSwingUtil {
                 // for now, legend and items labels are mutually exclusive. Could make this a user pref.
                 plot.setLabelGenerator(null);
             }
+        }
+        
+        if (!c.isAutoYAxisRange()) {
+        	CategoryPlot plot = chart.getCategoryPlot();
+            ValueAxis axis = plot.getRangeAxis();
+        	axis.setAutoRange(false);
+        	axis.setRange(c.getYAxisMinRange(), c.getYAxisMaxRange());
         }
         
         return chart;
@@ -469,7 +477,7 @@ public class ChartSwingUtil {
         if (xyCollection == null) {
             return null;
         }
-        return createChartFromXYDataset(xyCollection, c.getType(), legendPosition, 
+        return createChartFromXYDataset(c, xyCollection, c.getType(), legendPosition, 
                 chartName, yaxisName, xaxisName);
     }
 
@@ -477,6 +485,7 @@ public class ChartSwingUtil {
      * This is a helper method for creating a line chart. This should only do
      * the chart creation and not setting up the dataset. The calling method
      * should do the logic for the dataset setup.
+     * @param c 
      * 
      * @param xyCollection
      *            The dataset to display a chart for.
@@ -494,9 +503,15 @@ public class ChartSwingUtil {
      *            The name of the x axis.
      * @return A chart of the specified chartType based on the given dataset.
      */
-    private static JFreeChart createChartFromXYDataset(XYDataset xyCollection,
-            ChartType chartType, LegendPosition legendPosition, 
-            String chartName, String yaxisName, String xaxisName) {
+    private static JFreeChart createChartFromXYDataset(
+    		Chart c, 
+    		XYDataset xyCollection,
+            ChartType chartType, 
+            LegendPosition legendPosition, 
+            String chartName, 
+            String yaxisName, 
+            String xaxisName) 
+    {
         boolean showLegend = !legendPosition.equals(LegendPosition.NONE);
         JFreeChart chart;
         if (chartType.equals(ChartType.LINE)) {
@@ -519,6 +534,19 @@ public class ChartSwingUtil {
             plot.setDomainAxis(new DateAxis(xaxisName));
             // TODO user-settable date format
             // axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
+        }
+        
+        if (!c.isAutoXAxisRange()) {
+        	XYPlot xyplot = chart.getXYPlot();
+            ValueAxis axis = xyplot.getDomainAxis();
+        	axis.setAutoRange(false);
+        	axis.setRange(c.getXAxisMinRange(), c.getXAxisMaxRange());
+        }
+        if (!c.isAutoYAxisRange()) {
+        	XYPlot xyplot = chart.getXYPlot();
+            ValueAxis axis = xyplot.getRangeAxis();
+        	axis.setAutoRange(false);
+        	axis.setRange(c.getYAxisMinRange(), c.getYAxisMaxRange());
         }
         
         return chart;

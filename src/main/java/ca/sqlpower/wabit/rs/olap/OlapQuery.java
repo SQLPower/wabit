@@ -634,7 +634,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
      * <p>
      * This is package private for testing.
      */
-    void init() throws QueryInitializationException {
+    public void init() throws QueryInitializationException {
     	logger.debug("Initializing Olap Query");
     	logger.debug("Was loaded " + wasLoadedFromDao + ", init done " + initDone + ", mdxQuery is null " + (mdxQuery == null));
         if (!this.wasLoadedFromDao || this.initDone || this.mdxQuery!=null) return;

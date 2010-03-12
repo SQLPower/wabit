@@ -78,6 +78,7 @@ import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
+import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 import ca.sqlpower.wabit.rs.olap.WabitOlapAxis;
 import ca.sqlpower.wabit.rs.olap.WabitOlapDimension;
 import ca.sqlpower.wabit.rs.olap.WabitOlapExclusion;
@@ -133,11 +134,13 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.4 <dd>Put UUID attribute on every WabitObject element (especially workspace)
      *  <dt>1.2.5 <dd>Put UUID and name (mostly unused) attribute on OlapQuery child elements
      *  <dt>1.2.6 <dd>Saves the grand-totals attribute of RS renderers
+     *  <dt>1.2.7 <dd>Saves the chart's auto axis values and report selectors.
+     *  
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.6"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.7"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -511,6 +514,15 @@ public class WorkspaceXMLDAO {
         printAttribute("x-axis-name", chart.getXaxisName());
         printAttribute("x-axis-label-rotation", chart.getXAxisLabelRotation());
         printAttribute("gratuitous-animation", chart.isGratuitouslyAnimated());
+        
+        printAttribute("auto-x-axis", chart.isAutoXAxisRange());
+        printAttribute("auto-y-axis", chart.isAutoYAxisRange());
+        
+        printAttribute("x-axis-max", chart.getXAxisMaxRange());
+        printAttribute("y-axis-max", chart.getYAxisMaxRange());
+        printAttribute("x-axis-min", chart.getXAxisMinRange());
+        printAttribute("y-axis-min", chart.getYAxisMinRange());
+        
         if (chart.getType() != null) {
             printAttribute("type", chart.getType().name());
         }
@@ -603,15 +615,21 @@ public class WorkspaceXMLDAO {
         xml.niprintln(out, ">");
         xml.indent++;
         
-        if (query.getCurrentCube()!=null &&
-                query.getCurrentCube().getSchema()!=null &&
-                query.getCurrentCube().getSchema().getCatalog()!=null) {
-            xml.print(out, "<olap-cube");
-            printAttribute("catalog", query.getCatalogName());
-            printAttribute("schema", query.getSchemaName());
-            printAttribute("cube-name", query.getCubeName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
-            xml.niprintln(out, "/>");
+        if (query.getCurrentCube()==null ||
+                query.getCurrentCube().getSchema()==null ||
+                query.getCurrentCube().getSchema().getCatalog()==null) {
+        	// XXX In order to save OLAP queries properly, we need to init the query
+        	try {
+				query.init();
+			} catch (QueryInitializationException e) {
+				throw new RuntimeException(e);
+			}
         }
+        xml.print(out, "<olap-cube");
+        printAttribute("catalog", query.getCatalogName());
+        printAttribute("schema", query.getSchemaName());
+        printAttribute("cube-name", query.getCubeName()); //XXX This does not use it's unique name to look up the cube but instead just the name, don't use unique name or it won't find the cube.
+        xml.niprintln(out, "/>");
         
         xml.print(out, "<olap4j-query");
         printAttribute("name", query.getQueryName());

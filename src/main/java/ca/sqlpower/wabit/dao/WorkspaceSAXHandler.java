@@ -795,6 +795,22 @@ public class WorkspaceSAXHandler extends DefaultHandler {
                     chart.setLegendPosition(LegendPosition.valueOf(aval));
                 } else if (aname.equals("gratuitous-animation")) {
                     chart.setGratuitouslyAnimated(Boolean.parseBoolean(aval));
+                
+                } else if (aname.equals("auto-x-axis")) {
+                    chart.setAutoXAxisRange(Boolean.parseBoolean(aval));
+                } else if (aname.equals("auto-y-axis")) {
+                    chart.setAutoXAxisRange(Boolean.parseBoolean(aval));
+                    
+                } else if (aname.equals("x-axis-max")) {
+                    chart.setXAxisMaxRange(Double.parseDouble(aval));
+                } else if (aname.equals("y-axis-max")) {
+                    chart.setYAxisMaxRange(Double.parseDouble(aval));
+                } else if (aname.equals("x-axis-min")) {
+                    chart.setXAxisMinRange(Double.parseDouble(aval));
+                } else if (aname.equals("y-axis-min")) {
+                    chart.setYAxisMinRange(Double.parseDouble(aval));
+                
+                    
                 } else if (aname.equals("query-id")) {
                     QueryCache query = null;
                     for (QueryCache q : session.getWorkspace().getQueries()) {

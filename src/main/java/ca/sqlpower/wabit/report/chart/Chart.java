@@ -77,6 +77,17 @@ public class Chart extends AbstractWabitObject {
      */
     private String xaxisName;
     
+    private boolean autoXAxisRange = true;
+    private boolean autoYAxisRange = true;
+    private double xAxisMaxRange = 0;
+    private double yAxisMaxRange = 0;
+    private double xAxisMinRange = 0;
+    private double yAxisMinRange = 0;
+    
+    
+    
+    
+    
     /**
      * This is the current style of chart the user has made.
      */
@@ -236,6 +247,12 @@ public class Chart extends AbstractWabitObject {
     	this.resultSetFilter = chartToCopy.resultSetFilter;
     	this.xAxisLabelRotation = chartToCopy.xAxisLabelRotation;
     	this.gratuitouslyAnimated = chartToCopy.gratuitouslyAnimated;
+    	this.autoXAxisRange = chartToCopy.autoXAxisRange;
+    	this.autoYAxisRange = chartToCopy.autoYAxisRange;
+    	this.xAxisMaxRange = chartToCopy.xAxisMaxRange;
+    	this.yAxisMaxRange = chartToCopy.yAxisMaxRange;
+    	this.xAxisMinRange = chartToCopy.xAxisMinRange;
+    	this.yAxisMinRange = chartToCopy.yAxisMinRange;
     	this.setQuery(chartToCopy.query);
 	}
 
@@ -870,4 +887,64 @@ public class Chart extends AbstractWabitObject {
         ci.setParent(this);
         fireChildAdded(ChartColumn.class, ci, missingColumns.indexOf(ci));
     }
+
+	public boolean isAutoXAxisRange() {
+		return autoXAxisRange;
+	}
+
+	public void setAutoXAxisRange(boolean autoXAxisRange) {
+		boolean oldValue = this.autoXAxisRange;
+		this.autoXAxisRange = autoXAxisRange;
+		firePropertyChange("autoXAxisRange", oldValue, this.autoXAxisRange);
+	}
+
+	public boolean isAutoYAxisRange() {
+		return autoYAxisRange;
+	}
+
+	public void setAutoYAxisRange(boolean autoYAxisRange) {
+		boolean oldValue = this.autoYAxisRange;
+		this.autoYAxisRange = autoYAxisRange;
+		firePropertyChange("autoYAxisRange", oldValue, this.autoYAxisRange);
+	}
+
+	public double getXAxisMaxRange() {
+		return xAxisMaxRange;
+	}
+
+	public void setXAxisMaxRange(double xAxisMaxRange) {
+		double oldValue = this.xAxisMaxRange;
+		this.xAxisMaxRange = xAxisMaxRange;
+		firePropertyChange("XAxisMaxRange", oldValue, this.xAxisMaxRange);
+	}
+
+	public double getYAxisMaxRange() {
+		return yAxisMaxRange;
+	}
+
+	public void setYAxisMaxRange(double yAxisMaxRange) {
+		double oldValue = this.yAxisMaxRange;
+		this.yAxisMaxRange = yAxisMaxRange;
+		firePropertyChange("YAxisMaxRange", oldValue, this.yAxisMaxRange);
+	}
+
+	public double getXAxisMinRange() {
+		return xAxisMinRange;
+	}
+
+	public void setXAxisMinRange(double xAxisMinRange) {
+		double oldValue = this.xAxisMinRange;
+		this.xAxisMinRange = xAxisMinRange;
+		firePropertyChange("XAxisMinRange", oldValue, this.xAxisMinRange);
+	}
+
+	public double getYAxisMinRange() {
+		return yAxisMinRange;
+	}
+
+	public void setYAxisMinRange(double yAxisMinRange) {
+		double oldValue = this.yAxisMinRange;
+		this.yAxisMinRange = yAxisMinRange;
+		firePropertyChange("YAxisMinRange", oldValue, this.yAxisMinRange);
+	}   
 }

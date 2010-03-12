@@ -2734,6 +2734,24 @@ public class WabitSessionPersister implements SPPersister {
 
 		} else if (propertyName.equals("backgroundColour")) {
 			return converter.convertToBasicType(chart.getBackgroundColour());
+			
+		} else if (propertyName.equals("autoXAxisRange")) {
+			return converter.convertToBasicType(chart.isAutoXAxisRange());
+			
+		} else if (propertyName.equals("autoYAxisRange")) {
+			return converter.convertToBasicType(chart.isAutoYAxisRange());
+			
+		} else if (propertyName.equals("XAxisMaxRange")) {
+			return converter.convertToBasicType(chart.getXAxisMaxRange());
+			
+		} else if (propertyName.equals("YAxisMaxRange")) {
+			return converter.convertToBasicType(chart.getYAxisMaxRange());
+			
+		} else if (propertyName.equals("XAxisMinRange")) {
+			return converter.convertToBasicType(chart.getXAxisMinRange());
+			
+		} else if (propertyName.equals("YAxisMinRange")) {
+			return converter.convertToBasicType(chart.getYAxisMinRange());
 
 		} else {
 			throw new SPPersistenceException(chart.getUUID(),
@@ -2789,6 +2807,30 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (propertyName.equals("backgroundColour")) {
 			chart.setBackgroundColour((Color) converter.convertToComplexType(
 					newValue, Color.class));
+			
+		} else if (propertyName.equals("autoXAxisRange")) {
+			chart.setAutoXAxisRange((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("autoYAxisRange")) {
+			chart.setAutoYAxisRange((Boolean) converter.convertToComplexType(
+					newValue, Boolean.class));
+			
+		} else if (propertyName.equals("XAxisMaxRange")) {
+			chart.setXAxisMaxRange((Double) converter.convertToComplexType(
+					newValue, Double.class));
+			
+		} else if (propertyName.equals("YAxisMaxRange")) {
+			chart.setYAxisMaxRange((Double) converter.convertToComplexType(
+					newValue, Double.class));
+			
+		} else if (propertyName.equals("XAxisMinRange")) {
+			chart.setXAxisMinRange((Double) converter.convertToComplexType(
+					newValue, Double.class));
+			
+		} else if (propertyName.equals("YAxisMinRange")) {
+			chart.setYAxisMinRange((Double) converter.convertToComplexType(
+					newValue, Double.class));
 
 		} else {
 			throw new SPPersistenceException(uuid,

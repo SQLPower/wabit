@@ -47,6 +47,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
+import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
@@ -215,6 +216,21 @@ public class ChartPanel implements WabitPanel {
      * The data model for this component.
      */
     final Chart chart;
+    
+    private final JCheckBox xAxisAuto = new JCheckBox();
+    private final JLabel xAxisAutoLabel = new JLabel("X axis auto range");
+    private final JCheckBox yAxisAuto = new JCheckBox();
+    private final JLabel yAxisAutoLabel = new JLabel("Y axis auto range");
+    
+    private final JSpinner xAxisMax = new JSpinner();
+    private final JLabel xAxisMaxLabel = new JLabel("          X axis maximum");
+    private final JSpinner yAxisMax = new JSpinner();
+    private final JLabel yAxisMaxLabel = new JLabel("          Y axis maximum");
+    private final JSpinner xAxisMin = new JSpinner();
+    private final JLabel xAxisMinLabel = new JLabel("          X axis minimum");
+    private final JSpinner yAxisMin = new JSpinner();
+    private final JLabel yAxisMinLabel = new JLabel("          Y axis minimum");
+    
 
     /**
      * Listens for changes to all text fields on this panel. Updates the chart
@@ -355,6 +371,37 @@ public class ChartPanel implements WabitPanel {
         
         gratuitousAnimationCheckbox.addChangeListener(genericChangeHandler);
         
+        xAxisAuto.addChangeListener(genericChangeHandler);
+        xAxisAuto.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (xAxisAuto.isSelected()) {
+					xAxisMax.setEnabled(false);
+					xAxisMin.setEnabled(false);
+				} else {
+					xAxisMax.setEnabled(true);
+					xAxisMin.setEnabled(true);
+				}
+			}
+		});
+        yAxisAuto.addChangeListener(genericChangeHandler);
+        yAxisAuto.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e) {
+				if (yAxisAuto.isSelected()) {
+					yAxisMax.setEnabled(false);
+					yAxisMin.setEnabled(false);
+				} else {
+					yAxisMax.setEnabled(true);
+					yAxisMin.setEnabled(true);
+				}
+			}
+		});
+        
+        xAxisMax.addChangeListener(genericChangeHandler);
+        yAxisMax.addChangeListener(genericChangeHandler);
+        
+        xAxisMin.addChangeListener(genericChangeHandler);
+        yAxisMin.addChangeListener(genericChangeHandler);
+        
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
@@ -430,6 +477,14 @@ public class ChartPanel implements WabitPanel {
     		
     		xaxisLabelRotationSlider.setValue((int) chart.getXAxisLabelRotation());
     		
+    		xAxisAuto.setSelected(chart.isAutoXAxisRange());
+    		yAxisAuto.setSelected(chart.isAutoYAxisRange());
+    		
+    		xAxisMax.setValue(chart.getXAxisMaxRange());
+    		yAxisMax.setValue(chart.getYAxisMaxRange());
+    		xAxisMin.setValue(chart.getXAxisMinRange());
+    		yAxisMin.setValue(chart.getYAxisMinRange());
+    		
     		gratuitousAnimationCheckbox.setSelected(chart.isGratuitouslyAnimated());
     		
     		queryComboBox.setSelectedItem(chart.getQuery());
@@ -460,6 +515,18 @@ public class ChartPanel implements WabitPanel {
         				yaxisNameField.setVisible(false);
         				xaxisLabelRotationLabel.setVisible(false);
         				xaxisLabelRotationSlider.setVisible(false);
+        				xAxisAuto.setVisible(false);
+        				xAxisAutoLabel.setVisible(false);
+        				xAxisMax.setVisible(false);
+        				xAxisMaxLabel.setVisible(false);
+        				xAxisMin.setVisible(false);
+        				xAxisMinLabel.setVisible(false);
+        				yAxisAuto.setVisible(false);
+        				yAxisAutoLabel.setVisible(false);
+        				yAxisMax.setVisible(false);
+        				yAxisMaxLabel.setVisible(false);
+        				yAxisMin.setVisible(false);
+        				yAxisMinLabel.setVisible(false);
         			}
         			else{
         				xaxisNameLabel.setVisible(true);
@@ -468,6 +535,18 @@ public class ChartPanel implements WabitPanel {
         				yaxisNameField.setVisible(true);
         				xaxisLabelRotationLabel.setVisible(true);
         				xaxisLabelRotationSlider.setVisible(true);
+        				yAxisAuto.setVisible(true);
+        				yAxisAutoLabel.setVisible(true);
+        				yAxisMax.setVisible(true);
+        				yAxisMaxLabel.setVisible(true);
+        				yAxisMin.setVisible(true);
+        				yAxisMinLabel.setVisible(true);
+    					xAxisAuto.setVisible(false);
+    					xAxisAutoLabel.setVisible(false);
+        				xAxisMax.setVisible(false);
+        				xAxisMaxLabel.setVisible(false);
+        				xAxisMin.setVisible(false);
+        				xAxisMinLabel.setVisible(false);
         			}
         			
         		} else if (chart.getType().getDatasetType() == DatasetType.XY) {
@@ -485,6 +564,12 @@ public class ChartPanel implements WabitPanel {
         			yaxisNameField.setVisible(true);
         			xaxisLabelRotationLabel.setVisible(false);
         			xaxisLabelRotationSlider.setVisible(false);
+        			xAxisAuto.setVisible(true);
+					xAxisAutoLabel.setVisible(true);
+    				xAxisMax.setVisible(true);
+    				xAxisMaxLabel.setVisible(true);
+    				xAxisMin.setVisible(true);
+    				xAxisMinLabel.setVisible(true);
         		}
         		
         		headerLegendContainer.removeAll();
@@ -713,6 +798,15 @@ public class ChartPanel implements WabitPanel {
 
         builder.append(xaxisLabelRotationLabel, xaxisLabelRotationSlider);
         
+    	builder.append(this.xAxisAutoLabel, this.xAxisAuto);
+    	builder.append(this.xAxisMaxLabel, this.xAxisMax);
+    	builder.append(this.xAxisMinLabel, this.xAxisMin);
+        
+        
+    	builder.append(this.yAxisAutoLabel, this.yAxisAuto);
+    	builder.append(this.yAxisMaxLabel, this.yAxisMax);
+    	builder.append(this.yAxisMinLabel, this.yAxisMin);
+        
         builder.append("", gratuitousAnimationCheckbox);
         
         return builder.getPanel();
@@ -764,6 +858,12 @@ public class ChartPanel implements WabitPanel {
             chart.setXaxisName(xaxisNameField.getText());
             chart.setXAxisLabelRotation(xaxisLabelRotationSlider.getValue());
             chart.setGratuitouslyAnimated(gratuitousAnimationCheckbox.isSelected());
+            chart.setAutoXAxisRange(xAxisAuto.isSelected());
+            chart.setAutoYAxisRange(yAxisAuto.isSelected());
+            chart.setXAxisMaxRange(Double.parseDouble(xAxisMax.getValue().toString()));
+            chart.setYAxisMaxRange(Double.parseDouble(yAxisMax.getValue().toString()));
+            chart.setXAxisMinRange(Double.parseDouble(xAxisMin.getValue().toString()));
+            chart.setYAxisMinRange(Double.parseDouble(yAxisMin.getValue().toString()));
             
             if (queryComboBox.getSelectedItem() != chart.getQuery()) {
                chart.setQuery((WabitResultSetProducer) queryComboBox.getSelectedItem());
