@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.swingui.report.selectors;
 import java.awt.Component;
 import java.awt.Window;
 
+import javax.swing.Box;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -31,6 +32,7 @@ import javax.swing.SwingUtilities;
 import net.miginfocom.swing.MigLayout;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 
 import com.lowagie.text.Font;
 
@@ -62,6 +64,16 @@ public class TextBoxSelectorPanel implements DataEntryPanel {
 	
 	private void buildPanel() {
 		
+		
+		JLabel logo = new JLabel(WabitIcons.PARAMETERS_TEXT_16);
+		JLabel title = new JLabel("Free form text box");
+		title.setFont(title.getFont().deriveFont(Font.BOLD));
+		title.setFont(title.getFont().deriveFont(12f));
+		Box titleBox = Box.createHorizontalBox();
+		titleBox.add(logo);
+		titleBox.add(new JLabel(" "));
+		titleBox.add(title);
+		
         // Build the 'general' section
         
         JLabel generalLabel = new JLabel("General");
@@ -72,7 +84,8 @@ public class TextBoxSelectorPanel implements DataEntryPanel {
 
         
         
-        
+        panel.add(titleBox, "span, wrap");
+        panel.add(new JLabel(" "), "span, wrap");
         
         panel.add(generalLabel, "span, wrap");
         panel.add(genLabelLabel, "gapleft 15px");

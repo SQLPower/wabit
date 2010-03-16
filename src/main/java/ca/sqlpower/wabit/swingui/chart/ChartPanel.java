@@ -160,7 +160,7 @@ public class ChartPanel implements WabitPanel {
     /**
      * Checkbox to control the {@link Chart#isGratuitouslyAnimated()} property.
      */
-    private JCheckBox gratuitousAnimationCheckbox = new JCheckBox("Gratuitous Animation");
+    private JCheckBox gratuitousAnimationCheckbox = new JCheckBox("");
     
     /**
      * The table that shows values returned from the queries. The headers
@@ -797,17 +797,19 @@ public class ChartPanel implements WabitPanel {
         builder.nextLine();
 
         builder.append(xaxisLabelRotationLabel, xaxisLabelRotationSlider);
+        builder.nextLine();
         
     	builder.append(this.xAxisAutoLabel, this.xAxisAuto);
     	builder.append(this.xAxisMaxLabel, this.xAxisMax);
     	builder.append(this.xAxisMinLabel, this.xAxisMin);
-        
+    	builder.nextLine();
         
     	builder.append(this.yAxisAutoLabel, this.yAxisAuto);
     	builder.append(this.yAxisMaxLabel, this.yAxisMax);
     	builder.append(this.yAxisMinLabel, this.yAxisMin);
-        
-        builder.append("", gratuitousAnimationCheckbox);
+    	builder.nextLine();
+    	
+        builder.append("Gratuitous Animation", gratuitousAnimationCheckbox);
         
         return builder.getPanel();
     }

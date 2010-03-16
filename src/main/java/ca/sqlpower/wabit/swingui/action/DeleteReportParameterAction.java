@@ -40,7 +40,7 @@ public class DeleteReportParameterAction extends AbstractAction {
 			Selector selector, 
 			Runnable reportRefresher) 
 	{
-		super("", WabitIcons.CLOSE_WORKSPACE);
+		super("", WabitIcons.DELETE_12);
 		this.dialogOwner = dialogOwner;
 		this.selector = selector;
 		this.reportRefresher = reportRefresher;

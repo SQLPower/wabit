@@ -27,6 +27,7 @@ import java.beans.PropertyChangeEvent;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -95,24 +96,27 @@ public class SelectorsPanel extends JPanel {
 		this.selectorsSource = selectorsSource;
 		this.refreshRoutine = refreshRoutine;
 	
-		add(new Label("Parameters"), "spanx 3");
+		Box labelBox = Box.createHorizontalBox();
+		labelBox.add(new JLabel(WabitIcons.PARAMETERS_12));
+		labelBox.add(new Label("Parameters"));
+		add(labelBox, "spanx 3");
 		
 		 
-		final JButton addButton = new JButton("+");
+		final JButton addButton = new JButton(WabitIcons.ADD_12);
 		addButton.setFont(addButton.getFont().deriveFont(10f));
 		add(addButton, "wrap");
 		addButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
 				//Custom button text
-				Object[] options = {"Drop down list", "Free form text box"};
+				Object[] options = {"Drop down list", "Free form text"};
 				
 				final int n = JOptionPane.showOptionDialog(null,
 				    "What type of parameter selector would you like to create?",
 				    "",
 				    JOptionPane.YES_NO_OPTION,
 				    JOptionPane.QUESTION_MESSAGE,
-				    WabitIcons.QUERY_32,
+				    WabitIcons.PARAMETERS_NEW_32,
 				    options,
 				    options[0]);
 				

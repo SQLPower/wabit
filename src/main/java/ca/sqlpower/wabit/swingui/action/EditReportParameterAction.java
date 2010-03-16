@@ -43,7 +43,7 @@ public class EditReportParameterAction extends AbstractAction {
 			Component dialogOwner,
 			Selector selector) 
 	{
-		super("", WabitIcons.EDIT);
+		super("", WabitIcons.EDIT_12);
 		this.dialogOwner = dialogOwner;
 		this.selector = selector;
 	}

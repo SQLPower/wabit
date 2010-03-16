@@ -44,6 +44,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.object.InsertVariableAction;
 import ca.sqlpower.swingui.object.VariableInserter;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 
 import com.lowagie.text.Font;
 
@@ -125,8 +126,17 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
 	
 	private void buildPanel() {
 		
-        // Build the 'general' section
-        
+		JLabel logo = new JLabel(WabitIcons.PARAMETERS_COMBO_16);
+		JLabel title = new JLabel("Drop down list");
+		title.setFont(title.getFont().deriveFont(Font.BOLD));
+		title.setFont(title.getFont().deriveFont(12f));
+		Box titleBox = Box.createHorizontalBox();
+		titleBox.add(logo);
+		titleBox.add(new JLabel(" "));
+		titleBox.add(title);
+
+		
+		// Build the 'general' section
         JLabel generalLabel = new JLabel("General");
         generalLabel.setFont(generalLabel.getFont().deriveFont(Font.BOLD));
         JLabel genLabelLabel = new JLabel("Name");
@@ -177,7 +187,8 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
         
         
         
-        
+        panel.add(titleBox, "span, wrap");
+        panel.add(new JLabel(" "), "span, wrap");
         
         panel.add(generalLabel, "span, wrap");
         panel.add(genLabelLabel, "gapleft 15px");

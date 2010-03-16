@@ -61,6 +61,8 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
@@ -238,6 +240,13 @@ public class WorkspaceTreeCellRenderer extends DefaultTreeCellRenderer {
                 ChartColumn cc = (ChartColumn) spo;
                 r.setText(cc.toString());
                 r.setIcon(CHART_COL_ROLE_ICONS.get(cc.getRoleInChart()));
+                
+            } else if (spo instanceof ComboBoxSelector) {
+            	r.setIcon(WabitIcons.PARAMETERS_COMBO_16);
+            	
+            } else if (spo instanceof TextBoxSelector) {
+            	r.setIcon(WabitIcons.PARAMETERS_TEXT_16);
+            	
             } else if (spo instanceof WabitImage) {
                 setupForWabitImage((WorkspaceTreeCellRenderer) r, (WabitImage) spo);
             } else if (value instanceof SQLObject) {

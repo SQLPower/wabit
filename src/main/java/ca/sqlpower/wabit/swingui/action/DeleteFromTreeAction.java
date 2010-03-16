@@ -103,7 +103,7 @@ public class DeleteFromTreeAction extends AbstractAction {
      */
     public DeleteFromTreeAction(WabitWorkspace workspace, SPObject node, 
             Component parent, UserPrompterFactory upf) {
-        super("Delete", WabitIcons.DELETE_ICON_16);
+        super("Delete", WabitIcons.DELETE_12);
         this.workspace = workspace;
         item = node;
         this.parent = parent;

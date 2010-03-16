@@ -23,15 +23,20 @@ import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
+import javax.swing.ImageIcon;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenuItem;
@@ -122,6 +127,12 @@ public class ContentBoxNode extends PNode implements ReportNode {
             	if (
             			event.getPosition().getY()-ContentBoxNode.this.getY() >= contentBox.getHeight()-PARAMETER_BANNER_HEIGHT &&
             			event.getPosition().getY()-ContentBoxNode.this.getY() <= contentBox.getHeight()) {
+            		
+//            		PSwing node = new PSwing(new JLabel("Hello World!"));
+//            		node.setX(event.getPosition().getX());
+//            		node.setY(event.getPosition().getY());
+//            		topLayer.addChild(node);
+//            		node.moveToFront();
             		
             		displaySelectorsFrame();
             	}
@@ -290,7 +301,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		
 		if (selectorsFrame == null) {
 			
-			selectorsFrame = new JFrame("Parameters");
+			selectorsFrame = new JFrame("Parameters for " + contentBox.getName());
 			JPanel panel = new JPanel(new BorderLayout());
 			final SelectorsPanel selPanel = new SelectorsPanel(contentBox, refreshRoutine);
 
@@ -446,7 +457,22 @@ public class ContentBoxNode extends PNode implements ReportNode {
             	parametersBoxGraphics.fillRect(0, 0, boxWidth, PARAMETER_BANNER_HEIGHT);
             	parametersBoxGraphics.setColor(Color.BLACK);
             	parametersBoxGraphics.setFont(parametersBoxGraphics.getFont().deriveFont(8f));
-            	parametersBoxGraphics.drawString("    > Parameters...", 2, PARAMETER_BANNER_HEIGHT - 2);
+            	
+            	Image image;
+				try {
+					image = ImageIO.read(this.getClass().getClassLoader().getResourceAsStream("icons/parameters-12.png"));
+				} catch (IOException e) {
+					throw new RuntimeException("Failed to load image file.");
+				}
+            	parametersBoxGraphics.drawImage(
+            			image, 
+            			10, 
+            			1, 
+            			PARAMETER_BANNER_HEIGHT - 2, 
+            			PARAMETER_BANNER_HEIGHT - 2, 
+            			null);
+            	
+            	parametersBoxGraphics.drawString("Click for parameters...", 20, PARAMETER_BANNER_HEIGHT - 2);
             	
             	parametersBoxGraphics.dispose();
             	boxHeight -= PARAMETER_BANNER_HEIGHT;
