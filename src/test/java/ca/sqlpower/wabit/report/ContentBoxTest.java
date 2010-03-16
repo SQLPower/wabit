@@ -32,6 +32,8 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.dao.WabitSessionPersister;
 import ca.sqlpower.wabit.dao.session.WorkspacePersisterListener;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 
 public class ContentBoxTest extends AbstractWabitObjectTest {
 
@@ -43,6 +45,7 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToIgnoreForEvents() {
     	Set<String> ignores = super.getPropertiesToIgnoreForEvents();
     	ignores.add("contentRenderer");
+    	ignores.add("variableResolver");
     	return ignores;
     }
     
@@ -50,13 +53,20 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     public Set<String> getPropertiesToNotPersistOnObjectPersist() {
     	Set<String> ignored = super.getPropertiesToNotPersistOnObjectPersist();
     	ignored.add("bounds");
+    	ignored.add("variableResolver");
+    	ignored.add("selectors");
     	return ignored;
     }
     
     @Override
     protected void setUp() throws Exception {
-        super.setUp();
+        
+    	super.setUp();
+        
         cb = new ContentBox();
+        cb.addChild(new TextBoxSelector(), 0);
+        cb.addChild(new ComboBoxSelector(), 1);
+        
         Report report = new Report("report");
         parentPage = report.getPage();
         parentPage.addContentBox(cb);

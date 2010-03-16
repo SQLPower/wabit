@@ -241,7 +241,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
                 (int) cb.getX(), (int) cb.getY(),
                 (int) cb.getWidth(), (int) cb.getHeight());
         
-        renderer.renderReportContent(contentGraphics, cb, 1, 0, true, new SPVariableHelper(renderer));
+        renderer.renderReportContent(contentGraphics, (int)cb.getWidth(), (int)cb.getHeight(), 1, 0, true, new SPVariableHelper(renderer));
     	
     }
     
@@ -289,7 +289,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
                 (int) cb.getX(), (int) cb.getY(),
                 (int) cb.getWidth(), (int) cb.getHeight());
         
-        renderer.renderReportContent(contentGraphics, cb, 1, 0, true, new SPVariableHelper(renderer));
+        renderer.renderReportContent(contentGraphics, (int)cb.getWidth(), (int)cb.getHeight(), 1, 0, true, new SPVariableHelper(renderer));
         
         assertEquals(2, renderer.getColumnInfoList().size());
         renderer.getColumnInfoList().get(0).setWillGroupOrBreak(GroupAndBreak.GROUP);
@@ -299,7 +299,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         renderer.setHeaderFont(font);
         renderer.setBodyFont(font);
         
-        renderer.renderReportContent(contentGraphics, cb, 1, 0, false, new SPVariableHelper(renderer));
+        renderer.renderReportContent(contentGraphics, (int)cb.getWidth(), (int)cb.getHeight(), 1, 0, false, new SPVariableHelper(renderer));
         
         List<List<ResultSetCell>> layoutCells = renderer.findCells();
         
@@ -435,7 +435,7 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
         
         Image image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        renderer.renderReportContent(g, new ContentBox(), 1, 1, false, null);
+        renderer.renderReportContent(g, 1, 1, 1, 1, false, null);
     }
 
     /**
@@ -544,6 +544,6 @@ public class ResultSetRendererTest extends AbstractWabitObjectTest {
     	
         BufferedImage image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = (Graphics2D) image.getGraphics();
-        renderer.renderReportContent(g, parentCB, 1, 1, false, new SPVariableHelper(parentCB));
+        renderer.renderReportContent(g, (int)parentCB.getWidth(), (int)parentCB.getHeight(), 1, 1, false, new SPVariableHelper(parentCB));
     }
 }

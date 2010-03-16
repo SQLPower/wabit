@@ -41,13 +41,15 @@ import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
 import ca.sqlpower.wabit.report.chart.ChartDataListener;
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
+import ca.sqlpower.wabit.report.selectors.ContextAware;
 import ca.sqlpower.wabit.swingui.chart.ChartSwingUtil;
 
 /**
  * This class will render a chart from a query's result set in a chart format
  * defined by the user.
  */
-public class ChartRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
+public class ChartRenderer extends AbstractWabitObject 
+		implements WabitObjectReportRenderer, ContextAware {
 		
 	private static final Logger logger = Logger.getLogger(ChartRenderer.class);
 	private boolean needsRefresh = false;
@@ -100,8 +102,15 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 	}
 
     // TODO we intend to remove this whole method into the SwingUI layer (SwingContentRenderer)
-	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+	public boolean renderReportContent(
+			Graphics2D g,
+			double width,
+			double height,
+			double scaleFactor, 
+			int pageIndex, 
+			boolean printing, 
+			SPVariableResolver variablesContext) 
+	{
 	    
 		if (printing) {
 			// If we're printing a streaming query, we have to
@@ -126,7 +135,7 @@ public class ChartRenderer extends AbstractWabitObject implements WabitObjectRep
 			}
 
 			Rectangle2D area = new Rectangle2D.Double(
-			        0, 0, contentBox.getWidth(), contentBox.getHeight());
+			        0, 0, width, height);
 
 			// first pass establishes rendering info but draws nothing
 			ChartRenderingInfo info = new ChartRenderingInfo();

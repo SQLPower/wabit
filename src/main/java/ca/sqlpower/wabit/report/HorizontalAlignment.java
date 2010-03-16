@@ -68,8 +68,8 @@ public enum HorizontalAlignment {
      *         containingBoxWidth are inside the box, and positive values larger
      *         than containingBoxWidth are outside the box (to its right).
      */
-    public int computeStartX(int containingBoxWidth, int itemWidth) {
-        int x;
+    public double computeStartX(double containingBoxWidth, double itemWidth) {
+    	double x;
         if (this == HorizontalAlignment.LEFT) {
             x = 0;
         } else if (this == HorizontalAlignment.CENTER) {

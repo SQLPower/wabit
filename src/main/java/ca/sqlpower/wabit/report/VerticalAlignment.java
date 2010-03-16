@@ -65,8 +65,8 @@ public enum VerticalAlignment {
      *         and positive values larger than containingBoxHeight are outside
      *         the box (above it).
      */
-    public int calculateStartY(int containingBoxHeight, int itemHeight) {
-        int y;
+    public double calculateStartY(double containingBoxHeight, double itemHeight) {
+        double y;
         if (this == VerticalAlignment.TOP) {
             y = 0;
         } else if (this == VerticalAlignment.MIDDLE) {
@@ -94,7 +94,7 @@ public enum VerticalAlignment {
      *         {@link #calculateStartY(int, int)} for a detailed description of
      *         how to interpret the Y value.
      */
-    public int calculateStartY(int containingBoxHeight, int itemHeight, FontMetrics fm) {
+    public double calculateStartY(double containingBoxHeight, double itemHeight, FontMetrics fm) {
         return calculateStartY(containingBoxHeight, itemHeight) + fm.getAscent();
     }
 

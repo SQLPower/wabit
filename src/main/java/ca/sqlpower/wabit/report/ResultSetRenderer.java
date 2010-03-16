@@ -59,6 +59,7 @@ import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
+import ca.sqlpower.wabit.report.selectors.ContextAware;
 import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
@@ -73,7 +74,8 @@ import ca.sqlpower.wabit.rs.query.QueryException;
 /**
  * Renders a JDBC result set using configurable absolute column widths.
  */
-public class ResultSetRenderer extends AbstractWabitObject implements WabitObjectReportRenderer {
+public class ResultSetRenderer extends AbstractWabitObject 
+		implements WabitObjectReportRenderer, ContextAware {
     
     private static final Color DRAGGABLE_COL_LINE_COLOUR = new Color(0xcccccc);
     
@@ -490,7 +492,15 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         }
     }
 
-    public synchronized boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+    public synchronized boolean renderReportContent(
+    		Graphics2D g,
+    		double width,
+    		double height,
+    		double scaleFactor, 
+    		int pageIndex, 
+    		boolean printing, 
+    		SPVariableResolver variablesContext) 
+    {
     	
     	if (resultSetHandle == null || dirty) {
     		try {
@@ -509,7 +519,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	if (this.resultSetHandle == null) {
     		renderMessage(
     				g, 
-    				contentBox, 
+    				width,
+    				height,
     				Collections.singletonList("The associated query does not return any results."));
     		return false;
     	}
@@ -521,7 +532,8 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     		return renderFailure(
     				this.resultSetHandle.getException(), 
     				g, 
-    				contentBox, 
+    				width,
+    				height,
     				scaleFactor, 
     				pageIndex);
     	
@@ -530,12 +542,13 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     		return renderFailure(
 					this.internalError, 
 					g, 
-					contentBox, 
+					width,
+					height,
 					scaleFactor, 
 					pageIndex);
 			
     	} else {
-    		boolean pagesLeft = renderSuccess(g, contentBox, scaleFactor, pageIndex, printing);
+    		boolean pagesLeft = renderSuccess(g, width, height, scaleFactor, pageIndex, printing);
     		if (printing) {
     			return pagesLeft;
     		} else {
@@ -544,7 +557,14 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	}
     }
     
-    private boolean renderFailure(Exception failure, Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex) {
+    private boolean renderFailure(
+    		Exception failure, 
+    		Graphics2D g, 
+    		double width,
+    		double height, 
+    		double scaleFactor, 
+    		int pageIndex) 
+    {
         List<String> errorMessage = new ArrayList<String>();
         if (failure instanceof QueryException) {
             QueryException qe = (QueryException) failure;
@@ -565,7 +585,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             	}            	
             }
         }
-        renderMessage(g, contentBox, errorMessage);
+        renderMessage(g, width, height, errorMessage);
         
         return false;
     }
@@ -582,35 +602,44 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * @param errorMessage
      *            The list of strings that will be displayed as a message.
      */
-    private void renderMessage(Graphics2D g, ContentBox contentBox,
-            List<String> errorMessage) {
+    private void renderMessage(
+    		Graphics2D g, 
+    		double width,
+    		double height,
+            List<String> errorMessage) 
+    {
         FontMetrics fm = g.getFontMetrics();
-        int width =  (int) contentBox.getWidth();
-        int height = (int) contentBox.getHeight();
         int textHeight = fm.getHeight() * errorMessage.size();
         
-        int y = Math.max(0, height/2 - textHeight/2);
+        int y = Math.max(0, (int)height/2 - textHeight/2);
         for (String text : errorMessage) {
             y += fm.getHeight();
             int textWidth = fm.stringWidth(text);
-            g.drawString(text, width/2 - textWidth/2, y);
+            g.drawString(text, (int)width/2 - textWidth/2, y);
         }
     }
 
-    private boolean renderSuccess(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing) {
+    private boolean renderSuccess(
+    		Graphics2D g, 
+    		double width,
+    		double height,
+    		double scaleFactor, 
+    		int pageIndex, 
+    		boolean printing) 
+    {
     	
     	try {
     		
     		CachedRowSet rs = (CachedRowSet)this.resultSetHandle.getResultSet();
     		
         	if (rs.getData().size() == 0) {
-        	    renderMessage(g, contentBox, 
+        	    renderMessage(g, width, height, 
         	            Collections.singletonList("The result set from " 
         	                    + query.getName() + " is empty."));
         	    return false;
         	}
         	
-            maybeCreateResultSetLayout(g, rs, contentBox);
+            maybeCreateResultSetLayout(g, rs, width, height);
             
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -628,12 +657,10 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         }
         
         if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
-            int contentBoxHeight = (int) contentBox.getHeight();
-            int contentBoxWidth = (int) contentBox.getWidth();
-			g.drawLine(0, 0, 0, contentBoxHeight - 1);
-			g.drawLine(contentBoxWidth - 1, 0, contentBoxWidth - 1, contentBoxHeight);
-            g.drawLine(0, contentBoxHeight - 1, contentBoxWidth - 1, contentBoxHeight - 1);
-            g.drawLine(0, 0, contentBoxWidth - 1, 0);
+			g.drawLine(0, 0, 0, (int)height - 1);
+			g.drawLine((int)width - 1, 0, (int)width - 1, (int)height);
+            g.drawLine(0, (int)height - 1, (int)width - 1, (int)height - 1);
+            g.drawLine(0, 0, (int)width - 1, 0);
         }
         
         if (colBeingDragged != null) {
@@ -652,7 +679,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
             Stroke oldStroke = g.getStroke();
             g.setColor(DRAGGABLE_COL_LINE_COLOUR);
             g.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1, new float[]{5, 5}, 0));
-            g.drawLine(xLocation, 0, xLocation, (int) contentBox.getHeight());
+            g.drawLine(xLocation, 0, xLocation, (int)height);
             g.setColor(oldColor);
             g.setStroke(oldStroke);
         }
@@ -688,7 +715,11 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      *            set should also be sorted by the columns defined as breaks to
      *            avoid sections that are identified by the same section.
      */
-    private void maybeCreateResultSetLayout(Graphics2D g, CachedRowSet rs, ContentBox contentBox) throws SQLException {
+    private void maybeCreateResultSetLayout(
+    		Graphics2D g, 
+    		CachedRowSet rs, 
+    		double width,
+    		double height) throws SQLException {
     	
     	if (pageCells.get() != null) return; 
         
@@ -701,7 +732,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
     	
     	CachedRowSet rsCopy = rs.sort(comparator);
     	
-	    autosizeColumnInformation(g, contentBox, rsCopy);
+	    autosizeColumnInformation(g, width, height, rsCopy);
 	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
     	
         final ReportPositionRenderer reportPositionRenderer = 
@@ -729,9 +760,12 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
      * width of the largest value in the column. This is mainly used for new
      * columns added to a table when the query is modified.
      */
-    private void autosizeColumnInformation(Graphics2D g,
-            ContentBox contentBox, ResultSet rs)
-            throws SQLException {
+    private void autosizeColumnInformation(
+    		Graphics2D g,
+    		double width,
+    		double height, 
+            ResultSet rs) throws SQLException 
+    {
         FontMetrics fm = g.getFontMetrics(getBodyFont());
         for (ColumnInfo ci : columnInfo) {
         	if (ci.getWidth() < 0) {
@@ -740,7 +774,7 @@ public class ResultSetRenderer extends AbstractWabitObject implements WabitObjec
         		int columnIndex = columnInfo.indexOf(ci) + 1;
         		double maxWidth = fm.getStringBounds(rs.getMetaData().getColumnName(columnIndex), g).getWidth();
         		double currentHeight = 0;
-        		while (rs.next() && currentHeight < contentBox.getHeight()) {
+        		while (rs.next() && currentHeight < height) {
         			if (rs.getString(columnIndex) == null) {
         				continue;
         			}

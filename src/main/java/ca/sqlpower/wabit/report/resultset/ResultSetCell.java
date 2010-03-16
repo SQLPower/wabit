@@ -125,7 +125,7 @@ public class ResultSetCell {
         Font oldFont = g.getFont();
         g.setFont(font);
         final FontMetrics fm = g.getFontMetrics();
-        int offset = align.computeStartX(bounds.width - insets.left - insets.right, fm.stringWidth(text));
+        double offset = align.computeStartX(bounds.width - insets.left - insets.right, fm.stringWidth(text));
         
         String printingText = text;
         double stringLength = fm.getStringBounds(text, g).getWidth();
@@ -153,7 +153,7 @@ public class ResultSetCell {
                 textY += ReportPositionRenderer.BORDER_LINE_SIZE;
             }
         }
-        g.drawString(printingText, getBounds().x + insets.left + offset, 
+        g.drawString(printingText, getBounds().x + insets.left + (int)offset, 
                 textY);
         g.setFont(oldFont);
         

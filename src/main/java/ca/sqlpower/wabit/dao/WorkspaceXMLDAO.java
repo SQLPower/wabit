@@ -451,6 +451,12 @@ public class WorkspaceXMLDAO {
 						throw new ClassCastException("Cannot save a content renderer of class " + box.getContentRenderer().getClass());
 					}
 				}
+				
+				// Save ContentBox selectors.
+				for (Selector selector : box.getChildren(Selector.class)) {
+					saveSelector(selector);
+				}
+				
 				xml.indent--;
 				xml.println(out, "</content-box>");
 			} else if (object instanceof Guide) {

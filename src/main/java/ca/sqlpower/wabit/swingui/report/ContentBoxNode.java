@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Window;
@@ -32,7 +33,9 @@ import java.beans.PropertyChangeSupport;
 
 import javax.swing.AbstractAction;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
@@ -55,9 +58,12 @@ import ca.sqlpower.wabit.report.RepaintListener;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
+import ca.sqlpower.wabit.report.selectors.ContextAware;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
+import ca.sqlpower.wabit.swingui.report.selectors.SelectorsPanel;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PDragSequenceEventHandler;
 import edu.umd.cs.piccolo.event.PInputEvent;
@@ -73,6 +79,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private final ContentBox contentBox;
 
     private Color textColour = Color.BLACK;
+    
+    private final static int PARAMETER_BANNER_HEIGHT = 10;
     
     /**
      * This is the variable which determines whether or not the borders will be
@@ -108,6 +116,15 @@ public class ContentBoxNode extends PNode implements ReportNode {
                             propertiesPanel, dialogOwner, propertiesPanelName, "OK");
                     d.setVisible(true);
                 }
+            } else if (event.getClickCount() == 1) {
+            	
+            	// Handle clicks on the "parameters" gray box
+            	if (
+            			event.getPosition().getY()-ContentBoxNode.this.getY() >= contentBox.getHeight()-PARAMETER_BANNER_HEIGHT &&
+            			event.getPosition().getY()-ContentBoxNode.this.getY() <= contentBox.getHeight()) {
+            		
+            		displaySelectorsFrame();
+            	}
             }
             
         }
@@ -232,6 +249,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     private final WabitWorkspace workspace;
     
+    private JFrame selectorsFrame = null;
+    
     /**
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
@@ -266,6 +285,25 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		}
 
 	};
+	
+	private void displaySelectorsFrame() {
+		
+		if (selectorsFrame == null) {
+			
+			selectorsFrame = new JFrame("Parameters");
+			JPanel panel = new JPanel(new BorderLayout());
+			final SelectorsPanel selPanel = new SelectorsPanel(contentBox, refreshRoutine);
+
+			
+			panel.add(selPanel, BorderLayout.NORTH);
+			
+			selectorsFrame.setSize(500,300);
+			selectorsFrame.getContentPane().add(panel);
+			selectorsFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
+		}
+		
+		selectorsFrame.setVisible(true);
+	}
     
 	/**
 	 * This method will set the {@link SwingContentRenderer} on this content box node
@@ -301,12 +339,23 @@ public class ContentBoxNode extends PNode implements ReportNode {
 	}
 	
 	private final LayoutPanel parentPanel;
+
+	private Runnable refreshRoutine = new Runnable() {
+		public void run() {
+			parentPanel.refreshDataAction.actionPerformed(null);
+		}
+	};
+
+	private final PLayer topLayer;
 	
-    public ContentBoxNode(WabitSwingSession session, Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
-    	this.session = session;
+    public ContentBoxNode(PLayer topLayer, WabitSwingSession session, Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
+    	this.topLayer = topLayer;
+		this.session = session;
         this.dialogOwner = dialogOwner;
         logger.debug("Creating new contentboxnode for " + contentBox);
+        
         this.contentBox = contentBox;
+        
         this.parentPanel = parentPanel;
         this.workspace = workspace;
         
@@ -318,6 +367,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
         this.helper = new SPVariableHelper(contentBox);
     }
+    
     
     private void updateBoundsFromContentBox() {
         super.setBounds(contentBox.getX(), contentBox.getY(),
@@ -378,12 +428,46 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		if (contentRenderer != null) {
             g2.setColor(textColour);
             logger.debug("Rendering content");
+            
+            int boxX = (int) getX();
+            int boxY = (int) getY();
+            int boxWidth = (int) getWidth();
+            int boxHeight = (int) getHeight();
+            
+            if (contentBox.getContentRenderer() != null
+            		&& contentBox.getContentRenderer() instanceof ContextAware) 
+            {
+            
+            	Graphics2D parametersBoxGraphics = (Graphics2D) g2.create(
+                        boxX, boxY+boxHeight-PARAMETER_BANNER_HEIGHT,
+                        boxWidth, PARAMETER_BANNER_HEIGHT);
+            	
+            	parametersBoxGraphics.setColor(Color.LIGHT_GRAY);
+            	parametersBoxGraphics.fillRect(0, 0, boxWidth, PARAMETER_BANNER_HEIGHT);
+            	parametersBoxGraphics.setColor(Color.BLACK);
+            	parametersBoxGraphics.setFont(parametersBoxGraphics.getFont().deriveFont(8f));
+            	parametersBoxGraphics.drawString("    > Parameters...", 2, PARAMETER_BANNER_HEIGHT - 2);
+            	
+            	parametersBoxGraphics.dispose();
+            	boxHeight -= PARAMETER_BANNER_HEIGHT;
+            }
+            
             Graphics2D contentGraphics = (Graphics2D) g2.create(
-                    (int) getX(), (int) getY(),
-                    (int) getWidth(), (int) getHeight());
+                    boxX, boxY,
+                    boxWidth, boxHeight);
+            
             contentGraphics.setFont(contentBox.getFont()); // XXX could use piccolo attribute to do this magically
             contentRenderer.resetToFirstPage();
-            contentRenderer.renderReportContent(contentGraphics, contentBox, camera.getViewScale(), 0, false, this.helper);
+            
+            contentRenderer.renderReportContent(
+            		contentGraphics,
+            		boxWidth, 
+            		boxHeight, 
+            		camera.getViewScale(), 
+            		0, 
+            		false, 
+            		this.helper);
+            
             contentGraphics.dispose();
             if (showDropInfo) {
             	g2.setColor(borderColor);

@@ -249,6 +249,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
 	private String olapName;
 
 	private String olapID;
+	
+	private WabitObject selectorContainer;
 
 	/**
 	 * The data sources in this collection will be used to verify if
@@ -887,6 +889,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
     			session.getWorkspace().addTemplate((Template) layout);
     		}
     		createdObject = layout;
+    		selectorContainer = layout;
     		
     		
     		
@@ -941,6 +944,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         } else if (name.equals("content-box")) {
         	contentBox = new ContentBox();
         	createdObject = contentBox;
+        	selectorContainer = contentBox;
         	layout.getPage().addContentBox(contentBox);
          	for (int i = 0; i < attributes.getLength(); i++) {
         		String aname = attributes.getQName(i);
@@ -1188,10 +1192,13 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		throw new IllegalStateException("Cannot create a selector of type " + type);
         	}
         	
-        	if (layout instanceof Report) {
-        		layout.addChild(selector, ((Report) layout).getSelectors().size());
+        	if (selectorContainer == null) {
+        		throw new AssertionError("Program error. 'selectorContainer' not set.");
+        	} else if (selectorContainer instanceof Report
+        			|| selectorContainer instanceof ContentBox) {
+        		selectorContainer.addChild(selector, selectorContainer.getChildren(Selector.class).size());
         	} else {
-        		throw new IllegalStateException("Selectors can only be added to reports.");
+        		throw new IllegalStateException("Selectors can only be added to reports and content boxes..");
         	}
         	
         	createdObject = this.selector;

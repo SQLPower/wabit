@@ -23,6 +23,8 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -58,11 +60,13 @@ public class FancyTextBoxSelectorField extends JTextField implements SelectorCom
 		
 		public void focusGained(FocusEvent e) {
 			setForeground(Color.BLACK);
+			setFont(getFont().deriveFont(Font.PLAIN));
 			if (ObjectUtils.equals(getText(), selector.getDefaultValue())) {
 				setText("");
 			}
 		}
 	};
+	
 
 	private final TextBoxSelector selector;
 
@@ -78,11 +82,27 @@ public class FancyTextBoxSelectorField extends JTextField implements SelectorCom
 			
 				setText(evt.getNewValue()==null?"":evt.getNewValue().toString());
 				setForeground(Color.GRAY);
+				setFont(getFont().deriveFont(Font.ITALIC));
 				SwingUtilities.invokeLater(refreshRoutine);
 			
 			}
 			
 		};
+	};
+
+
+	private KeyListener enterKeyListener = new KeyListener() {
+		public void keyTyped(KeyEvent e) {
+			if (e.getKeyChar() == KeyEvent.VK_ENTER) {
+				FancyTextBoxSelectorField.this.transferFocus();
+			}
+		}
+		public void keyReleased(KeyEvent e) {
+			// not interested
+		}
+		public void keyPressed(KeyEvent e) {
+			// not interested
+		}
 	};
 	
 	
@@ -91,10 +111,22 @@ public class FancyTextBoxSelectorField extends JTextField implements SelectorCom
 		this.selector = selector;
 		this.refreshRoutine = refreshRoutine;
 		this.addFocusListener(focusListener);
+		this.addKeyListener(this.enterKeyListener);
 		this.selector.addSPListener(spListener);
 		
 		setText(selector.getCurrentValue()==null?"":selector.getCurrentValue().toString());
-		setForeground(Color.GRAY);
+		
+		if (getText().length() == 0
+				|| ObjectUtils.equals(getText(), selector.getDefaultValue())) {
+			selector.setSelectedValue(null);
+			setText(String.valueOf(selector.getDefaultValue()));
+			setForeground(Color.GRAY);
+			setFont(getFont().deriveFont(Font.ITALIC));
+		} else {
+			selector.setSelectedValue(getText());
+			setForeground(Color.BLACK);
+			setFont(getFont().deriveFont(Font.PLAIN));
+		}
 	}
 	
 	public void cleanup() {

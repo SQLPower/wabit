@@ -58,6 +58,7 @@ import ca.sqlpower.swingui.ColourScheme;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.report.selectors.ContextAware;
 import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
 import ca.sqlpower.wabit.rs.ResultSetListener;
@@ -73,7 +74,7 @@ import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent.LayoutItem;
  * Renders a CellSet from a MDX query on a report layout.
  */
 public class CellSetRenderer extends AbstractWabitObject implements
-        WabitObjectReportRenderer {
+        WabitObjectReportRenderer, ContextAware {
     
     private final static Logger logger = Logger.getLogger(CellSetRenderer.class);
     
@@ -274,8 +275,15 @@ public class CellSetRenderer extends AbstractWabitObject implements
     /**
      * This method renders the report content in the CellSetRenderer
      */
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-            double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+    public boolean renderReportContent(
+    		Graphics2D g, 
+    		double width, 
+    		double height,
+            double scaleFactor, 
+            int pageIndex, 
+            boolean printing, 
+            SPVariableResolver variablesContext) 
+    {
     	init();
         if (getBodyFont() == null) {
             setBodyFont(g.getFont());
@@ -321,7 +329,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         if (maxRowHeight == 0) {
         	maxRowHeight = 1;
         }
-        int numRows = (int) ((contentBox.getHeight() - totalHeaderHeight) / maxRowHeight);
+        int numRows = (int) ((height - totalHeaderHeight) / maxRowHeight);
         if (numRows <= 0) return false;
         
         int firstRecord = numRows * pageIndex;
@@ -341,10 +349,10 @@ public class CellSetRenderer extends AbstractWabitObject implements
         int[] columnWidthList = getDesiredColumnWidths(g, tableAsModel);
         
         // Actually print
-        int colHeaderSumHeight = printColumnHeaders(g, contentBox, printing,
+        int colHeaderSumHeight = printColumnHeaders(g, width, printing,
 				headerFontHeight, maxRowHeight, parentDepth,
 				tableAsModel, rowHeaderWidth, oldForeground, columnWidthList);
-        printRowHeaders(g, contentBox, printing, maxRowHeight, numRows,
+        printRowHeaders(g, height, printing, maxRowHeight, numRows,
 				firstRecord, rowHeaderComponent, oldForeground,
 				colHeaderSumHeight, columnWidthList);
         boolean shouldContinue = printBody(g, maxRowHeight, numRows, firstRecord, rowHeaderWidth,
@@ -457,7 +465,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	/**
 	 * Prints the Row Headers in the Cell Set Renderer
 	 */
-	private void printRowHeaders(Graphics2D g, ContentBox contentBox,
+	private void printRowHeaders(Graphics2D g, double height,
 			boolean printing, int maxRowHeight, int numRows, int firstRecord,
 			CellSetTableHeaderComponent rowHeaderComponent,
 			Color oldForeground, int colHeaderSumHeight, int[] columnWidthList) {
@@ -471,7 +479,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
         for (HierarchyComponent hierarchyComponent : rowHeaderComponent.getHierarchies()) {
             hierarchyComponent.createLayout();
             g.setColor(ColourScheme.HEADER_COLOURS[colourSchemeNum]);
-            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int) contentBox.getHeight());
+            g.fillRect((int) (hierarchyComponent.getX() + rowHeaderSumWidth), (int) (colHeaderSumHeight), (int) hierarchyComponent.getPreferredSize().getWidth(), (int)height);
             g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
             for (LayoutItem layoutItem : hierarchyComponent.getLayoutItems()) {
@@ -505,7 +513,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
 	/**
 	 * Prints the column headers in the CellSetRenderer.
 	 */
-	private int printColumnHeaders(Graphics2D g, ContentBox contentBox,
+	private int printColumnHeaders(Graphics2D g, double width,
 			boolean printing, int headerFontHeight, int maxRowHeight,
 			int[] parentDepth, JTable tableAsModel, double rowHeaderWidth, 
 			Color oldForeground, int[] columnWidthList) {
@@ -529,8 +537,8 @@ public class CellSetRenderer extends AbstractWabitObject implements
             
             g.setColor(ColourScheme.HEADER_COLOURS[colourSchemeNum]);
             int hierarchyHeight = (int) maxDepth * (headerFontHeight);
-			g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int) contentBox.getWidth(), hierarchyHeight);
-            g.setColor(oldForeground);
+			g.fillRect((int) (hierarchyComponent.getX() + rowHeaderWidth), (int) (hierarchyComponent.getY() + colHeaderSumHeight), (int)width, hierarchyHeight);
+			g.setColor(oldForeground);
             Member lastMemberDisplayed = null;
             
             double columnPosition = rowHeaderWidth;

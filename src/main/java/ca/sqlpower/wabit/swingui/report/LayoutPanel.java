@@ -101,6 +101,7 @@ import ca.sqlpower.wabit.swingui.action.ReportFromTemplateAction;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 import edu.umd.cs.piccolo.PCamera;
 import edu.umd.cs.piccolo.PCanvas;
+import edu.umd.cs.piccolo.PLayer;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.util.PPaintContext;
 import edu.umd.cs.piccolo.util.PPickPath;
@@ -209,7 +210,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					isFirstTime = false;
 				} else {
 					contentBox = new ContentBox();
-					cbNode = new ContentBoxNode(session, parentFrame, session.getWorkspace(), 
+					cbNode = new ContentBoxNode(canvas.getLayer(), session, parentFrame, session.getWorkspace(), 
 							LayoutPanel.this, contentBox);
 				}
 
@@ -343,6 +344,10 @@ public class LayoutPanel implements WabitPanel, MouseState {
 			cursorManager.placeModeStarted();
 		}
 	};
+	
+	public PLayer getLayer() {
+		return canvas.getLayer();
+	}
 	
 	
 	/**

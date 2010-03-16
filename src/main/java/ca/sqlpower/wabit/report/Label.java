@@ -149,7 +149,15 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
 	 * the content box. Note that specifying a pageIndex has no effect, since
 	 * Labels are intended to be the same on every page.
 	 */
-    public boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+    public boolean renderReportContent(
+    		Graphics2D g, 
+    		double width,
+    		double height,
+    		double scaleFactor, 
+    		int pageIndex, 
+    		boolean printing, 
+    		SPVariableResolver variablesContext) 
+    {
         logger.debug("Rendering label...");
         logger.debug("Text before: " + text);
         String[] textToRender = getVariableSubstitutedText();
@@ -159,15 +167,15 @@ public class Label extends AbstractWabitObject implements ReportContentRenderer 
         
         if (getBackgroundColour() != null) {
 	        g.setColor(getBackgroundColour());
-	        g.fillRect(0, 0, (int) contentBox.getWidth(), (int) contentBox.getHeight());
+	        g.fillRect(0, 0, (int)width, (int)height);
 	        g.setColor(Color.BLACK);
         }
         logger.debug("Rendering label text: " + Arrays.toString(textToRender));
-        int y = vAlignment.calculateStartY((int) contentBox.getHeight(), textHeight, fm);
+        double y = vAlignment.calculateStartY(height, textHeight, fm);
         for (String text : textToRender) {
             int textWidth = fm.stringWidth(text);
-            int x = hAlignment.computeStartX((int) contentBox.getWidth(), textWidth);
-            g.drawString(text, x, y);
+            double x = hAlignment.computeStartX(width, textWidth);
+            g.drawString(text, (int)x, (int)y);
             y += fm.getHeight();
         }
         return false;

@@ -44,9 +44,8 @@ public class FancyComboBoxSelector extends JComboBox implements
 
 	private SPListener selectorListener = new AbstractSPListener() {
 		protected void propertyChangeImpl(java.beans.PropertyChangeEvent evt) {
-			
-			refresh();
-			
+			if (!evt.getPropertyName().equals("parent"))
+				refresh();
 		};
 	};
 	

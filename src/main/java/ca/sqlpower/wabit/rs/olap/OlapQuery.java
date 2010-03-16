@@ -144,11 +144,12 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 				
 				isUpdating.set(true);
 				
-				ResultSetHandle handle = execute(
-						new SPVariableHelper(OlapQuery.this),
-						null,
-						false);
 				try {
+					ResultSetHandle handle = execute(
+							new SPVariableHelper(OlapQuery.this),
+							null,
+							false);
+					
 					variables.clear();
 					ResultSet rs = handle.getResultSet();
 					if (rs != null &&
@@ -159,16 +160,18 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 							}
 						} while (rs.next());
 					}
+					
 				} catch (SQLException e) {
 					logger.error("Failed to resolve available variables from a query.", e);
+				} finally {
+					isUpdating.set(false);
 				}
+			
 				
 				this.updateNeeded.set(false);
 				
 			} catch (ResultSetProducerException e) {
 				logger.error("Failed to resolve available variables from a query.", e);
-			} finally {
-				isUpdating.set(false);
 			}
 		}
     }

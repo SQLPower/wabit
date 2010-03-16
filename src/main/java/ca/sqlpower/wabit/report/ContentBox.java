@@ -31,11 +31,15 @@ import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.SPSimpleVariableResolver;
+import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.SPVariableResolverProvider;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.report.selectors.Selector;
 
 /**
  * Represents a box on the page which has an absolute position and size.
@@ -44,7 +48,7 @@ import ca.sqlpower.wabit.WabitWorkspace;
  * a PropertyChangeEvent with the property name "content". The old and new
  * values will
  */
-public class ContentBox extends AbstractWabitObject {
+public class ContentBox extends AbstractWabitObject implements SPVariableResolverProvider {
 	
 	private static final String EMPTY_BOX_NAME = "Empty Content Box";
 
@@ -63,6 +67,16 @@ public class ContentBox extends AbstractWabitObject {
      * The renderer that provides visual content for this box.
      */
     private ReportContentRenderer contentRenderer;
+    
+    /**
+     * List of parameters of this CB.
+     */
+    private List<Selector> selectors = new ArrayList<Selector>();
+    
+    /**
+     * Helper object to store/expose selectors variables.
+     */
+    private SPSimpleVariableResolver variablesResolver;
 
    /**
     * The listeners that will be notified when this content box makes a request
@@ -142,6 +156,23 @@ public class ContentBox extends AbstractWabitObject {
     	setContentRenderer(newContentRenderer);
     }
 
+    
+    @Override
+    public void setParent(SPObject parent) {
+    	super.setParent(parent);
+    	if (getParent() != null) {
+    		this.variablesResolver = new SPSimpleVariableResolver(this, getUUID(), getName(), false);    		
+    	}
+    }
+    
+    @Override
+    public void setName(String name) {
+    	super.setName(name);
+    	if (this.variablesResolver != null) {
+    		this.variablesResolver.setUserFriendlyName(getName());
+    	}
+    }
+    
     /**
      * Sets the given content renderer as this box's provider of rendered
      * content.
@@ -239,24 +270,37 @@ public class ContentBox extends AbstractWabitObject {
     }
 
     public int childPositionOffset(Class<? extends SPObject> childType) {
+
     	if (ReportContentRenderer.class.isAssignableFrom(childType)) {
-    		return 0;
-    	} else {
-            throw new IllegalArgumentException("Content boxes don't have children of type " + childType);
+            return 0;
+        } else if (Selector.class.isAssignableFrom(childType)) {
+            return this.contentRenderer == null ? 0 : 1;
+        } else {
+        	throw new IllegalArgumentException("Content boxes don't have children of type " + childType);
         }
+    	
     }
 
-    /**
-     * Included to complete the WabitObject implementation. For direct use of
-     * this class, it's usually better to use {@link #getContentRenderer()} because
-     * there can only ever be 0 or 1 children.
-     */
     public List<WabitObject> getChildren() {
-        if (contentRenderer == null) {
-            return Collections.emptyList();
-        } else {
-            return Collections.singletonList((WabitObject) getContentRenderer());
+        
+    	List<WabitObject> children = new ArrayList<WabitObject>();
+    	
+    	if (contentRenderer != null) {
+            children.add(contentRenderer);
         }
+    	
+    	children.addAll(selectors);
+    	
+    	return children;
+    }
+    
+    @Override
+    public boolean allowsChildType(Class<? extends SPObject> type) {
+    	if (Selector.class.isAssignableFrom(type)
+    			|| ReportContentRenderer.class.isAssignableFrom(type))
+    		return true;
+    	else
+    		return false;
     }
 
     public Font getFont() {
@@ -289,20 +333,28 @@ public class ContentBox extends AbstractWabitObject {
 
     @Override
     protected boolean removeChildImpl(SPObject child) {
-        if (child != null && child.equals(getContentRenderer())) {
+        if (child == getContentRenderer()) {
             setContentRenderer(null);
             return true;
+        } else if (this.selectors.contains(child)) {
+        	int index = this.selectors.indexOf(child);
+        	this.selectors.remove(child);
+        	fireChildRemoved(Selector.class, child, index);
+        	return true;
         }
         return false;
     }
     
     @Override
     protected void addChildImpl(SPObject child, int index) {
-        if (index > 0) {
-            throw new IllegalArgumentException("There is only one child in a content box, " +
-            		"index " + index + " is out of range");
-        }
-        setContentRenderer((ReportContentRenderer) child);
+        
+    	if (ReportContentRenderer.class.isAssignableFrom(child.getClass())) {
+    		setContentRenderer((ReportContentRenderer) child);    		
+    	} else if (Selector.class.isAssignableFrom(child.getClass())) {
+    		this.selectors.add(index, (Selector)child);
+    	} else {
+    		throw new AssertionError("Content boxes don't have children of type " + child);
+    	}
     }
 
     /**
@@ -336,5 +388,13 @@ public class ContentBox extends AbstractWabitObject {
     	types.add(Label.class);
     	return types;
     }
+    
+    public SPVariableResolver getVariableResolver() {
+    	return this.variablesResolver;
+    }
+    
+    public List<Selector> getSelectors() {
+		return Collections.unmodifiableList(selectors);
+	}
 
 }

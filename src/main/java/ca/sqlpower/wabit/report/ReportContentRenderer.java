@@ -91,6 +91,9 @@ public interface ReportContentRenderer extends WabitObject {
 	 *            data must fit within. You can ignore the X and Y coordinates
 	 *            of the box because the given graphics object's origin is
 	 *            already set to this box's origin.
+	 *            It is also recommended to ignore the width and height properties
+	 *            and to conform to those provided by the method parameters 
+	 *            since the actual space available might not be the same.
 	 * @param scaleFactor
 	 *            The amount of scaling currently in effect. The nominal size of
 	 *            a unit when displayed via the given graphics is scaleFactor/72
@@ -108,7 +111,14 @@ public interface ReportContentRenderer extends WabitObject {
 	 *         report to grow by another page. The final page of the report is
 	 *         the first one where all content renderers involved return false.
 	 */
-    boolean renderReportContent(Graphics2D g, ContentBox contentBox, double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext);
+    boolean renderReportContent(
+    		Graphics2D g,
+    		double width, 
+    		double height, 
+    		double scaleFactor, 
+    		int pageIndex, 
+    		boolean printing, 
+    		SPVariableResolver variablesContext);
 
     /**
      * Tells this content renderer that the next call to

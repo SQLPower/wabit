@@ -255,30 +255,33 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
 				
 				isUpdating.set(true);
 				
-				ResultSetHandle variablesHandle = execute(
-						new SPVariableHelper(QueryCache.this),
-						null,
-						false);
-				
-				synchronized (variables) {
-					ResultSet rs = variablesHandle.getResultSet();
-					variables.clear();
-					if (rs != null &&
-							rs.first()) {
-						do {
-							for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
-								this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
-							}
-						} while (rs.next());
-					}					
+				try {
+					ResultSetHandle variablesHandle = execute(
+							new SPVariableHelper(QueryCache.this),
+							null,
+							false);
+					
+					synchronized (variables) {
+						ResultSet rs = variablesHandle.getResultSet();
+						variables.clear();
+						if (rs != null &&
+								rs.first()) {
+							do {
+								for (int i = 0; i < rs.getMetaData().getColumnCount(); i++) {
+									this.store(rs.getMetaData().getColumnName(i+1), rs.getObject(i+1));
+								}
+							} while (rs.next());
+						}					
+					}
+					
+				} finally {
+					isUpdating.set(false);
 				}
 				
 				this.updateNeeded.set(false);
 				
 			} catch (Exception e) {
 				logger.error("Failed to resolve available variables from a query.", e);
-			} finally {
-				isUpdating.set(false);
 			}
 		}
     }

@@ -19,10 +19,10 @@
 
 package ca.sqlpower.wabit.swingui.report.selectors;
 
-import java.awt.Component;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -33,16 +33,10 @@ import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 public class SelectorFactory {
 	
 	private Set<SelectorComponent> components = new HashSet<SelectorComponent>();
-
-	public Component makeSelector(WabitWorkspace sourceWorkspace, String selectorUuid, Runnable refreshRoutine) {
+	
+	public JComponent makeSelector(Selector selector, Runnable refreshRoutine) {
 		
-		Selector selector = sourceWorkspace.findByUuid(selectorUuid, Selector.class);
-		
-		if (selector == null) {
-			throw new IllegalArgumentException("No selector with UUID '" + selectorUuid + "' could be found.");
-		}
-		
-		final Component comp;
+		final JComponent comp;
 		if (selector instanceof ComboBoxSelector) {
 			comp = makeComboBoxSelector((ComboBoxSelector)selector, refreshRoutine);
 		} else if (selector instanceof TextBoxSelector) {
@@ -53,9 +47,21 @@ public class SelectorFactory {
 		
 		SwingUtilities.invokeLater(refreshRoutine);
 		return comp;
+		
+	}
+
+	public JComponent makeSelector(WabitWorkspace sourceWorkspace, String selectorUuid, Runnable refreshRoutine) {
+		
+		Selector selector = sourceWorkspace.findByUuid(selectorUuid, Selector.class);
+		
+		if (selector == null) {
+			throw new IllegalArgumentException("No selector with UUID '" + selectorUuid + "' could be found.");
+		}
+		
+		return this.makeSelector(selector, refreshRoutine);
 	}
 	
-	private Component makeTextBoxSelector(final TextBoxSelector selector, final Runnable refreshRoutine) {
+	private JComponent makeTextBoxSelector(final TextBoxSelector selector, final Runnable refreshRoutine) {
 		
 		final FancyTextBoxSelectorField text = 
 				new FancyTextBoxSelectorField(
@@ -67,7 +73,7 @@ public class SelectorFactory {
 		return text;
 	}
 	
-	private Component makeComboBoxSelector(final ComboBoxSelector selector, final Runnable refreshRoutine) {
+	private JComponent makeComboBoxSelector(final ComboBoxSelector selector, final Runnable refreshRoutine) {
 		
 		final FancyComboBoxSelector cb = new FancyComboBoxSelector(selector, refreshRoutine);
 		

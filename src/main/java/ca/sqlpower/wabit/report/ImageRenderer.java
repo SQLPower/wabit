@@ -133,28 +133,35 @@ public class ImageRenderer extends AbstractWabitObject implements
 		return null;
 	}
 
-	public boolean renderReportContent(Graphics2D g, ContentBox contentBox,
-			double scaleFactor, int pageIndex, boolean printing, SPVariableResolver variablesContext) {
+	public boolean renderReportContent(
+			Graphics2D g,
+			double width,
+			double height,
+			double scaleFactor, 
+			int pageIndex, 
+			boolean printing, 
+			SPVariableResolver variablesContext) 
+	{
 		if (image.getImage() == null) {
 			g.drawString("Empty image", 0, g.getFontMetrics().getHeight());
 			return false;
 		}
 		
 		ImageIcon imageIcon = new ImageIcon(image.getImage());
-		int width;
-		int height;
+		double imageWidth;
+		double imageHeight;
 		if (isPreservingAspectRatio()) {
 		
 			double widthRatio = 
-				(double) contentBox.getWidth() / (double) imageIcon.getIconWidth();
+				width / (double) imageIcon.getIconWidth();
 			double heightRatio = 
-				(double) contentBox.getHeight() / (double) imageIcon.getIconHeight();
+				height / (double) imageIcon.getIconHeight();
 			double sizeRatio = Math.min(widthRatio, heightRatio);
-			width = (int) (imageIcon.getIconWidth() * sizeRatio);
-			height = (int) (imageIcon.getIconHeight() * sizeRatio);
+			imageWidth = (int) (imageIcon.getIconWidth() * sizeRatio);
+			imageHeight = (int) (imageIcon.getIconHeight() * sizeRatio);
 		} else {
-			width = (int) contentBox.getWidth();
-			height = (int) contentBox.getHeight();
+			imageWidth = width;
+			imageHeight = height;
 		}
 		
 		int x = 0;
@@ -164,10 +171,10 @@ public class ImageRenderer extends AbstractWabitObject implements
     		        x = 0;
     		        break;
     		    case CENTER:
-    		        x = (int) (contentBox.getWidth() - width) / 2;
+    		        x = (int) (width - imageWidth) / 2;
     		        break;
     		    case RIGHT:
-    		        x = (int) (contentBox.getWidth() - width);
+    		        x = (int) (width - imageWidth);
     		        break;
 		    }
 		}
@@ -179,15 +186,15 @@ public class ImageRenderer extends AbstractWabitObject implements
     		        y = 0;
     		        break;
     		    case MIDDLE:
-    		        y = (int) ((contentBox.getHeight() - height) / 2);
+    		        y = (int) ((height - imageHeight) / 2);
     		        break;
     		    case BOTTOM:
-    		        y = (int) (contentBox.getHeight() - height);
+    		        y = (int) (height - imageHeight);
     		        break;
 		    }
 		}
 		
-		g.drawImage(image.getImage(), x, y, width, height, null);
+		g.drawImage(image.getImage(), x, y, (int)imageWidth, (int)imageHeight, null);
 		logger.debug("Image rendered");
 		return false;
 	}
