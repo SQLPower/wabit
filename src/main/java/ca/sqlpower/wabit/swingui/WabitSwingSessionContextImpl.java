@@ -126,7 +126,7 @@ import ca.sqlpower.enterprise.client.Grant;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.enterprise.client.User;
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
@@ -2018,7 +2018,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
      * Listens for changes to the workspace name and updates the name on the
      * stacked tab accordingly.
      */
-    private final SPListener nameChangeListener = new AbstractSPListener() {
+    private final SPListener nameChangeListener = new AbstractPoolingSPListener() {
     	public void propertyChangeImpl(PropertyChangeEvent evt) {
     		if (evt.getPropertyName().equals("name")) {
     			WabitSession sourceSession = ((WabitWorkspace) evt.getSource()).getSession();

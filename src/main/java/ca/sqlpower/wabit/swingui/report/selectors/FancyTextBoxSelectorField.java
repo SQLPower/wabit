@@ -31,7 +31,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang.ObjectUtils;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 
@@ -72,7 +72,7 @@ public class FancyTextBoxSelectorField extends JTextField implements SelectorCom
 
 	private final Runnable refreshRoutine;
 	
-	private SPListener spListener = new AbstractSPListener() {
+	private SPListener spListener = new AbstractPoolingSPListener() {
 		protected void propertyChangeImpl(final java.beans.PropertyChangeEvent evt) {
 			
 			String currentText = getText().trim();

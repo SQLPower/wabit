@@ -66,7 +66,7 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.enterprise.client.SPServerInfo;
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
@@ -245,7 +245,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * of {@link ResultSetProducer} and bind a listener to it so we can update
      * the throbber icon in the tree.
      */
-	private class WorkspaceWatcher extends AbstractSPListener {
+	private class WorkspaceWatcher extends AbstractPoolingSPListener {
 
 	    private final Set<String> ignorablePropertyNames = new HashSet<String>();
 	    {
@@ -428,7 +428,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      * update the current editor displayed when the object being edited changes
      * in the workspace.
      */
-    private final SPListener workspaceEditorModelListener = new AbstractSPListener() {
+    private final SPListener workspaceEditorModelListener = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (sessionContext.isLoading()) return;
             if (evt.getPropertyName().equals("editorPanelModel")) {

@@ -29,7 +29,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.commons.lang.ObjectUtils;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
@@ -42,7 +42,7 @@ public class FancyComboBoxSelector extends JComboBox implements
 	private final Runnable refreshRoutine;
 	private AtomicBoolean ignoreEvents = new AtomicBoolean(false);
 
-	private SPListener selectorListener = new AbstractSPListener() {
+	private SPListener selectorListener = new AbstractPoolingSPListener() {
 		protected void propertyChangeImpl(java.beans.PropertyChangeEvent evt) {
 			if (!evt.getPropertyName().equals("parent"))
 				refresh();

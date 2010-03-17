@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
@@ -89,7 +89,7 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
      * children of a renderer changes. It also fires a repaint request when 
      * there is a change to the children of this content box.
      */
-    private final SPListener childListener = new AbstractSPListener() {
+    private final SPListener childListener = new AbstractPoolingSPListener() {
         
         @Override
 		public void childRemovedImpl(SPChildEvent e) {

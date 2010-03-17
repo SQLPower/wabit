@@ -61,7 +61,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.swingui.olap.CellSetTableHeaderComponent;
@@ -98,7 +98,7 @@ public class WabitImagePanel implements WabitPanel {
     /**
      * When the image changes this listener will cause the image panel to repaint.
      */
-    private final SPListener imageListener = new AbstractSPListener() {
+    private final SPListener imageListener = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             resetImage();
         }

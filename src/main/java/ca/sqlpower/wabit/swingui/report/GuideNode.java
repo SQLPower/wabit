@@ -35,10 +35,9 @@ import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.SPChildEvent;
+import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitNode;
@@ -233,32 +232,7 @@ public class GuideNode extends PNode implements WabitNode {
     /**
      * Adjusts this guide's position and length based on it's model.
      */
-    private final SPListener modelChangeHandler = new SPListener() {
-
-		public void transactionEnded(TransactionEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public void transactionRollback(TransactionEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public void transactionStarted(TransactionEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public void childAdded(SPChildEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
-
-		public void childRemoved(SPChildEvent e) {
-			// TODO Auto-generated method stub
-			
-		}
+    private final SPListener modelChangeHandler = new AbstractSPListener() {
 
 		public void propertyChanged(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("offset")) {

@@ -84,7 +84,7 @@ import org.olap4j.metadata.Cube;
 import org.olap4j.metadata.Dimension;
 import org.olap4j.query.Query;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.DatabaseListChangeEvent;
@@ -272,7 +272,7 @@ public class OlapQueryPanel implements WabitPanel {
     /**
      * This updates the displayed name of the query when it changes.
      */
-    private final SPListener queryPropertyListener = new AbstractSPListener() {
+    private final SPListener queryPropertyListener = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             if (evt.getPropertyName().equals("currentCube")) {
                 if (query.getCurrentCube() != null) {

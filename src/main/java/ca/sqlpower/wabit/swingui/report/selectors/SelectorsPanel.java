@@ -37,7 +37,7 @@ import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 
 import net.miginfocom.swing.MigLayout;
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.WabitObject;
@@ -59,7 +59,7 @@ public class SelectorsPanel extends JPanel {
 	private Map<Selector, Component> selectorComponents = new HashMap<Selector, Component>();
 	private final Runnable refreshRoutine;
 	
-	private final SPListener reportListener = new AbstractSPListener() {
+	private final SPListener reportListener = new AbstractPoolingSPListener() {
 		@Override
 		protected void childAddedImpl(SPChildEvent e) {
 			if (e.getChildType().equals(Selector.class)) {
@@ -80,7 +80,7 @@ public class SelectorsPanel extends JPanel {
 	};
 	
 	
-	private final SPListener selectorListener = new AbstractSPListener() {
+	private final SPListener selectorListener = new AbstractPoolingSPListener() {
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
 			updateParameters();
 			revalidate();

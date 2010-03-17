@@ -23,7 +23,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
-import java.beans.PropertyChangeEvent;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,6 +54,7 @@ import ca.sqlpower.enterprise.client.Grant;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
@@ -72,7 +72,6 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.util.SQLPowerUtils;
-import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSession;
@@ -602,25 +601,10 @@ public class WabitSessionPersister implements SPPersister {
 					.getParentUUID(), SPObject.class);
 			SPObject spo = loadWabitObject(pwo);
 			if (spo != null) {
-				SPListener removeChildOnAddListener = new SPListener() {
-					public void propertyChanged(PropertyChangeEvent arg0) {
-						//do nothing
-					}
+				SPListener removeChildOnAddListener = new AbstractSPListener() {
 					public void childRemoved(SPChildEvent e) {
 						objectsToRemoveRollbackList.add(
 								new RemovedObjectEntry(e.getSource().getUUID(), e.getChild(), e.getIndex()));
-					}
-					public void childAdded(SPChildEvent e) {
-						//do nothing
-					}
-					public void transactionStarted(TransactionEvent e) {
-						//do nothing
-					}
-					public void transactionRollback(TransactionEvent e) {
-						//do nothing
-					}
-					public void transactionEnded(TransactionEvent e) {
-						//do nothing
 					}
 				};
 				parent.addSPListener(removeChildOnAddListener);

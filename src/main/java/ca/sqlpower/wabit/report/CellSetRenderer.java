@@ -48,7 +48,7 @@ import org.olap4j.Position;
 import org.olap4j.metadata.Member;
 import org.olap4j.metadata.Property;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
@@ -143,7 +143,7 @@ public class CellSetRenderer extends AbstractWabitObject implements
      * Updates the name of this renderer if the name of the query backing it
      * has changed.
      */
-    private SPListener nameListener = new AbstractSPListener() {
+    private SPListener nameListener = new AbstractPoolingSPListener() {
         
         @Override
 		public void propertyChangeImpl(PropertyChangeEvent evt) {

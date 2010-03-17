@@ -30,12 +30,12 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.StubWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
-public class AbstractSPListenerTest extends TestCase {
+public class AbstractPoolingSPListenerTest extends TestCase {
     
     /**
      * This listener tracks the order events were handled in Wabit.
      */
-    private static class ExecutionOrderWabitListener extends AbstractSPListener {
+    private static class ExecutionOrderWabitListener extends AbstractPoolingSPListener {
 
         /**
          * A list of events that were handled in the order they were handled by

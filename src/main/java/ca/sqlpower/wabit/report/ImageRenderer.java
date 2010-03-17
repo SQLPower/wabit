@@ -30,7 +30,7 @@ import javax.swing.ImageIcon;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableResolver;
@@ -87,7 +87,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 	 * {@link #preserveAspectRatioWhenResizing} value.
 	 */
 	private final SPListener contentBoxResizingListener = 
-		new AbstractSPListener() {
+		new AbstractPoolingSPListener() {
 	
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("width") 
@@ -98,7 +98,7 @@ public class ImageRenderer extends AbstractWabitObject implements
 	};
 	
 	private final SPListener imageListener = 
-		new AbstractSPListener() {
+		new AbstractPoolingSPListener() {
 		
 		public void propertyChangeImpl(PropertyChangeEvent evt) {
 			if (evt.getPropertyName().equals("image")) {

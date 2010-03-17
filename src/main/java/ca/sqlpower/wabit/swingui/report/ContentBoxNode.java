@@ -45,13 +45,13 @@ import javax.swing.JPopupMenu;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.AbstractSPListener;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
-import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
@@ -266,7 +266,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
      */
-    private SPListener contentRendererListener = new SPListener() {
+    private SPListener contentRendererListener = new AbstractSPListener() {
         
 		public void childRemoved(SPChildEvent e) {
 			setSwingContentRenderer(null);
@@ -282,18 +282,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
             updateBoundsFromContentBox();
             repaint();
         }
-
-		public void transactionEnded(TransactionEvent e) {
-			//no-op
-		}
-
-		public void transactionRollback(TransactionEvent e) {
-			//no-op			
-		}
-
-		public void transactionStarted(TransactionEvent e) {
-			//no-op			
-		}
 
 	};
 	

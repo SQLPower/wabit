@@ -25,7 +25,7 @@ import java.beans.PropertyChangeEvent;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
@@ -48,7 +48,7 @@ public class PageNode extends PNode implements WabitNode {
     /**
      * Updates this page's bounds based on changes in the model.
      */
-    private final SPListener pageChangeHandler = new AbstractSPListener() {
+    private final SPListener pageChangeHandler = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
             logger.debug("Page " + evt.getSource() + ": " + evt.getPropertyName() +
                     " changed " + evt.getOldValue() + " -> " + evt.getNewValue(), new Exception());

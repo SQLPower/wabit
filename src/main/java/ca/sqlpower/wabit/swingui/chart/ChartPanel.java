@@ -64,7 +64,7 @@ import javax.swing.table.TableColumnModel;
 import org.apache.log4j.Logger;
 import org.jfree.chart.JFreeChart;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
@@ -268,7 +268,7 @@ public class ChartPanel implements WabitPanel {
      * {@link #chartDataListener}, which handles events strictly dealing with
      * the chart's current data (rather than its configuration).
      */
-    private final SPListener chartListener = new AbstractSPListener() {
+    private final SPListener chartListener = new AbstractPoolingSPListener() {
 
         /**
          * Set of properties that are ignored with regards to marking this chart

@@ -44,7 +44,7 @@ import javax.annotation.Nonnull;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
@@ -239,7 +239,7 @@ public class ResultSetRenderer extends AbstractWabitObject
 	 * This listens for all property changes on the parent content box to 
 	 * know when to recreate the layout of the result set.
 	 */
-	private final SPListener parentChangeListener = new AbstractSPListener() {
+	private final SPListener parentChangeListener = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
         	pageCells.remove();
         }
@@ -269,7 +269,7 @@ public class ResultSetRenderer extends AbstractWabitObject
 		};
 	};
 	
-	private final SPListener columnInfoListener = new AbstractSPListener() {
+	private final SPListener columnInfoListener = new AbstractPoolingSPListener() {
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
 			pageCells.remove();
 			ResultSetRenderer.this.getParent().repaint();

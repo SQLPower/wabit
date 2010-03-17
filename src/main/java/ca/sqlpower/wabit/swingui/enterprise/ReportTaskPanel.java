@@ -45,7 +45,7 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -100,7 +100,7 @@ public class ReportTaskPanel implements WabitPanel {
 	private final WabitToolBarBuilder toolbarBuilder = new WabitToolBarBuilder();
 	private final WabitWorkspace workspace;
 	
-	private final SPListener taskListener = new AbstractSPListener() {
+	private final SPListener taskListener = new AbstractPoolingSPListener() {
 		@Override
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
 			reinitGuiModel();
