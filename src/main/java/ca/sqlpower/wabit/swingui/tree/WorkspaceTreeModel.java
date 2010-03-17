@@ -158,10 +158,12 @@ public class WorkspaceTreeModel implements TreeModel {
 	        if (o instanceof Chart) return true;
 	        if (o instanceof ChartColumn) return true;
 	        if (o instanceof ContentBox) return true;
+	        if (o instanceof Selector) return true;
 	        if (o instanceof WabitImage) return true;
 	        if (o instanceof WabitOlapAxis) return true;
 	        if (o instanceof WabitOlapDimension) return true;
 	        if (o instanceof WabitOlapSelection) return true;
+	        
 	        if (o instanceof ReportTask &&
 	        		this.workspace.isServerWorkspace()) {
 	        	return true;
@@ -175,32 +177,43 @@ public class WorkspaceTreeModel implements TreeModel {
     }
     
     public Object getChild(Object parentObject, int index) {
+    	
 		if (parentObject instanceof WabitWorkspace) {
 			return folderList.get(index);
-    	} else if (parentObject instanceof FolderNode) {
+    	
+		} else if (parentObject instanceof FolderNode) {
     		return ((FolderNode) parentObject).getChildren().get(index);
-    	} else if (parentObject instanceof Layout) {
+    	
+		} else if (parentObject instanceof Layout) {
     		return  getLayoutsChildren((Layout) parentObject).get(index);
-    	} else if (parentObject instanceof ContentBox) {
-    		return Collections.emptyList();
-    	} else if (parentObject instanceof WabitDataSource) {
+    	
+		} else if (parentObject instanceof ContentBox) {
+    		return ((ContentBox) parentObject).getChildren(Selector.class).get(index);
+    	
+		} else if (parentObject instanceof WabitDataSource) {
     		List<Object> children = getWabitDatasourceChildren((WabitDataSource) parentObject);
     		return children.get(index);
-    	} else if (parentObject instanceof QueryCache) {
+    	
+		} else if (parentObject instanceof QueryCache) {
     	    return Collections.emptyList();
-    	} else if (parentObject instanceof ReportTask) {
+    	
+		} else if (parentObject instanceof ReportTask) {
     	    return Collections.emptyList();
-    	} else if (parentObject instanceof User) {
+    	
+		} else if (parentObject instanceof User) {
     		return Collections.emptyList();
-    	} else if (parentObject instanceof Group) {
+    	
+		} else if (parentObject instanceof Group) {
     		return Collections.emptyList();
-    	} else if (parentObject instanceof SQLObject) {
+    	
+		} else if (parentObject instanceof SQLObject) {
     		try {
 				return ((SQLObject) parentObject).getChild(index);
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
-    	} else if (parentObject instanceof Olap4jTreeObject) {
+    	
+		} else if (parentObject instanceof Olap4jTreeObject) {
     		Olap4jTreeObject parentTreeNode = (Olap4jTreeObject) parentObject;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(parentTreeNode);
     		Object olap4jObject = model.getChild(parentTreeNode.getOlapObject(), index);
@@ -214,32 +227,43 @@ public class WorkspaceTreeModel implements TreeModel {
     }
     
     public int getChildCount(Object parent) {
+    	
     	if (parent instanceof WabitWorkspace) {
     		return folderList.size();
+    	
     	} else if (parent instanceof FolderNode) {
     		return ((FolderNode) parent).getChildren().size();
+    	
     	} else if (parent instanceof Layout) {
     		return getLayoutsChildren((Layout) parent).size();
+    		
     	} else if (parent instanceof ContentBox) {
-    		return 0;
+    		return ((ContentBox)parent).getSelectors().size();
+    	
     	} else if (parent instanceof WabitDataSource) {
     		WabitDataSource wds = (WabitDataSource) parent;
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.size();
+    	
     	} else if (parent instanceof ReportTask) {
     		return 0;
+    	
     	} else if (parent instanceof User) {
     		return 0;
+    	
     	} else if (parent instanceof Group) {
     		return 0;
+    	
     	} else if (parent instanceof QueryCache) {
     	    return 0;
+    	
     	} else if (parent instanceof SQLObject) {
     		try {
 				return ((SQLObject) parent).getChildCount();
 			} catch (SQLObjectException e) {
 				throw new RuntimeException(e);
 			}
+    	
     	} else if (parent instanceof Olap4jTreeObject) {
     		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
     		Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
@@ -330,27 +354,35 @@ public class WorkspaceTreeModel implements TreeModel {
 	}
     
     public int getIndexOfChild(Object parent, Object child) {
+    	
     	if (parent instanceof WabitWorkspace) {
     		return folderList.indexOf(child);
+    	
     	} else if (parent instanceof FolderNode) {
     		return ((FolderNode) parent).getChildren().indexOf(child);
+    	
     	} else if (parent instanceof WabitDataSource) {
     		WabitDataSource wds = (WabitDataSource) parent;
 			List<Object> children = getWabitDatasourceChildren(wds);
     		return children.indexOf(child);
+    	
     	} else if (parent instanceof SQLObject) {
     		return ((SQLObject) parent).getChildren().indexOf(child);
+    	
     	} else if (parent instanceof QueryCache) {
     	    return 0;
+    	    
     	} else if (parent instanceof SPObject) {
 	        SPObject spo = (SPObject) parent;
 	        List<? extends SPObject> children = spo.getChildren();
 	        return children.indexOf(child);
+    	
     	} else if (parent instanceof Olap4jTreeObject){
     		Olap4jTreeObject treeNode = (Olap4jTreeObject) parent;
 			Olap4jTreeModel model = getOlapTreeModelFromNode(treeNode);
     		Olap4jTreeObject treeNodeChild = (Olap4jTreeObject) child;
 			return model.getIndexOfChild(treeNode.getOlapObject(), treeNodeChild.getOlapObject());
+    	
     	} else {
     		throw new UnsupportedOperationException("Object of type " + parent.getClass().toString() + " " +
     				"not yet supported in Left Hand tree model");
@@ -362,7 +394,7 @@ public class WorkspaceTreeModel implements TreeModel {
     	if (node instanceof FolderNode) {
     		retval = !(((FolderNode) node).allowsChildren());
     	} else if (node instanceof ContentBox) {
-    		retval = true;
+    		retval = ((ContentBox)node).getChildren(Selector.class).size()==0;
     	} else if (node instanceof WabitDataSource) {
     		retval = false;
     	} else if (node instanceof SQLDatabase){

@@ -56,6 +56,7 @@ import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
+import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.action.AddDataSourceAction;
@@ -354,7 +355,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			    				editItem,
 			    				WabitAccessManager.Permission.MODIFY);
 			    	}
-			        if (!(lastPathComponent instanceof ContentBox)) {
+			        if (!(lastPathComponent instanceof ContentBox)
+			        		&& !(lastPathComponent instanceof Selector)) {
 			        	
 			        	if (!(lastPathComponent instanceof WabitDataSource)) {
 				        	objectsMenu(
@@ -718,6 +720,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			}
 		}
 		if (!(lastPathComponent instanceof ContentBox) && 
+				!(lastPathComponent instanceof Selector) &&
 				!(lastPathComponent instanceof SQLObject) &&
 				!(lastPathComponent instanceof Olap4jTreeObject) &&
 				menu.getComponentCount() > 0) {
