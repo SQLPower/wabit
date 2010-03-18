@@ -19,10 +19,8 @@
 
 package ca.sqlpower.wabit.dao.session;
 
-import java.awt.Color;
 import java.awt.Font;
 import java.awt.Image;
-import java.awt.geom.Point2D;
 import java.io.InputStream;
 
 import org.olap4j.Axis;
@@ -43,13 +41,9 @@ import ca.sqlpower.wabit.WabitSession;
  */
 public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperConverter {
 	
-	private static final ColorConverter colorConverter = new ColorConverter();
-	
 	private final CubeConverter cubeConverter;
 	
 	private static final FontConverter fontConverter = new FontConverter();
-	
-	private static final Point2DConverter point2DConverter = new Point2DConverter();
 	
 	private final SQLJoinConverter sqlJoinConverter;
 	
@@ -86,22 +80,14 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 			// Could not convert to basic type through SessionPersisterSuperConverter.
 			// Squishing the exception so that we can also check known types in Wabit.
 		}
-		
-		if (convertFrom instanceof Color) {
-			Color c = (Color) convertFrom;
-			return colorConverter.convertToSimpleType(c);
 			
-		} else if (convertFrom instanceof Cube) {
+		if (convertFrom instanceof Cube) {
 			Cube c = (Cube) convertFrom;
 			return cubeConverter.convertToSimpleType(c, additionalInfo);
 			
 		} else if (convertFrom instanceof Font) {
 			Font f = (Font) convertFrom;
 			return fontConverter.convertToSimpleType(f);
-			
-		} else if (convertFrom instanceof Point2D) {
-			Point2D p = (Point2D) convertFrom;
-			return point2DConverter.convertToSimpleType(p);
 			
 		} else if (convertFrom instanceof SQLJoin) {
 			SQLJoin join = (SQLJoin) convertFrom;
@@ -142,17 +128,11 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 			// Squishing the exception so that we can also check known types in Wabit.
 		}
 		
-		if (Color.class.isAssignableFrom(type)) {
-			return colorConverter.convertToComplexType((String) o);
-			
-		} else if (Cube.class.isAssignableFrom(type)) {
+		if (Cube.class.isAssignableFrom(type)) {
 			return cubeConverter.convertToComplexType((String) o);
 			
 		} else if (Font.class.isAssignableFrom(type)) {
 			return fontConverter.convertToComplexType((String) o);
-			
-		} else if (Point2D.class.isAssignableFrom(type)) {
-			return point2DConverter.convertToComplexType((String) o);
 			
 		} else if (Container.class.isAssignableFrom(type)) {
 			return containerConverter.convertToComplexType((String) o);
