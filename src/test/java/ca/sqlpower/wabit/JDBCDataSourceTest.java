@@ -32,7 +32,7 @@ public class JDBCDataSourceTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         PlDotIni plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
+        plIni.read(new File("src/test/resources/pl.regression.ini"));
         JDBCDataSource spds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         ds = new WabitDataSource(spds);
         getWorkspace().addDataSource(ds);

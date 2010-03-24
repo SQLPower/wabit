@@ -101,7 +101,7 @@ public class ResultSetRendererOlapTest extends AbstractWabitObjectTest {
         OlapConnectionPool connectionPool;
         
         plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
+        plIni.read(new File("src/test/resources/pl.regression.ini"));
         ds = plIni.getDataSource("World Facts OLAP Connection", Olap4jDataSource.class);
         
         db = new SQLDatabase(ds.getDataSource());

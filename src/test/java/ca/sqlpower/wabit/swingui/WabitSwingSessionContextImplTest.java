@@ -70,14 +70,14 @@ public class WabitSwingSessionContextImplTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
+        plIni.read(new File("src/test/resources/pl.regression.ini"));
         jdbcDS = plIni.getDataSource("regression_test", JDBCDataSource.class);
     }
     
     public void testImportingIntoActiveSession() throws Exception {
         TestingWabitSessionContextImpl delegateContext = 
             new TestingWabitSessionContextImpl(true, false, plIni, "", false);
-        delegateContext.setPlDotIniPath("src/test/java/pl.regression.ini");
+        delegateContext.setPlDotIniPath("src/test/resources/pl.regression.ini");
         
         final WabitSwingSessionContextImpl context = 
             new WabitSwingSessionContextImpl(delegateContext, true, 

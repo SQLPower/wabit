@@ -54,7 +54,7 @@ public class DeleteFromTreeActionTest extends TestCase {
 	protected void setUp() throws Exception {
 		super.setUp();
 		final PlDotIni plIni = new PlDotIni();
-    	plIni.read(new File("src/test/java/pl.regression.ini"));
+    	plIni.read(new File("src/test/resources/pl.regression.ini"));
         final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
         		Olap4jDataSource.class);
         if (olapDS == null) throw new IllegalStateException("Cannot find 'World Facts OLAP Connection'");

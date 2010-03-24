@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.io.File;
 import java.io.IOException;
 
 import junit.framework.TestCase;
@@ -47,12 +48,15 @@ public class WabitSessionPersisterTest extends TestCase {
     private StubWabitSession session;
 
 	public void setUp() {
+		
 		final PlDotIni defaultPlIni = new PlDotIni();
+		
 		try {
-			defaultPlIni.read(ClassLoader
-							.getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
-			defaultPlIni.read(ClassLoader
-							.getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
+		
+			defaultPlIni.read(new File("ca/sqlpower/sql/default_database_types.ini"));
+			
+			defaultPlIni.read(new File("ca/sqlpower/demodata/example_database.ini"));
+		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

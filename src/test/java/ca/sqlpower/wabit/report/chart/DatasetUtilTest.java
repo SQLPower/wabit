@@ -46,7 +46,7 @@ public class DatasetUtilTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
+        plIni.read(new File("src/test/resources/pl.regression.ini"));
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
     }
 

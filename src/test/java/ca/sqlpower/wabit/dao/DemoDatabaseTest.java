@@ -19,6 +19,8 @@
 
 package ca.sqlpower.wabit.dao;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStream;
 
 import junit.framework.TestCase;
@@ -86,10 +88,15 @@ public class DemoDatabaseTest extends TestCase {
     		}
     	};
         
-        InputStream in = DemoDatabaseTest.class.getResourceAsStream("/ca/sqlpower/wabit/example_workspace.wabit");
-        OpenWorkspaceXMLDAO workspaceDAO =
-            new OpenWorkspaceXMLDAO(context, in, OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
-        workspaceDAO.openWorkspaces();
+        File file = new File("build/ca/sqlpower/wabit/example_workspace.wabit");
+        FileInputStream fis = new FileInputStream(file);
+        try {
+        	OpenWorkspaceXMLDAO workspaceDAO = new OpenWorkspaceXMLDAO(context, fis, OpenWorkspaceXMLDAO.UNKNOWN_STREAM_LENGTH);
+        	workspaceDAO.openWorkspaces();
+        } finally {
+        	fis.close();
+        }
+            
     }
     
 }

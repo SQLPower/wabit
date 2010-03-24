@@ -46,7 +46,7 @@ public class WabitTableContainerTest extends AbstractWabitObjectTest {
     protected void setUp() throws Exception {
         super.setUp();
         plIni = new PlDotIni();
-        plIni.read(new File("src/test/java/pl.regression.ini"));
+        plIni.read(new File("src/test/resources/pl.regression.ini"));
         ds = plIni.getDataSource("regression_test", JDBCDataSource.class);
         db = new SQLDatabase(ds);
         
