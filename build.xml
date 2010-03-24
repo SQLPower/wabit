@@ -488,7 +488,7 @@ SQL Power Wabit Ant build file
 	<target 
 			name="assembly"
 			description="Assembles all the distributions."
-			depends="assembly-mac, assembly-windows">
+			depends="assembly-mac, assembly-windows, assembly-generic">
 	</target>
 	
 	
