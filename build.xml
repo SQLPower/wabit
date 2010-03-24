@@ -836,7 +836,7 @@ SQL Power Wabit Ant build file
 	
 	
 	
-	<target name="hudson" depends="clean, assembly, findbugs, pmd, pmd-cpd">
+	<target name="hudson" depends="clean, test, assembly, findbugs, pmd, pmd-cpd">
 	</target>
 	
 	
