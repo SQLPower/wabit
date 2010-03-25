@@ -6,7 +6,7 @@ SQL Power Wabit Ant build file
 -->
 <project 
 		name="wabit" 
-		default="" 
+		default="assembly" 
 		basedir=".">
 
 	<!-- $Id: $ -->
@@ -80,8 +80,6 @@ SQL Power Wabit Ant build file
 	<!-- Base directory for the izpack (Windows) installer output -->
 	<property name="installer.dir" value="installer"/>
 	
-	<property name="only.copy.sqlpower.library" value="false"/>
-	
 	<!-- When the build runs on a Mac, we can create the .dmg disk image
 	     using the native hdiutil program.  Otherwise, we just make a .tar.gz.
 	-->
@@ -154,16 +152,7 @@ SQL Power Wabit Ant build file
 	<property name="pmd.home" value="ext-tools-home/pmd"/>
 	<property name="pmd.jar" value="${pmd.home}/lib/pmd-4.2.jar"/>
 
-	<!-- 
-		Sets if we want to actually run a build on the SQL Power Library.
-		It may be useful to set it to copy only if we already know that the
-		library has been built. For example, when running the builds on a 
-		continuous integration engine like Hudson, where the library can be
-		built separately.
-	-->
-	<condition property="buildSQLPowerLibrary">
-		<isfalse value="${only.copy.sqlpower.library}"/>
-	</condition>
+	
 	
 	<!--
 		Set the format of the findbugs report to html by default
@@ -263,7 +252,7 @@ SQL Power Wabit Ant build file
 	
 	
 	
-	<target name="compile" depends="init, build.sqlpower.library, copy.sqlpower.library">
+	<target name="compile" depends="init, copy.sqlpower.library">
 		<javac 
 				srcdir="${src}" 
 				destdir="${build}" 
@@ -301,19 +290,6 @@ SQL Power Wabit Ant build file
 	
 	
 	
-	
-	
-	<target name="build.sqlpower.library" depends="check.sqlpower.library.dir" if="buildSQLPowerLibrary">
-		
-		<echo message="Attempting to build sqlpower-library project..."/>
-		
-		<ant inheritall="false" dir="${sqlpower.library.home}" target="clean">
-		</ant>
-		
-		<ant inheritall="false" dir="${sqlpower.library.home}" target="jar">
-		</ant>
-		
-	</target>
 	
 	<target name="copy.sqlpower.library" depends="check.sqlpower.library.dir">
 		<copy file="${sqlpower.library.home}/dist/sqlpower_library.jar" todir="${lib}"/>
