@@ -26,18 +26,20 @@
 	<entry key="downloadUrl">http://www.sqlpower.ca/page/wabit</entry>
 	<entry key="releaseNotes"><![CDATA[
 <html>
-<p>Noteworthy changes in 1.3.0</p>
-<p>Improvements</p>
-<ul>
-<li>Parameters and parameter value selectors have been added report content boxes.</li>
-<li>Global report parameters and parameter value selectors have been added.</li>
-<li>Wabit thin client libraries are now completely independant and embedable in
-web pages and corporate websites.</li>
-</ul>
-<p>Bug Fixes</p>
-<ul>
-<li>Fixes UI freeze when populating a query results table with >1000 rows.</li>
-</ul>
+Noteworthy changes in 1.3.0
+<br/>
+<br/>
+Improvements
+<br/>
+&nbsp;-&nbsp;Parameters and parameter value selectors have been added report content boxes.
+&nbsp;-&nbsp;Global report parameters and parameter value selectors have been added.
+&nbsp;-&nbsp;Wabit thin client libraries are now completely independant and embedable in
+web pages and corporate websites.
+<br/>
+<br/>
+Bug Fixes
+<br/>
+&nbsp;-&nbsp;Fixes UI freeze when populating a query results table with >1000 rows.
 </html>
 ]]></entry>
 	
