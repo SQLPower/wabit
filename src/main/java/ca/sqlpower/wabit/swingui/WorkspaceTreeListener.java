@@ -516,16 +516,20 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							new JMenuItem(new CopyReportAction((Report) lastPathComponent, session, session.getContext().getFrame())),
 							WabitAccessManager.Permission.CREATE);
 					
-					if (this.session.isEnterpriseServerSession() &&
-							this.session.getSystemWorkspace() != null) 
+					JMenuItem action = new JMenuItem(new ScheduleReportAction((Report) lastPathComponent, session));
+					
+					if (!this.session.isEnterpriseServerSession() ||
+							this.session.getSystemWorkspace() == null) 
 					{
-						objectsMenu(
-								menu,
-								ReportTask.class.getSimpleName(),  
-								null,
-								new JMenuItem(new ScheduleReportAction((Report) lastPathComponent, session)),
-								WabitAccessManager.Permission.CREATE);
+						action.setEnabled(false);
 					}
+					objectsMenu(
+							menu,
+							ReportTask.class.getSimpleName(),  
+							null,
+							action,
+							WabitAccessManager.Permission.CREATE);
+					
 				} else if (lastPathComponent instanceof Template) {
 					JMenuItem item = new JMenuItem(new ReportFromTemplateAction(session, (Template) lastPathComponent));
 					item.setIcon(WabitIcons.REPORT_ICON_16);
@@ -779,6 +783,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 					session.getSystemWorkspace().getSession());
 		}
 		
+		boolean add = false;
 		if (subjectUuid==null) {
 			if (WabitAccessManager.Permission.GRANT.equals(permission) &&
 					accessManager.isGrantGranted(
@@ -789,11 +794,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							false, 
 							false, 
 							false, 
-							true))) {
-				menu.add(menuItem);
+							true))) 
+			{
+				add = true;
 			} else if (accessManager.isGranted(simpleName,EnumSet.of(permission))) {
-				menu.add(menuItem);
-				return true;
+				add = true;
 			}
 		} else {
 			if (WabitAccessManager.Permission.GRANT.equals(permission) &&
@@ -806,14 +811,19 @@ public class WorkspaceTreeListener extends MouseAdapter {
 							false, 
 							false, 
 							true))) {
-				menu.add(menuItem);
-				return true;
+				add = true;
 			} else if (accessManager.isGranted(subjectUuid,simpleName,EnumSet.of(permission))) {
-				menu.add(menuItem);
-				return true;
+				add = true;
 			}
 		}
-		return false;
+		
+		if (!add) {
+			menuItem.setEnabled(false);
+		}
+		
+		menu.add(menuItem);
+		
+		return add;
 	}
 	
 	/**
@@ -845,92 +855,115 @@ public class WorkspaceTreeListener extends MouseAdapter {
 	private boolean securityMenu(JPopupMenu menu, String simpleName, SPObject object) {
     	
     	WabitWorkspace systemWorkspace = this.session.getSystemWorkspace();
-    	
+
     	if (!this.session.isEnterpriseServerSession() ||
     			systemWorkspace == null) {
-    		return false;
-    	}
-    	
+    		
+    		String label = getLabel(simpleName);
+    		JMenuItem action = new JMenuItem(
+									new SecurityAction(
+											this.session.getWorkspace(), 
+											systemWorkspace, 
+											null,
+											simpleName,
+											label));
+    		action.setEnabled(false);
+    		menu.add(action);
 
-		if (simpleName != null && object == null) {
-			String label = null;
-			if (simpleName.equals("WabitDataSource")) {
-				label = "datasources";
-			} else if (simpleName.equals("QueryCache")) {
-				label = "relational queries";
-			} else if (simpleName.equals("OlapQuery")) {
-				label = "OLAP queries";
-			} else if (simpleName.equals("WabitImage")) {
-				label = "images";
-			} else if (simpleName.equals("Chart")) {
-				label = "charts";
-			} else if (simpleName.equals("Report")) {
-				label = "reports";
-			} else if (simpleName.equals("Template")) {
-				label = "templates";
-			} else if (simpleName.equals("ReportTask")) {
-				label = "scheduled reports";
-			} else if (simpleName.equals("User")) {
-				label = "users";
-			} else if (simpleName.equals("Group")) {
-				label = "groups";
-			} else if (simpleName.equals("WabitWorkspace")) {
-				label = "all workspaces";
-			} else {
-				throw new IllegalStateException(simpleName);
-			}
-			return objectsMenu(
-				menu, 
-				simpleName,
-				null,
-				new JMenuItem(
-					new SecurityAction(
-						this.session.getWorkspace(), 
-						systemWorkspace, 
-						null,
-						simpleName,
-						label)),
-				WabitAccessManager.Permission.GRANT);
-		} else if (simpleName != null && object != null) {
-			if (object instanceof WabitDataSource ||
-					object instanceof QueryCache ||
-					object instanceof OlapQuery ||
-					object instanceof WabitImage ||
-					object instanceof Chart ||
-					object instanceof Report ||
-					object instanceof Template ||
-					object instanceof ReportTask) {
-				return objectsMenu(
-					menu, 
-					simpleName,
-					object.getUUID(),
-					new JMenuItem(
-						new SecurityAction(
-							this.session.getWorkspace(), 
-							systemWorkspace, 
-							object.getUUID(),
-							object.getClass().getSimpleName(),
-							object.getName())),
-					WabitAccessManager.Permission.GRANT);
-			} else if (object instanceof WabitWorkspace) {
-				 return objectsMenu(
-					menu, 
-					simpleName,
-					object.getUUID(),
-					new JMenuItem(
-						new SecurityAction(
-							this.session.getWorkspace(), 
-							systemWorkspace, 
-							object.getUUID(),
-							object.getClass().getSimpleName(),
-							object.getName().concat(" workspace"))),
-					WabitAccessManager.Permission.GRANT);
-				
-			}
+    	} else {
+    	
+    		if (simpleName != null && object == null) {
+    			
+    			String label = getLabel(simpleName);
+    			
+    			objectsMenu(
+    					menu, 
+    					simpleName,
+    					null,
+    					new JMenuItem(
+    							new SecurityAction(
+    									this.session.getWorkspace(), 
+    									systemWorkspace, 
+    									null,
+    									simpleName,
+    									label)),
+    									WabitAccessManager.Permission.GRANT);
+    			
+    		} else if (simpleName != null && object != null) {
+    			
+    			if (object instanceof WabitDataSource ||
+    					object instanceof QueryCache ||
+    					object instanceof OlapQuery ||
+    					object instanceof WabitImage ||
+    					object instanceof Chart ||
+    					object instanceof Report ||
+    					object instanceof Template ||
+    					object instanceof ReportTask) 
+    			{
+    				objectsMenu(
+    						menu, 
+    						simpleName,
+    						object.getUUID(),
+    						new JMenuItem(
+    								new SecurityAction(
+    										this.session.getWorkspace(), 
+    										systemWorkspace, 
+    										object.getUUID(),
+    										object.getClass().getSimpleName(),
+    										object.getName())),
+    										WabitAccessManager.Permission.GRANT);
+    				
+    			} else if (object instanceof WabitWorkspace) 
+    			{
+    				objectsMenu(
+    						menu, 
+    						simpleName,
+    						object.getUUID(),
+    						new JMenuItem(
+    								new SecurityAction(
+    										this.session.getWorkspace(), 
+    										systemWorkspace, 
+    										object.getUUID(),
+    										object.getClass().getSimpleName(),
+    										object.getName().concat(" workspace"))),
+    										WabitAccessManager.Permission.GRANT);
+    				
+    			}
+    		} else {
+    			throw new IllegalStateException();
+    		}
+    	}
+		return true;
+	}
+	
+	public String getLabel(String simpleName) {
+		final String label;
+		if (simpleName.equals("WabitDataSource")) {
+			label = "datasources";
+		} else if (simpleName.equals("QueryCache")) {
+			label = "relational queries";
+		} else if (simpleName.equals("OlapQuery")) {
+			label = "OLAP queries";
+		} else if (simpleName.equals("WabitImage")) {
+			label = "images";
+		} else if (simpleName.equals("Chart")) {
+			label = "charts";
+		} else if (simpleName.equals("Report")) {
+			label = "reports";
+		} else if (simpleName.equals("Template")) {
+			label = "templates";
+		} else if (simpleName.equals("ReportTask")) {
+			label = "scheduled reports";
+		} else if (simpleName.equals("User")) {
+			label = "users";
+		} else if (simpleName.equals("Group")) {
+			label = "groups";
+		} else if (simpleName.equals("WabitWorkspace")) {
+			label = "all workspaces";
 		} else {
-			throw new IllegalStateException();
+			throw new IllegalStateException(simpleName);
 		}
-		return false;
+		return label;
 	}
 
 	/**

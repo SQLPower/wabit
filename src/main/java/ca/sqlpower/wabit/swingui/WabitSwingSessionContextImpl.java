@@ -186,6 +186,7 @@ import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
+import ca.sqlpower.wabit.swingui.action.CheckForUpdateAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.DeleteWabitServerWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.HelpAction;
@@ -990,6 +991,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             });
             
             macOSXRegistration();
+            
+            CheckForUpdateAction.checkForUpdate(frame);
+            
         } else {
             sourceListDialog = null;
             prefsAction = null;
