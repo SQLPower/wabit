@@ -15,61 +15,94 @@ Good luck with the release!
 
 
 *Comment out all the logging configs set to DEBUG (leave the RootLogger at INFO)
-*Update the install.xml and the pom.xml version numbers to reflect the correct
+
+*Update the install.xml and the build.xml version numbers to reflect the correct
  release number.  Normally, this will mean setting the suffix to "" for a full
  release, or "beta", "rc1", etc for a pre-release.
+ 
 *Update the doc/ReleaseNotes.txt file with the latest features and bugfixes.
+
 *Run the LibraryMegaTest and Wabit tests. It should pass with a flying colour (green)
+
 *Run 'mvn site' to generate the PDF and JavaHelp documentation, and the download page
   *run 'mvn javadoc:javadoc' to create the API documentation for the website.
+
 *Read the formatted documentation, noting what's missing or incorrect. Then update
  the documentation. (This will need to be done when Wabit has documentation.)
+
 *(Clover will be added later) Generate the JUnit and Clover test reports (run the 'clover.test.and.report' build.xml
  target). This must be done separately from 'dist', otherwise the executables generated will
  require the clover.jar library to run.
- * To run the JUnit report create a new Maven build with the goal "surefire-report:report".
+
+* To run the JUnit report create a new Maven build with the goal "surefire-report:report".
+
 *Change the systemPath property in the pom.xml to absolute paths for the Maven dependencies in both sqlpower-library and wabit
+
 *Run the 'Maven clean' target from the "Run as" menu on the POM to remove the Clover-dependent 
  compiled class files.
+
 *Build the distribution by running the command "mvn assembly:assembly" from a terminal
  in the Wabit directory. For an official release, this has to be done on OS X, since the tools for creating the dmg 
  disk image file are unavailable elsewhere.
+
 *Test the three flavours of binaries (Generic tarball, OS X disk image, Windows
  installer) for the following:
- *Rename your PL.INI file so you get the "new user experience" 
+
+  *Rename your PL.INI file so you get the "new user experience" 
   (Or better yet, create a fresh user account to test from)
- *File size is close to the expected size (it was ~20 MB in 0.9.7)
- *Archive expands properly or installer works as expected
- *Try connecting to all databases that the Wabit is preconfigured for (MySQL,
+
+  *File size is close to the expected size (it was ~20 MB in 0.9.7)
+
+  *Archive expands properly or installer works as expected
+
+  *Try connecting to all databases that the Wabit is preconfigured for (MySQL,
   PostgreSQL, SQL Server)
- *Try adding the Oracle driver to the driver manager then connect to an Oracle
+
+  *Try adding the Oracle driver to the driver manager then connect to an Oracle
   database
- *Try creating a new database type from scratch (it could just be a new config for
+  
+  *Try creating a new database type from scratch (it could just be a new config for
   one of the existing types)
- *Ensure the online help is present
- *(When documentation exists) Scan through the PDF documentation. Ensure the pictures are included properly
+ 
+  *Ensure the online help is present
+ 
+  *(When documentation exists) Scan through the PDF documentation. Ensure the pictures are included properly
   (not stretched, properly cropped)
- *Try saving and loading a Wabit file. Ensure workspace settings are persistent:
+ 
+  *Try saving and loading a Wabit file. Ensure workspace settings are persistent:
   data sources, queries and reports and so on
- *Test printing reports with relational queries, olap queries, charts, images, and any new object types.
- *Make sure the app quits once all windows have been closed
- *For Windows only, test the uninstaller
+
+  *Test printing reports with relational queries, olap queries, charts, images, and any new object types.
+
+  *Make sure the app quits once all windows have been closed
+
+  *For Windows only, test the uninstaller
+
+
 *Commit, then tag the release in the SVN repository, if you made it all the way
  to this point without finding any new problems!
+
 *Add the current release number without the -alpha suffix to Bugzilla, as well
  as the next release number with -alpha.
 
+
 Making the new release available
+
 *Upload generic, mac, and windows binaries to Google Code
-*Upload user guide (PDF format) to Google Code NOTE! Add the version number to the file!
+
 *(Introduce and...) Upload source code snapshot to Google Code
+
 *Deprecate all Google Code files related to the previous release
+
 *(Create and...) Upload the dist directory to the SQL Power web server on pag 
  (/tomcat/virtualhosts/download.sqlpower.ca/wabit/x.y.z/). If the dist directory
  has not yet been created the current.html page will have to be updated.
+
 *Copy the index.html page from the wabit/x.y.z directory into the wabit directory as
  current.html
+
 *Test the all the links on the sqlpower.ca download page
+
 
 Announcing the New Release
 *Post to wabit-developers mailing list
@@ -79,3 +112,5 @@ Announcing the New Release
 *apple.com/downloads
 *news wire press release if significant milestone
 *Send release information to news@infoq.com and post to http://www.theserverside.com/ and http://www.dzone.com/links/index.html
+
+* Update doc/currentVersion.xml to notify current users of the update.
