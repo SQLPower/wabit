@@ -20,7 +20,6 @@
 package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -28,7 +27,6 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
@@ -36,12 +34,13 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
-import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+
+import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
@@ -128,13 +127,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
             			event.getPosition().getY()-ContentBoxNode.this.getY() >= contentBox.getHeight()-PARAMETER_BANNER_HEIGHT &&
             			event.getPosition().getY()-ContentBoxNode.this.getY() <= contentBox.getHeight()) {
             		
-//            		PSwing node = new PSwing(new JLabel("Hello World!"));
-//            		node.setX(event.getPosition().getX());
-//            		node.setY(event.getPosition().getY());
-//            		topLayer.addChild(node);
-//            		node.moveToFront();
-            		
-            		displaySelectorsFrame();
+            		displaySelectorsDialog();
             	}
             }
             
@@ -260,8 +253,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
     
     private final WabitWorkspace workspace;
     
-    private JFrame selectorsFrame = null;
-    
     /**
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
@@ -285,23 +276,37 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
 	};
 	
-	private void displaySelectorsFrame() {
+	private void displaySelectorsDialog() {
 		
-		if (selectorsFrame == null) {
-			
-			selectorsFrame = new JFrame("Parameters for " + contentBox.getName());
-			JPanel panel = new JPanel(new BorderLayout());
-			final SelectorsPanel selPanel = new SelectorsPanel(contentBox, refreshRoutine);
+	
+		final JDialog selectorsDialog = new JDialog();
+		selectorsDialog.setTitle("Parameters for " + contentBox.getName());
+		selectorsDialog.setModal(true);
+		
+		selectorsDialog.getContentPane().setLayout(new MigLayout("fill"));
+		JPanel motherShip = new JPanel(new MigLayout("fill", "", "[grow][shrink]"));
+		
+		final SelectorsPanel selPanel = new SelectorsPanel(contentBox, refreshRoutine);
+		motherShip.add(selPanel, "grow, wrap, height 100%, width 100%");
+		
+		JButton closeButton = new JButton();
+		closeButton.setAction(new AbstractAction() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				selectorsDialog.dispose();
+			}
+		});
+		closeButton.setText("Close");
+		motherShip.add(closeButton, "shrink, right");
+		
+		
+		selectorsDialog.getContentPane().add(motherShip, "grow, height 100%, width 100%");
+		selectorsDialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 
-			
-			panel.add(selPanel, BorderLayout.NORTH);
-			
-			selectorsFrame.setSize(500,300);
-			selectorsFrame.getContentPane().add(panel);
-			selectorsFrame.setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
-		}
 		
-		selectorsFrame.setVisible(true);
+		selectorsDialog.setSize(500,300);
+		selectorsDialog.setVisible(true);
+		
 	}
     
 	/**

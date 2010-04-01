@@ -166,7 +166,7 @@ public class SelectorsPanel extends JPanel {
 		
 		updateParameters();
 		
-		add(parametersScrollPane, "span, wrap, grow");
+		add(parametersScrollPane, "span, wrap, grow, height 100%");
 		
 		
 		
