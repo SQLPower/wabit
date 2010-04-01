@@ -436,7 +436,7 @@ SQL Power Wabit Ant build file
 	<target 
 			name="jar"
 			description="Creates the embedable JAR"
-			depends="compile">
+			depends="compile-tests">
 		
 		<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 		<tstamp/>
