@@ -138,12 +138,21 @@ public class CheckForUpdateAction extends AbstractAction {
 		this.owner = owner;
 	}
 	
+	public CheckForUpdateAction(String caption, JFrame owner) {
+		super(caption);
+		this.owner = owner;
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent event) {
-		checkForUpdate(owner);
+		checkForUpdate(owner, false);
 	}
 	
 	public static void checkForUpdate(JFrame owner) {
+		checkForUpdate(owner, true);
+	}
+	
+	public static void checkForUpdate(JFrame owner, boolean silent) {
 		
 		try {
 			
@@ -190,6 +199,12 @@ public class CheckForUpdateAction extends AbstractAction {
 				
 				dialog.pack();
 				dialog.setVisible(true);
+			} else if (!silent) {
+				JOptionPane.showMessageDialog(
+						owner, 
+						"No updates available.", 
+						"Update checker", 
+						JOptionPane.INFORMATION_MESSAGE);
 			}
 			
 		} catch (Exception ex) {

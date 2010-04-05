@@ -1726,6 +1726,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             helpMenu.add(aboutAction);
             helpMenu.addSeparator();
         }
+        helpMenu.add(new CheckForUpdateAction("Check for updates...", frame));
         helpMenu.add(SPSUtils.forumAction);
         helpMenu.add(new HelpAction(frame));
     
