@@ -23,10 +23,10 @@
 		
 	</comment>
 	
-	<entry key="currentVersion">1.3.0</entry>
+	<entry key="currentVersion">1.3.0-RC1</entry>
 	<entry key="downloadUrl">http://www.sqlpower.ca/page/wabit</entry>
 	<entry key="releaseNotes"><![CDATA[<html>
-<p><b>Noteworthy changes in 1.3.0</b></p>
+<p><b>Noteworthy changes in 1.3.0-RC1</b></p>
 <p>Improvements</p>
 <p>
 <ul>
