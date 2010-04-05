@@ -31,8 +31,8 @@
 <ul>
 <li>Parameters and parameter value selectors have been added report content boxes.</li>
 <li>Global report parameters and parameter value selectors have been added.</li>
-<li>Wabit thin client libraries are now completely independant and embedable in<br/>
-web pages and corporate websites.</li>
+<li>Wabit thin client libraries are now completely independent and can be embedded in<br/>
+web pages and corporate web sites.</li>
 </ul>
 <p>Bug Fixes</p>
 <ul>

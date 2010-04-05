@@ -1,5 +1,14 @@
 SQL Power Wabit Release Notes
 
+Noteworthy changes in 1.3.0-RC1
+Improvements
+    * Parameters and parameter value selectors have been added report content boxes.
+    * Global report parameters and parameter value selectors have been added.
+    * SQL Power Wabit thin client libraries are now completely independent and can be embedded in web pages and corporate web sites.
+
+Bug Fixes
+    * Fixes UI freeze when populating a query results table with >1000 rows.
+
 Noteworthy changes in 1.2.0
 
   Improvements
