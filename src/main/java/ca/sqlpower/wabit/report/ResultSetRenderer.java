@@ -516,6 +516,10 @@ public class ResultSetRenderer extends AbstractWabitObject
 			}
     	}
     	
+    	if (printing) {
+    		colBeingDragged = null;
+    	}
+    	
     	if (this.resultSetHandle == null) {
     		renderMessage(
     				g, 

@@ -124,6 +124,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
             	
             	// Handle clicks on the "parameters" gray box
             	if (
+            			contentBox.getContentRenderer() != null &&
+                		contentBox.getContentRenderer() instanceof ContextAware && 
             			event.getPosition().getY()-ContentBoxNode.this.getY() >= contentBox.getHeight()-PARAMETER_BANNER_HEIGHT &&
             			event.getPosition().getY()-ContentBoxNode.this.getY() <= contentBox.getHeight()) {
             		

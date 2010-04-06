@@ -495,6 +495,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     	if (getCurrentCube() != null){
     		setMdxQuery(new Query(OLAP4J_QUERY_NAME, getCurrentCube()));
     	}
+    	fireStructureChanged();
     }
 
 	/**
