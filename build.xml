@@ -291,7 +291,7 @@ SQL Power Wabit Ant build file
 	
 	
 	
-	<target name="copy.sqlpower.library" depends="check.sqlpower.library.dir">
+	<target name="copy.sqlpower.library" depends="check.sqlpower.library.dir" if="copySqlpLibrary">
 		<copy file="${sqlpower.library.home}/dist/sqlpower_library.jar" todir="${lib}"/>
 		<copy file="${sqlpower.library.home}/dist/sqlpower_library-tests.jar" todir="${buildlib}"/>
 	</target>
@@ -306,6 +306,10 @@ SQL Power Wabit Ant build file
 			</condition>
 		</fail>
 	</target>
+	
+	<condition property="copySqlpLibrary">
+		<isfalse value="${release.mode}"/>
+	</condition>
 
 
 	
