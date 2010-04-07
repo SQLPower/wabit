@@ -1143,6 +1143,9 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     	super.setParent(parent);
     	
     	// Create a variable context.
+    	if (this.variableProvider != null) {
+			this.variableProvider.cleanup();
+		}
         this.variableProvider = new QueryVariableResolver(this, this.uuid, "Relational Query - " + this.getName());
     }
 

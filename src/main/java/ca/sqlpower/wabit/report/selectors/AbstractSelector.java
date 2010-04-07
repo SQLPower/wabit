@@ -98,8 +98,9 @@ abstract class AbstractSelector extends AbstractWabitObject implements Selector 
 	
 	public boolean setSelectedValue(Object newValue) {
 		
-		if (newValue == null ||
-				ObjectUtils.equals(getDefaultValue(), newValue)) {
+		if ((newValue == null ||
+				ObjectUtils.equals(getDefaultValue(), newValue)) &&
+				resolver != null) {
 			
 			resolver.update(getName(), getDefaultValue());
 		

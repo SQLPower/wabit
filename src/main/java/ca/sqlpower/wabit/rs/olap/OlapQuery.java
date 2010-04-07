@@ -1393,6 +1393,9 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		super.setParent(parent);
 		// Initialize the variables provider once this object is hooked up to the tree only.
 		if (actsAsVariableProvider) {
+			if (this.variableProvider != null) {
+				this.variableProvider.cleanup();
+			}
 			this.variableProvider = new OlapVariableResolver(this, this.uuid, "OLAP Query - " + this.getName());
 		}
 	}

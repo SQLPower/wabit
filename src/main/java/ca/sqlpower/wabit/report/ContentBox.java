@@ -161,6 +161,9 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
     public void setParent(SPObject parent) {
     	super.setParent(parent);
     	if (getParent() != null) {
+    		if (this.variablesResolver != null) {
+    			this.variablesResolver.cleanup();
+    		}
     		this.variablesResolver = new SPSimpleVariableResolver(this, getUUID(), getName(), false);    		
     	}
     }

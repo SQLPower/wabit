@@ -856,7 +856,7 @@ public class WorkspacePersisterListener implements SPListener {
 			this.persistProperty(
 					uuid, 
 					"alwaysIncludeDefaultValue", 
-					DataType.STRING, 
+					DataType.BOOLEAN, 
 					converter.convertToBasicType(cbs.isAlwaysIncludeDefaultValue()));
 		
 		} else if(child instanceof TextBoxSelector) {

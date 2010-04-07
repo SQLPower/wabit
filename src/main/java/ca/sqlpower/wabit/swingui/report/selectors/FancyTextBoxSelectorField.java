@@ -114,16 +114,14 @@ public class FancyTextBoxSelectorField extends JTextField implements SelectorCom
 		this.addKeyListener(this.enterKeyListener);
 		this.selector.addSPListener(spListener);
 		
-		setText(selector.getCurrentValue()==null?"":selector.getCurrentValue().toString());
+		setText(selector.getCurrentValue()==null?null:selector.getCurrentValue().toString());
 		
 		if (getText().length() == 0
 				|| ObjectUtils.equals(getText(), selector.getDefaultValue())) {
-			selector.setSelectedValue(null);
-			setText(String.valueOf(selector.getDefaultValue()));
+			setText(selector.getDefaultValue()==null?null:selector.getDefaultValue().toString());
 			setForeground(Color.GRAY);
 			setFont(getFont().deriveFont(Font.ITALIC));
 		} else {
-			selector.setSelectedValue(getText());
 			setForeground(Color.BLACK);
 			setFont(getFont().deriveFont(Font.PLAIN));
 		}

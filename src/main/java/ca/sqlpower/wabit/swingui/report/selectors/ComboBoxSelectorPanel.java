@@ -118,6 +118,12 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
 		this.panel = new JPanel(new MigLayout("hidemode 1"));
 		
 		buildPanel();
+		
+		
+		defValueField.setText(selector.getDefaultValue()==null?"":selector.getDefaultValue().toString());
+		includeDefValueBox.setSelected(selector.isAlwaysIncludeDefaultValue());
+		this.genLabelField.setText(selector.getName() == null ? "" : selector.getName());
+		
 		updateUi();
 	}
 	
@@ -229,9 +235,6 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
 	private void updateUi() {
 		if (currentMode.equals(Mode.Variable)) {
 			valSpecField.setEnabled(false);
-			valSpecField.setText(selector.getSourceKey());
-			defValueField.setText(selector.getDefaultValue()==null?"":selector.getDefaultValue().toString());
-			includeDefValueBox.setSelected(selector.isAlwaysIncludeDefaultValue());
         	this.staticHelpLabel.setVisible(false);
         	this.valSpecVarButton.setVisible(true);
         	this.defValueLabel.setVisible(true);
@@ -239,9 +242,9 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
         	this.includeDefValueLabel.setVisible(true);
         	this.includeDefValueBox.setVisible(true);
         	this.valTypeCombo.setSelectedItem(Mode.Variable);
+        	valSpecField.setText(selector.getSourceKey());
         } else {
         	valSpecField.setEnabled(true);
-        	valSpecField.setText(selector.getStaticValues());
         	this.staticHelpLabel.setVisible(true);
         	this.valSpecVarButton.setVisible(false);
         	this.defValueLabel.setVisible(false);
@@ -249,10 +252,9 @@ public class ComboBoxSelectorPanel implements DataEntryPanel {
         	this.includeDefValueLabel.setVisible(false);
         	this.includeDefValueBox.setVisible(false);
         	this.valTypeCombo.setSelectedItem(Mode.Static);
+        	valSpecField.setText(selector.getStaticValues());
         }
 		
-		this.genLabelField.setText(selector.getName() == null ? "" : selector.getName());
-        
 		this.panel.repaint();
 		
 		Window window = SwingUtilities.getWindowAncestor(this.panel);

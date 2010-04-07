@@ -77,6 +77,9 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 	@Override
 	public void setParent(SPObject parent) {
 		super.setParent(parent);
+		if (this.variables != null) {
+			this.variables.cleanup();
+		}
 		this.variables = new SPSimpleVariableResolver(this, this.uuid, getNameForVariables(this.getName()));
 		this.updateBuiltinVariables();
 	}
@@ -84,6 +87,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
 	public void setUUID(String uuid) {
 		super.setUUID(uuid);
 		if (this.variables != null) {
+			this.variables.clear();
 			this.variables.setNamespace(uuid);
 		}
 	}
@@ -131,6 +135,7 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
     protected void updateBuiltinVariables() {
     	if (this.variables != null) {
     		// Make sure we operate under the right namespace
+    		this.variables.clear();
     		this.variables.setNamespace(this.getUUID());
     		this.variables.update("now", new Date());
     		this.variables.update("system_user", System.getProperty("user.name"));
