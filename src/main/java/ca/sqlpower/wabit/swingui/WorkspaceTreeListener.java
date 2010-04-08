@@ -380,7 +380,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			        menu.addSeparator();
 			        
 			        boolean sep = securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
-			        sep = securityMenu(menu,lastPathComponent.getClass().getSimpleName(),(SPObject) lastPathComponent);
+			        sep = securityMenu(menu,lastPathComponent.getClass().getSimpleName(), null);
 			        if (sep) menu.addSeparator();
 			        
 			        sep = false;
