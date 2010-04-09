@@ -209,6 +209,13 @@ public class CheckForUpdateAction extends AbstractAction {
 			
 		} catch (Exception ex) {
 			logger.warn("Failed to check for update.", ex);
+			if (!silent) {
+				JOptionPane.showMessageDialog(
+						owner, 
+						"Failed to check for updates. Are you connected to the internet?", 
+						"Update checker", 
+						JOptionPane.INFORMATION_MESSAGE);
+			}
 		}
 		
 	}
