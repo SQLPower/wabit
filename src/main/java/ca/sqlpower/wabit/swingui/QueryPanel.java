@@ -111,9 +111,9 @@ import ca.sqlpower.swingui.query.TableChangeListener;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.FancyExportableJTable;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
-import ca.sqlpower.util.SessionNotFoundException;
+import ca.sqlpower.util.RunnableDispatcher;
+import ca.sqlpower.util.WorkspaceContainer;
 import ca.sqlpower.validation.swingui.StatusComponent;
-import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitSessionContext;
 import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetListener;
@@ -489,7 +489,12 @@ public class QueryPanel implements WabitPanel {
 	
 	private class CustomSQLObjectRoot extends SQLObjectRoot {
 		@Override
-		public WabitSession getSession() throws SessionNotFoundException {
+		public WorkspaceContainer getWorkspaceContainer() {
+			return session;
+		}
+		
+		@Override
+		public RunnableDispatcher getRunnableDispatcher() {
 			return session;
 		}
 	}
