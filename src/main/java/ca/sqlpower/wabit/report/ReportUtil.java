@@ -93,12 +93,15 @@ public class ReportUtil {
         numberFormats.add(new DecimalFormat("(#,000)"));
         
         numberFormats.add(new DecimalFormat("$#,##0.00"));
+        numberFormats.add(new DecimalFormat("€#,##0.00"));
         numberFormats.add(new DecimalFormat("£#,##0.00"));
         numberFormats.add(new DecimalFormat("¥#,##0.00"));
         
         numberFormats.add(new DecimalFormat("$#,##0"));
+        numberFormats.add(new DecimalFormat("€#,##0"));
         numberFormats.add(new DecimalFormat("£#,##0"));
         numberFormats.add(new DecimalFormat("¥#,##0"));
+        
 
         numberFormats.add(new DecimalFormat("##0.##E0"));
         
