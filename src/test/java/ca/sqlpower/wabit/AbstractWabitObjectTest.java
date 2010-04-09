@@ -142,6 +142,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
         Set<String> ignore = new HashSet<String>();
         ignore.add("class");
         ignore.add("session");
+        ignore.add("workspaceContainer");
+        ignore.add("runnableDispatcher");
         ignore.add("magicEnabled");
         return ignore;
     }
@@ -168,6 +170,8 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("dependencies");
     	ignore.add("UUID");
     	ignore.add("session");
+    	ignore.add("workspaceContainer");
+    	ignore.add("runnableDispatcher");
     	ignore.add("allowedChildTypes");
     	ignore.add("magicEnabled");
     	return ignore;

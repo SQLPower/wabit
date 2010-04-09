@@ -24,13 +24,14 @@ import java.beans.PropertyChangeListener;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
-import ca.sqlpower.util.SPSession;
+import ca.sqlpower.util.RunnableDispatcher;
+import ca.sqlpower.util.WorkspaceContainer;
 
 /**
  * The basic interface for a Wabit session. This interface provides all the
  * UI-independent state and behaviour of a Wabit session. 
  */
-public interface WabitSession extends SPSession{
+public interface WabitSession extends WorkspaceContainer, RunnableDispatcher {
 
 	public void addSessionLifecycleListener(SessionLifecycleListener<WabitSession> l);
 

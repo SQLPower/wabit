@@ -40,7 +40,6 @@ import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.enterprise.client.security.SPAccessManager;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.WorkspaceGraphModel;
-import ca.sqlpower.util.SPSession;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitSession;
 import ca.sqlpower.wabit.WabitWorkspace;
@@ -53,9 +52,9 @@ public class WabitAccessManager implements SPAccessManager{
 	
 	private User currentUser;
 	
-	private SPSession systemSession;
+	private WabitSession systemSession;
 	
-	private SPSession currentSession;
+	private WabitSession currentSession;
 	
 	public WabitAccessManager() {
 		// Due to jackrabbit's access manager interface, state is defined in init
@@ -73,7 +72,7 @@ public class WabitAccessManager implements SPAccessManager{
 	 *            The system session that contains currentUser, as well as all
 	 *            groups and grants that apply
 	 */
-	public void init(@Nonnull User currentUser, @Nullable SPSession currentSession, @Nonnull SPSession systemSession) {
+	public void init(@Nonnull User currentUser, @Nullable WabitSession currentSession, @Nonnull WabitSession systemSession) {
 		this.currentUser = currentUser;
 		this.currentSession = currentSession;
 		this.systemSession = systemSession;
@@ -456,11 +455,11 @@ public class WabitAccessManager implements SPAccessManager{
 		return false;
 	}
 	
-	public SPSession getCurrentSession() {
+	public WabitSession getCurrentSession() {
 		return currentSession;
 	}
 	
-	public SPSession getSystemSession() {
+	public WabitSession getSystemSession() {
 		return systemSession;
 	}
 	

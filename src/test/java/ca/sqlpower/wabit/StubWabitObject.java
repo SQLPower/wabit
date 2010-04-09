@@ -27,7 +27,8 @@ import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
-import ca.sqlpower.util.SPSession;
+import ca.sqlpower.util.RunnableDispatcher;
+import ca.sqlpower.util.WorkspaceContainer;
 
 public class StubWabitObject implements WabitObject {
 
@@ -146,11 +147,6 @@ public class StubWabitObject implements WabitObject {
 		return 0;
 	}
 
-	public SPSession getSession() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public boolean removeChild(SPObject child) throws ObjectDependentException,
 			IllegalArgumentException {
 		// TODO Auto-generated method stub
@@ -177,6 +173,16 @@ public class StubWabitObject implements WabitObject {
 
 	public void setMagicEnabled(boolean enable) {
 		// no-op
+	}
+
+	public RunnableDispatcher getRunnableDispatcher() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public WorkspaceContainer getWorkspaceContainer() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
