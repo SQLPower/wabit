@@ -1,5 +1,12 @@
 SQL Power Wabit Release Notes
 
+Noteworthy changes in 1.3.0-RC2
+Bug Fixes
+    * Fixes a bad UTF encoding in numeric format options
+    * Reports were sometimes printing result set column borders
+    * Parameters panel could be displayed for non ContextAware? content boxes.
+    * OLAP query reset button was not sending reset event to the query panel 
+
 Noteworthy changes in 1.3.0-RC1
 Improvements
     * Parameters and parameter value selectors have been added report content boxes.
