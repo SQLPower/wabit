@@ -31,7 +31,7 @@
 <ul>
 <li>Fixes a bad UTF encoding in numeric format options</li>
 <li>Reports were sometimes printing result set column borders</li>
-<li>Parameters panel could be displayed for non ContextAware? content boxes</li>
+<li>Parameters panel could be displayed for non ContextAware content boxes</li>
 <li>OLAP query reset button was not sending reset event to the query panel</li>
 </ul>
 </html>]]>
