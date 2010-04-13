@@ -94,4 +94,12 @@ public class WabitUtils {
 		return "w" + UUID.randomUUID().toString();
 	}
 
+	public static Throwable getRootCause(Throwable t) {
+		Throwable rootCause = t;
+		while (rootCause.getCause() != null
+				&& rootCause != rootCause.getCause()) {
+			rootCause = rootCause.getCause();
+		}
+		return rootCause;
+	}
 }
