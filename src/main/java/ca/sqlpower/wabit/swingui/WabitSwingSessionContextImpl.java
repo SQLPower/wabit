@@ -147,6 +147,7 @@ import ca.sqlpower.swingui.Search;
 import ca.sqlpower.swingui.SearchTextField;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
+import ca.sqlpower.swingui.action.FaqAction;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
@@ -1727,8 +1728,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             helpMenu.addSeparator();
         }
         helpMenu.add(new CheckForUpdateAction("Check for updates...", frame));
+        helpMenu.add(new FaqAction(null));
         helpMenu.add(SPSUtils.forumAction);
-        helpMenu.add(new HelpAction(frame));
     
         frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
