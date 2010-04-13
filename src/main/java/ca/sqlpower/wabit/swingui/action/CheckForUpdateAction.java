@@ -19,12 +19,14 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Method;
 import java.util.Properties;
 
 import javax.swing.AbstractAction;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -32,6 +34,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.border.Border;
 
 import net.miginfocom.swing.MigLayout;
 
@@ -62,7 +65,7 @@ public class CheckForUpdateAction extends AbstractAction {
 		private final JDialog dialog;
 
 		public DownloadAction(JDialog dialog, String downloadUrl) {
-			super("Download now");
+			super("Download Now");
 			this.dialog = dialog;
 			this.downloadUrl = downloadUrl;
 		}
@@ -176,18 +179,27 @@ public class CheckForUpdateAction extends AbstractAction {
 				dialog.setAlwaysOnTop(true);
 				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				
-				JPanel panel = new JPanel(new MigLayout("fill", "[fill]", "[shrink][fill][shrink]"));
+				JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[shrink][grow][shrink]"));
 				dialog.setContentPane(panel);
 				
+				JLabel title = new JLabel("A new version of SQL Power Wabit is available for download.");
+				title.setFont(title.getFont().deriveFont(16f));
 				panel.add(
-						new JLabel("A new version of SQL Power Wabit is available for download."),
-						"span, wrap, gapbottom 10px");
+						title,
+						"wrap, gapbottom 10px, center");
 				
-				panel.add(new JLabel(results.getProperty("releaseNotes")), "wrap, span");
+				JLabel notes = new JLabel(results.getProperty("releaseNotes"));
+				notes.setBackground(Color.WHITE);
+				notes.setOpaque(true);
+				Border gap = BorderFactory.createEmptyBorder(4, 4, 4, 4);
+			    Border blackline = BorderFactory.createLineBorder(Color.black);
+			    Border compound = BorderFactory.createCompoundBorder(blackline, gap);
+				notes.setBorder(compound);
+				panel.add(notes, "wrap, center, grow");
 				
 				Box buttons = Box.createHorizontalBox();
 				JButton downloadButton = new JButton(new DownloadAction(dialog, results.getProperty("downloadUrl")));
-				JButton cancelButton = new JButton(new AbstractAction("No thanks.") {
+				JButton cancelButton = new JButton(new AbstractAction("No thanks") {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						dialog.dispose();
@@ -195,7 +207,7 @@ public class CheckForUpdateAction extends AbstractAction {
 				});
 				buttons.add(downloadButton);
 				buttons.add(cancelButton);
-				panel.add(buttons, "span, wrap, align right");
+				panel.add(buttons, "center");
 				
 				dialog.pack();
 				dialog.setVisible(true);
@@ -221,6 +233,6 @@ public class CheckForUpdateAction extends AbstractAction {
 	}
 
 	public static void main(String[] args) {
-		checkForUpdate(null);
+		checkForUpdate(null, false);
 	}
 }
