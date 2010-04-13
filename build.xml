@@ -505,6 +505,11 @@ SQL Power Wabit Ant build file
 			   <include name="LICENSE" />
 				<include name="LEGAL" />
 			</fileset>
+			<fileset dir="doc">
+				<include name="README.generic" />
+				<include name="wabit.sh" />
+				<include name="wabit.bat" />
+			</fileset>
 		</copy>
 
 		

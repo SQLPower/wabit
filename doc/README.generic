@@ -1,0 +1,19 @@
+This generic distribution of SQL Power Wabit is intended
+for platforms that we do not have a specific distribution
+for.  For example, NetBSD, FreeBSD, OpenBSD, Solaris, and
+all flavours of Linux.
+
+COMPATIBILITY NOTE: If you are using Compiz, you will need at
+least JRE 6u1. There is a known compatibility problem with JRE 5.
+See http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6429775
+for details.
+
+To launch SQL Power Wabit from the command line, do the following:
+
+% java -Xms256m -Xmx1024m -jar $WABIT_HOME/wabit.jar
+
+(where $WABIT_HOME is the directory this README file is in).
+
+That will give you 1024MB of heap space to play with.
+
+Enjoy!
