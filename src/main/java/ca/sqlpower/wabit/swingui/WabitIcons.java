@@ -65,6 +65,9 @@ public class WabitIcons {
 	public static final Icon PARAMETERS_NEW_32 = makeIcon("parameters-new-32");
 	public static final Icon PARAMETERS_COMBO_16 = makeIcon("parameters-combo-16");
 	public static final Icon PARAMETERS_TEXT_16 = makeIcon("parameters-text-16");
+	
+	// FIXME need proper icon
+	public static final Icon PARAMETERS_DATE_16 = makeIcon("parameters-text-16");
 	 
 	
     private static final ImageIcon makeIcon(String resourceName) {

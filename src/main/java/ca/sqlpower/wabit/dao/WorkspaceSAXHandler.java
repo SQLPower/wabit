@@ -30,6 +30,7 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +54,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
+import ca.sqlpower.dao.session.DateConverter;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLGroupFunction;
@@ -101,6 +103,7 @@ import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
@@ -1188,6 +1191,8 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		this.selector = new ComboBoxSelector();
         	} else if (type.equals(TextBoxSelector.class.getSimpleName())) {
         		this.selector = new TextBoxSelector();
+        	} else if (type.equals(DateSelector.class.getSimpleName())) {
+        		this.selector = new DateSelector();
         	} else {
         		throw new IllegalStateException("Cannot create a selector of type " + type);
         	}
@@ -1205,8 +1210,6 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         
         } else if (name.equals("selector-config")) {
         	
-        	String type = attributes.getValue("type");
-        	
         	if (selector instanceof ComboBoxSelector) {
         		((ComboBoxSelector) selector).setSourceKey(attributes.getValue("sourceKey"));
         		((ComboBoxSelector) selector).setStaticValues(attributes.getValue("staticValues"));
@@ -1214,8 +1217,17 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		((ComboBoxSelector) selector).setAlwaysIncludeDefaultValue(Boolean.valueOf(attributes.getValue("alwaysIncludeDefaultValue")));
         	} else if (selector instanceof TextBoxSelector) {
         		((TextBoxSelector) selector).setDefaultValue(attributes.getValue("defaultValue"));
+        	} else if (selector instanceof DateSelector) {
+        		String defValueS = attributes.getValue("defaultValue");
+        		final Date defValue;
+        		if (defValueS == null) {
+        			defValue = null;
+        		} else {
+        			defValue = new DateConverter().convertToComplexType(defValueS);
+        		}
+        		((DateSelector) selector).setDefaultValue(defValue);
         	} else {
-        		throw new IllegalStateException("Cannot create a selector of type " + type);
+        		throw new IllegalStateException("Cannot configure selector.");
         	}
         	
         	createdObject = null;

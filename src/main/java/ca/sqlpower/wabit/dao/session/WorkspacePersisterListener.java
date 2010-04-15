@@ -23,6 +23,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
@@ -72,6 +73,7 @@ import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.ResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
@@ -868,6 +870,16 @@ public class WorkspacePersisterListener implements SPListener {
 					"defaultValue", 
 					DataType.STRING, 
 					converter.convertToBasicType(tbs.getDefaultValue()));
+			
+		} else if(child instanceof DateSelector) {
+			
+			DateSelector ds = (DateSelector) child;
+			
+			this.persistProperty(
+					uuid, 
+					"defaultValue", 
+					DataType.STRING, 
+					converter.convertToBasicType((Date)ds.getDefaultValue()));
 			
 		} else {
 			

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -104,6 +105,7 @@ import ca.sqlpower.wabit.report.chart.ChartType;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
@@ -802,6 +804,8 @@ public class WabitSessionPersister implements SPPersister {
 			spo = new ComboBoxSelector(); 
 		} else if (type.equals(TextBoxSelector.class.getSimpleName())) {
 			spo = new TextBoxSelector(); 
+		} else if (type.equals(DateSelector.class.getSimpleName())) {
+			spo = new DateSelector(); 
 		} else if (type.equals(ReportTask.class.getSimpleName())) {
 			spo = new ReportTask();
 		} else if (type.equals(ResultSetRenderer.class.getSimpleName())) {
@@ -1179,6 +1183,9 @@ public class WabitSessionPersister implements SPPersister {
 					propertyName, newValue);
 		} else if (spo instanceof TextBoxSelector) {
 			commitTextBoxSelectorProperty((TextBoxSelector) spo,
+					propertyName, newValue);
+		} else if (spo instanceof DateSelector) {
+			commitDateSelectorProperty((DateSelector) spo,
 					propertyName, newValue);
 		} else if (spo instanceof WabitWorkspace) {
 			commitWabitWorkspaceProperty((WabitWorkspace) spo,
@@ -1572,6 +1579,9 @@ public class WabitSessionPersister implements SPPersister {
 				} else if (spo instanceof TextBoxSelector) {
 					propertyValue = getTextBoxSelectorProperty(
 							(TextBoxSelector) spo, propertyName);
+				} else if (spo instanceof DateSelector) {
+					propertyValue = getDateSelectorProperty(
+							(DateSelector) spo, propertyName);
 				} else if (spo instanceof WabitWorkspace) {
 					propertyValue = getWabitWorkspaceProperty((WabitWorkspace) spo,
 							propertyName);
@@ -2099,6 +2109,19 @@ public class WabitSessionPersister implements SPPersister {
 		}
 	}
 	
+	private Object getDateSelectorProperty(DateSelector selector, String propertyName) 
+		throws SPPersistenceException 
+	{
+	if (propertyName.equals("defaultValue")) {
+		return converter.convertToBasicType(selector.getDefaultValue());
+	
+	} else {
+		throw new SPPersistenceException(selector.getUUID(),
+			getSPPersistenceExceptionMessage(selector,
+					propertyName));
+	}
+	}
+	
 	/**
 	 * Commits a persisted {@link WabitTableContainer} object property
 	 * 
@@ -2166,6 +2189,21 @@ public class WabitSessionPersister implements SPPersister {
 		if (propertyName.equals("defaultValue")) {
 			selector.setDefaultValue((String) converter
 					.convertToComplexType(newValue, String.class));
+
+		} else {
+			throw new SPPersistenceException(selector.getUUID(),
+					getSPPersistenceExceptionMessage(selector,
+							propertyName));
+		}
+	}
+	
+	private void commitDateSelectorProperty(
+			DateSelector selector, String propertyName,
+			Object newValue) throws SPPersistenceException {
+
+		if (propertyName.equals("defaultValue")) {
+			selector.setDefaultValue((Date) converter
+					.convertToComplexType(newValue, Date.class));
 
 		} else {
 			throw new SPPersistenceException(selector.getUUID(),

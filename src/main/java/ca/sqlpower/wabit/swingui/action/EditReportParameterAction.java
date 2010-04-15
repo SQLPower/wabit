@@ -28,10 +28,12 @@ import javax.swing.JDialog;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.report.selectors.ComboBoxSelectorPanel;
+import ca.sqlpower.wabit.swingui.report.selectors.DateSelectorPanel;
 import ca.sqlpower.wabit.swingui.report.selectors.TextBoxSelectorPanel;
 
 public class EditReportParameterAction extends AbstractAction {
@@ -61,6 +63,12 @@ public class EditReportParameterAction extends AbstractAction {
 			dep = new TextBoxSelectorPanel(
 					dialogOwner, 
 					(TextBoxSelector)selector);
+			
+		} else if (selector instanceof DateSelector) {
+			
+			dep = new DateSelectorPanel(
+					dialogOwner, 
+					(DateSelector)selector);
 			
 		} else {
 			throw new AssertionError();

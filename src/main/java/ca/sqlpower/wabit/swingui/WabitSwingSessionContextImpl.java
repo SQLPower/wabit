@@ -190,7 +190,6 @@ import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CheckForUpdateAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.DeleteWabitServerWorkspaceAction;
-import ca.sqlpower.wabit.swingui.action.HelpAction;
 import ca.sqlpower.wabit.swingui.action.ImportWorkspaceAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
 import ca.sqlpower.wabit.swingui.action.NewGroupAction;
@@ -993,7 +992,12 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             
             macOSXRegistration();
             
-            CheckForUpdateAction.checkForUpdate(frame);
+            SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					CheckForUpdateAction.checkForUpdate(frame);
+				}
+			});
             
         } else {
             sourceListDialog = null;

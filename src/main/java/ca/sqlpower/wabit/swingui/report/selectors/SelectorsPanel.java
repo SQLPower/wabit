@@ -42,6 +42,7 @@ import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.swingui.WabitIcons;
@@ -109,7 +110,7 @@ public class SelectorsPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				
 				//Custom button text
-				Object[] options = {"Drop down list", "Free form text"};
+				Object[] options = {"Drop down list", "Free form text", "Date selection widget"};
 				
 				final int n = JOptionPane.showOptionDialog(null,
 				    "What type of parameter selector would you like to create?",
@@ -127,6 +128,8 @@ public class SelectorsPanel extends JPanel {
 					newSelector = new ComboBoxSelector();
 				} else if (n == 1) {
 					newSelector = new TextBoxSelector();
+				} else if (n == 2) {
+					newSelector = new DateSelector();
 				} else {
 					throw new AssertionError();
 				}

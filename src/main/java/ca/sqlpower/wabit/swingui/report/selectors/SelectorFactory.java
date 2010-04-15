@@ -27,6 +27,7 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 
@@ -41,6 +42,8 @@ public class SelectorFactory {
 			comp = makeComboBoxSelector((ComboBoxSelector)selector, refreshRoutine);
 		} else if (selector instanceof TextBoxSelector) {
 			comp = makeTextBoxSelector((TextBoxSelector)selector, refreshRoutine);
+		} else if (selector instanceof DateSelector) {
+			comp = makeDateSelector((DateSelector)selector, refreshRoutine);
 		} else {
 			throw new IllegalArgumentException("This factory does not know how to build a component of class " + selector.getClass().getCanonicalName());
 		}
@@ -48,6 +51,17 @@ public class SelectorFactory {
 		SwingUtilities.invokeLater(refreshRoutine);
 		return comp;
 		
+	}
+
+	private JComponent makeDateSelector(DateSelector selector,
+			Runnable refreshRoutine) 
+	{
+		final FancyDateSelectorField date =
+				new FancyDateSelectorField(selector, refreshRoutine);
+		
+		this.components.add(date);
+		
+		return date;
 	}
 
 	public JComponent makeSelector(WabitWorkspace sourceWorkspace, String selectorUuid, Runnable refreshRoutine) {

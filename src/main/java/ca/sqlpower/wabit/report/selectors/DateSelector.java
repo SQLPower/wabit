@@ -19,8 +19,11 @@
 
 package ca.sqlpower.wabit.report.selectors;
 
-public class TestSelector extends AbstractSelector {
+/**
+ * Represents a report parameter that takes date value.
+ */
+public class DateSelector extends AbstractSelector {
 
-
-
+	// Nothing special here.
+	
 }

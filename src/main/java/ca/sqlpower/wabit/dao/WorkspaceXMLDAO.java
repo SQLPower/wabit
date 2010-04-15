@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,7 @@ import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 
 import ca.sqlpower.dao.PersisterUtils;
+import ca.sqlpower.dao.session.DateConverter;
 import ca.sqlpower.graph.DepthFirstSearch;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.WorkspaceGraphModel;
@@ -75,6 +77,7 @@ import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
 import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
@@ -135,12 +138,13 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.5 <dd>Put UUID and name (mostly unused) attribute on OlapQuery child elements
      *  <dt>1.2.6 <dd>Saves the grand-totals attribute of RS renderers
      *  <dt>1.2.7 <dd>Saves the chart's auto axis values and report selectors.
+     *  <dt>1.2.8 <dd>Saves the date report selectors.
      *  
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.7"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.8"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -325,6 +329,12 @@ public class WorkspaceXMLDAO {
 		xml.indent++;
 		saveFont(page.getDefaultFont());
 		
+		if (layout instanceof Report) {
+			for (Selector selector : ((Report) layout).getSelectors()) {
+				saveSelector(selector);
+			}
+		}
+		
 		for (WabitObject object : page.getChildren()) {
 			if (object instanceof ContentBox) {
 				ContentBox box = (ContentBox) object;
@@ -337,6 +347,11 @@ public class WorkspaceXMLDAO {
 				xml.niprintln(out, ">");
 				xml.indent++;
 				saveFont(box.getFont());
+				
+				// Save ContentBox selectors.
+				for (Selector selector : box.getChildren(Selector.class)) {
+					saveSelector(selector);
+				}
 				
 				if (box.getContentRenderer() != null) {
 					if (box.getContentRenderer() instanceof Label) {
@@ -452,11 +467,6 @@ public class WorkspaceXMLDAO {
 					}
 				}
 				
-				// Save ContentBox selectors.
-				for (Selector selector : box.getChildren(Selector.class)) {
-					saveSelector(selector);
-				}
-				
 				xml.indent--;
 				xml.println(out, "</content-box>");
 			} else if (object instanceof Guide) {
@@ -473,14 +483,6 @@ public class WorkspaceXMLDAO {
 		
 		xml.indent--;
 		xml.println(out, "</layout-page>");
-		
-		
-		if (layout instanceof Report) {
-			for (Selector selector : ((Report) layout).getSelectors()) {
-				saveSelector(selector);
-			}
-		}
-		
 		
 		xml.indent--;
 		xml.println(out, "</layout>");
@@ -505,6 +507,14 @@ public class WorkspaceXMLDAO {
         	printAttribute("alwaysIncludeDefaultValue", ((ComboBoxSelector) selector).isAlwaysIncludeDefaultValue());
         } else if (selector instanceof TextBoxSelector) {
         	printAttribute("defaultValue", ((TextBoxSelector) selector).getDefaultValue());
+        } else if (selector instanceof DateSelector) {
+        	Date defaultValue = (Date)((DateSelector) selector).getDefaultValue();
+        	if (defaultValue != null) {
+        		printAttribute(
+        				"defaultValue", 
+        				new DateConverter().convertToSimpleType(
+        						(Date)defaultValue));
+        	}
         }
         xml.niprintln(out, "/>");
         
