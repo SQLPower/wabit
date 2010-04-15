@@ -46,6 +46,7 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.JDBCDataSourceType;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.UserDefinedSQLType;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.enterprise.client.ReportTask;
 import ca.sqlpower.wabit.image.WabitImage;
@@ -1071,4 +1072,14 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     	super.setName(name);
     	this.variableResolver.setUserFriendlyName("Workspace - " + this.getName());
     }
+
+	@Override
+	public UserDefinedSQLType getSQLType(String name) {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
+
+	@Override
+	public List<UserDefinedSQLType> getSQLTypes() {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
 }

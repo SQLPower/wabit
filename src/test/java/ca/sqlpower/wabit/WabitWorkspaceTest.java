@@ -132,6 +132,8 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
     	// These are currently not supported.
     	notPersisting.add("dataSourceTypes");
     	notPersisting.add("serverBaseURI");
+    	notPersisting.add("SQLType");
+    	notPersisting.add("SQLTypes");
     	
     	return notPersisting;
     }
@@ -149,6 +151,7 @@ public class WabitWorkspaceTest extends AbstractWabitObjectTest {
         ignore.add("serverBaseURI");
         ignore.add("mondrianServerBaseURI");
         ignore.add("session");
+        ignore.add("SQLTypes");
         
         //workspace parents cannot be set as they are always null.
         ignore.add("parent");
