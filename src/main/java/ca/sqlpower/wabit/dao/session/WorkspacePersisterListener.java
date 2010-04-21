@@ -199,6 +199,9 @@ public class WorkspacePersisterListener implements SPListener {
 			public void sessionClosing(SessionLifecycleEvent<WabitSession> e) {
 				SQLPowerUtils.unlistenToHierarchy(session.getWorkspace(), listener);
 			}
+
+			public void sessionOpening(SessionLifecycleEvent<WabitSession> e) {
+			}
 		});
 		return listener;
 	}

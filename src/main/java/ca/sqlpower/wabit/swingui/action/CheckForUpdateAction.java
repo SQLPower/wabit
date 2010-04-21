@@ -71,7 +71,6 @@ public class CheckForUpdateAction extends AbstractAction {
 		}
 		
 		@SuppressWarnings("unchecked")
-		@Override
 		public void actionPerformed(ActionEvent event) {
 			
 			/*
@@ -146,7 +145,6 @@ public class CheckForUpdateAction extends AbstractAction {
 		this.owner = owner;
 	}
 	
-	@Override
 	public void actionPerformed(ActionEvent event) {
 		checkForUpdate(owner, false);
 	}
@@ -200,7 +198,6 @@ public class CheckForUpdateAction extends AbstractAction {
 				Box buttons = Box.createHorizontalBox();
 				JButton downloadButton = new JButton(new DownloadAction(dialog, results.getProperty("downloadUrl")));
 				JButton cancelButton = new JButton(new AbstractAction("No thanks") {
-					@Override
 					public void actionPerformed(ActionEvent e) {
 						dialog.dispose();
 					}

@@ -161,6 +161,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
                 System.exit(0);
             }
         }
+
+		public void sessionOpening(SessionLifecycleEvent<WabitSession> e) {
+			// Auto-generated method stub
+		}
     };
     
     /**

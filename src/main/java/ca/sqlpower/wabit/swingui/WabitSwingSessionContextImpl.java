@@ -1376,6 +1376,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
             sessionTabs.remove(child);
             child.getWorkspace().removeSPListener(nameChangeListener);
         }
+
+		public void sessionOpening(SessionLifecycleEvent<WabitSession> e) {
+		}
 	};
 
 	/**

@@ -293,7 +293,6 @@ public class ContentBoxNode extends PNode implements ReportNode {
 		
 		JButton closeButton = new JButton();
 		closeButton.setAction(new AbstractAction() {
-			@Override
 			public void actionPerformed(ActionEvent e) {
 				selectorsDialog.dispose();
 			}
