@@ -493,7 +493,17 @@ public class WabitSessionContextImpl implements WabitSessionContext {
     	if (conn == null) {
     		conn = getDatabase(dataSource).getConnection();
     		this.sqlConnections.put(dataSource, conn);
-    	}
+    	} else
+			try {
+				if (conn.isClosed()) {
+					this.sqlConnections.remove(dataSource);
+					conn = getDatabase(dataSource).getConnection();
+					this.sqlConnections.put(dataSource, conn);
+				}
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				throw new SQLObjectException(e1);
+			}
     	
     	try {
 			return helper.substituteForDb(conn, sql);
