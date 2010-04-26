@@ -66,6 +66,7 @@ import ca.sqlpower.wabit.swingui.action.CopyQueryAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportAction;
 import ca.sqlpower.wabit.swingui.action.CopyReportTaskAction;
 import ca.sqlpower.wabit.swingui.action.CopyTemplateAction;
+import ca.sqlpower.wabit.swingui.action.CopyUuidToClipboardAction;
 import ca.sqlpower.wabit.swingui.action.DeleteFromTreeAction;
 import ca.sqlpower.wabit.swingui.action.EditCellAction;
 import ca.sqlpower.wabit.swingui.action.NewChartAction;
@@ -375,6 +376,15 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			        					(SPObject) lastPathComponent, context.getFrame(), context)),
 			        					WabitAccessManager.Permission.DELETE);
 			        	
+			        }
+			        
+			        if (!(lastPathComponent instanceof WabitDataSource)) {
+			        	objectsMenu(
+			        			menu,
+			        			lastPathComponent.getClass().getSimpleName(),  
+			        			null,
+			        			new JMenuItem(new CopyUuidToClipboardAction(((SPObject)lastPathComponent).getUUID())),
+			        			WabitAccessManager.Permission.EXECUTE);
 			        }
 			        
 			        menu.addSeparator();
@@ -860,6 +870,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
     			systemWorkspace == null) {
     		
     		String label = getLabel(simpleName);
+    		
+    		if (label == null) {
+				return false;
+			}
+    		
     		JMenuItem action = new JMenuItem(
 									new SecurityAction(
 											this.session.getWorkspace(), 
@@ -875,6 +890,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
     		if (simpleName != null && object == null) {
     			
     			String label = getLabel(simpleName);
+    			if (label == null) {
+    				return false;
+    			}
     			
     			objectsMenu(
     					menu, 
@@ -936,6 +954,11 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		return true;
 	}
 	
+	/**
+	 * Finds a suitable label for a given SP object.
+	 * Returns null if the object is not one of those that we can 
+	 * apply security to.
+	 */
 	public String getLabel(String simpleName) {
 		final String label;
 		if (simpleName.equals("WabitDataSource")) {
@@ -961,7 +984,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 		} else if (simpleName.equals("WabitWorkspace")) {
 			label = "all workspaces";
 		} else {
-			throw new IllegalStateException(simpleName);
+			return null;
 		}
 		return label;
 	}
