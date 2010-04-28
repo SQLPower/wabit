@@ -22,6 +22,7 @@ package ca.sqlpower.wabit.report;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
@@ -203,6 +204,8 @@ public abstract class Layout extends AbstractWabitObject implements Pageable, Pr
         }
         
         Graphics2D g2 = (Graphics2D) graphics;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+        		RenderingHints.VALUE_ANTIALIAS_ON);
         g2.setColor(Color.BLACK);
         if (this.variables != null) {
         	if (!((Boolean) this.variables.resolve(COUNTING_PAGES, false))) {

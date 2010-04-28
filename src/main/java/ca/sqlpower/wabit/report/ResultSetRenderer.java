@@ -654,10 +654,11 @@ public class ResultSetRenderer extends AbstractWabitObject
             return false;
         }
         
-        Graphics2D g2 = (Graphics2D) g.create();
         List<ResultSetCell> currentPagePositions = pageCells.get().get(pageIndex);
         for (ResultSetCell position : currentPagePositions) {
+        	Graphics2D g2 = (Graphics2D) g.create();
             position.paint(g2);
+            g2.dispose();
         }
         
         if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {

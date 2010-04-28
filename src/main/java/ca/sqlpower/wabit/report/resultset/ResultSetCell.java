@@ -26,7 +26,6 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.Stroke;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -122,7 +121,6 @@ public class ResultSetCell {
      * top left of this cell.
      */
     public void paint(Graphics2D g) {
-        Font oldFont = g.getFont();
         g.setFont(font);
         final FontMetrics fm = g.getFontMetrics();
         double offset = align.computeStartX(bounds.width - insets.left - insets.right, fm.stringWidth(text));
@@ -155,9 +153,7 @@ public class ResultSetCell {
         }
         g.drawString(printingText, getBounds().x + insets.left + (int)offset, 
                 textY);
-        g.setFont(oldFont);
         
-        Stroke oldStroke = g.getStroke();
 
         //Thinning the stroke for the subtotal line for looks. We can't get the
         //line width from a regular stroke so if the stroke is somehow different
@@ -200,8 +196,6 @@ public class ResultSetCell {
                     		"cannot break out into the third or fourth dimension.");
             }
         }
-        
-        g.setStroke(oldStroke);
     }
 
     public List<BorderType> getBorderTypes() {
