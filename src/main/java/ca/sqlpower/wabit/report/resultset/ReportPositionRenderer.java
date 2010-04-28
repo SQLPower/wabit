@@ -86,18 +86,6 @@ public class ReportPositionRenderer {
      */
     private boolean hasLayoutStarted = false;
     
-    /**
-     * If true the section header will be added to the top of each new page even if
-     * the section hasn't changed.
-     */
-    private boolean addSectionHeaderToNewPage = true;
-
-    /**
-     * If true the column headers will be added to the top of each new page even if
-     * the section hasn't changed.
-     */
-    private boolean addColumnHeaderToNewPage = true;
-    
     public ReportPositionRenderer(Font headerFont, Font bodyFont, BorderStyles borderType, int availableWidth, String nullString) {
         this.headerFont = headerFont;
         this.bodyFont = bodyFont;
@@ -129,7 +117,7 @@ public class ReportPositionRenderer {
      *            avoid sections that are identified by the same section.
      */
     public List<List<ResultSetCell>> createResultSetLayout(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInfoList,
-            ContentBox contentBox, boolean isPrintingGrandTotals) throws SQLException {
+    		double boxHeight, boolean isPrintingGrandTotals) throws SQLException {
         if (hasLayoutStarted) throw new IllegalStateException("The layout of a report position renderer should only " +
         		"be done once per renderer. Create a new renderer if a new layout is needed");
         hasLayoutStarted = true;
@@ -140,7 +128,8 @@ public class ReportPositionRenderer {
         
         List<BigDecimal> grandTotals = new ArrayList<BigDecimal>();
         for (ColumnInfo ci : columnInfoList) {
-            if (ci.getDataType() == DataType.NUMERIC) {
+            if (ci.getWillSubtotal()
+            		&& ci.getDataType() == DataType.NUMERIC) {
                 grandTotals.add(BigDecimal.ZERO);
             } else {
                 grandTotals.add(null);
@@ -158,6 +147,7 @@ public class ReportPositionRenderer {
         }
         
         Map<Integer, List<BigDecimal>> groupingTotalMap = new HashMap<Integer, List<BigDecimal>>();
+        
         for (int i = 0; i < columnInfoList.size(); i++) {
             if (columnInfoList.get(i).getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
                 List<BigDecimal> groupingTotals = new ArrayList<BigDecimal>();
@@ -179,43 +169,39 @@ public class ReportPositionRenderer {
         
         currentPage = 0;
         cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
-        
-        List<ResultSetCell> currentSectionHeaders = null;
-        List<ResultSetCell> currentColumnHeaders = null;
-        
+       
+        List<List<ResultSetCell>> headerRows = new ArrayList<List<ResultSetCell>>();
+
         //for each result set entry
         while (rsCopy.next()) {
         
-            //if new break header is needed create it
-            //if new column header is needed create it
-            List<Object> newSectionKey = createRowSectionKey(rsCopy, columnInfoList);
+        	// This is a temp list of rows we will need to print.
+            List<List<ResultSetCell>> rowsToAdd = new ArrayList<List<ResultSetCell>>();
             
             if (!rsCopy.isFirst() && sectionKey == null) 
                 throw new IllegalStateException("The initial section key was undefined! " +
                         "Cannot start laying out the result set.");
-            if (!rsCopy.isFirst() && !newSectionKey.equals(sectionKey)
-                    || rsCopy.isFirst()) {
+                      
+            boolean forcePrintHeaders = false;
+            final List<Object> newSectionKey = createRowSectionKey(rsCopy, columnInfoList);
+            
+            if (sectionKey == null 
+            		|| !newSectionKey.equals(sectionKey)
+                    || rsCopy.isFirst()) 
+            {
                 sectionKey = newSectionKey;
-                
-                ResultSetCell cell = renderSectionHeader(
-                        g, newSectionKey, columnInfoList, yPosition);
-                final List<ResultSetCell> headerCells = Collections.singletonList(cell);
-                currentSectionHeaders = headerCells;
-                yPosition = addCells(headerCells, cellsGroupedPerPage, contentBox, yPosition);
-                
-                List<ResultSetCell> cells = renderColumnHeader(g, columnInfoList, yPosition);
-                currentColumnHeaders = cells;
-                yPosition = addCells(cells, cellsGroupedPerPage, contentBox, yPosition);
-                
+                forcePrintHeaders = true;
             }
-
+            
+            headerRows.clear();
+            headerRows.add(Collections.singletonList(renderSectionHeader(g, sectionKey, columnInfoList)));
+            headerRows.add(renderColumnHeaders(g, columnInfoList));
             
             //create a row of values, decide if we need to hide grouped columns
-            List<ResultSetCell> rowCells = renderRow(g, rsCopy, columnInfoList, yPosition, false);
-            yPosition = addRowCells(rowCells, cellsGroupedPerPage, contentBox, yPosition, currentSectionHeaders,
-                    currentColumnHeaders, g, rsCopy, columnInfoList);
+            List<ResultSetCell> rowCells = renderRow(g, rsCopy, columnInfoList, false);
+            rowsToAdd.addAll(Collections.singletonList(rowCells));
             
-            //add to totals
+            //Increment totals counters
             for (ColumnInfo ci : columnInfoList) {
                 final int colIndex = columnInfoList.indexOf(ci);
                 if (ci.getWillSubtotal()) {
@@ -230,7 +216,8 @@ public class ReportPositionRenderer {
                         subtotals.set(colIndex, groupTotal);
                     }
                 }
-                if (ci.getDataType() == DataType.NUMERIC) {
+                if (ci.getWillSubtotal()
+                		&& ci.getDataType() == DataType.NUMERIC) {
                     final BigDecimal valueToAdd = rsCopy.getBigDecimal(colIndex + 1);
                     BigDecimal total = grandTotals.get(colIndex);
                     BigDecimal cellValue = valueToAdd;
@@ -256,14 +243,27 @@ public class ReportPositionRenderer {
             }
             rsCopy.previous();
 
-            if (!hasNext || !nextSectionKey.equals(sectionKey)) { //look for breaks
+            
+            // Now decide if we need to print sub-totals, due to grouping
+            // changes or section breaks;
+            
+            // Start by looking for section breaks
+            if (!hasNext || !nextSectionKey.equals(sectionKey)) { 
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
                     if (groupingTotalMap.get(i) != null) {
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
                         String groupingText = " " + rsCopy.getString(i + 1);
-                        List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
-                                groupingText, i, yPosition);
-                        yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
+
+                        rowsToAdd.addAll(
+                        		renderTotals(
+		                        		g, 
+		                        		groupingTotals, 
+		                        		columnInfoList, 
+		                        		false,
+		                                groupingText, 
+		                                i,
+		                                cellsGroupedPerPage,
+		                                boxHeight));
 
                         for (int j = 0; j < groupingTotals.size(); j++) {
                             if (groupingTotals.get(j) != null) {
@@ -280,12 +280,19 @@ public class ReportPositionRenderer {
                         if (sectionKeyText.length() > 0) {
                             sectionKeyText.append(";");
                         }
-                        sectionKeyText.append(" " + columnInfoList.get(i).getName() + ": " + value);
+                        sectionKeyText.append("Total for " + columnInfoList.get(i).getName() + ": " + value);
                     }
                 }
-                List<ResultSetCell> breakTotals = renderTotals(g, sectionTotals, columnInfoList, false,
-                        sectionKeyText.toString(), 0, yPosition);
-                yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
+                rowsToAdd.addAll(
+                		renderTotals(
+	                			g, 
+	                			sectionTotals, 
+	                			columnInfoList, 
+	                			false,
+	                			sectionKeyText.toString(), 
+	                			0,
+	                			cellsGroupedPerPage,
+	                			boxHeight));
                 
                 sectionTotals = new ArrayList<BigDecimal>();
                 for (ColumnInfo ci : columnInfoList) {
@@ -296,8 +303,8 @@ public class ReportPositionRenderer {
                     }
                 }
                 
-                yPosition += BORDER_LINE_SIZE;
-            } else if (hasNext) { //look for grouping changes
+            // Now look for grouping changes
+            } else if (hasNext) { 
                 
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
                     Object oldValue = rsCopy.getObject(i + 1);
@@ -305,12 +312,22 @@ public class ReportPositionRenderer {
                     if (groupingTotalMap.get(i) != null && 
                             ((oldValue != null && !oldValue.equals(nextValue))
                             || (oldValue == null && nextValue != null))) {
+                    	
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
-                        String groupingText = " " + rsCopy.getString(i + 1);
-                        List<ResultSetCell> breakTotals = renderTotals(g, groupingTotals, columnInfoList, false,
-                                groupingText, i, yPosition);
-                        yPosition = addCells(breakTotals, cellsGroupedPerPage, contentBox, yPosition);
-
+                        String groupingText = String.valueOf(rsCopy.getString(i + 1));
+                        
+                        rowsToAdd.addAll(
+                        		renderTotals(
+                        				g, 
+                        				groupingTotals, 
+                        				columnInfoList, 
+                        				false,
+                        				"Total for " + groupingText, 
+                        				i,
+                        				cellsGroupedPerPage,
+                        				boxHeight));
+                        
+                        
                         for (int j = 0; j < groupingTotals.size(); j++) {
                             if (groupingTotals.get(j) != null) {
                                 groupingTotals.set(j, BigDecimal.ZERO);
@@ -318,14 +335,37 @@ public class ReportPositionRenderer {
                         }
                     }
                 }
+                
             }
-        
+            
+            // Print whatever sub total rows.
+            yPosition = addRowsGroup(
+            				rowsToAdd, 
+            				cellsGroupedPerPage, 
+            				headerRows, 
+            				boxHeight, 
+            				yPosition, 
+            				forcePrintHeaders);
+            
         }
         
+        // We might need to print grand totals.
         if (isPrintingGrandTotals) {
-            List<ResultSetCell> renderTotals = renderTotals(
-                    g, grandTotals, columnInfoList, true, "", 0, yPosition);
-            addCells(renderTotals, cellsGroupedPerPage, contentBox, yPosition);
+        	yPosition = addRowsGroup(
+        			renderTotals(
+        				g, 
+        				grandTotals, 
+        				columnInfoList, 
+        				true, 
+        				"Grand Total", 
+        				0,
+        				cellsGroupedPerPage,
+        				boxHeight),
+    				cellsGroupedPerPage,
+    				headerRows,
+    				boxHeight,
+    				yPosition,
+    				false);
         }
         
         return cellsGroupedPerPage;
@@ -354,8 +394,11 @@ public class ReportPositionRenderer {
     /**
      * This is a helper method for
      * {@link #createResultSetLayout(Graphics2D, ResultSet)}. This will add the
-     * cells to the current or next page of the cellsGroupedPerPage as well as
+     * groups of cells to the current or next page of the cellsGroupedPerPage as well as
      * increment the yPosition and possibly the current page count.
+     * 
+     * This method takes a list of rows to add and will make all those stick
+     * together. It wont add a page break between those.
      * 
      * @param cells
      *            The {@link ResultSetCell}s to add to the pages
@@ -369,113 +412,110 @@ public class ReportPositionRenderer {
      * @param yPosition
      *            The current y position that can be used to layout cells. The
      *            space above this position contains cells already.
+     * @param forcePrintHeaders 
      * @return The new y position that defines where new cells can be placed
      *         below
      */
-    private int addCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
-            ContentBox contentBox, int yPosition) {
-        int maxY = 0;
-        for (ResultSetCell columnHeaderCell : cells) {
-            maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
-        }
-        yPosition += maxY;
-        
-        if (yPosition < contentBox.getHeight()) {
-            cellsGroupedPerPage.get(currentPage).addAll(cells);
-        } else {
-            yPosition = 0;
-            cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
-            currentPage++;
-            
-            for (ResultSetCell movingCell : cells) {
-                movingCell.moveCell(new Point(movingCell.getBounds().x, yPosition));
-            }
-            maxY = 0;
-            for (ResultSetCell columnHeaderCell : cells) {
-                maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
-            }
-            yPosition += maxY;
-            cellsGroupedPerPage.get(currentPage).addAll(cells);
-        }
-        
-        return yPosition;
-    }
+    private int addRowsGroup(
+    		List<List<ResultSetCell>> rows, 
+    		List<List<ResultSetCell>> cellsGroupedPerPage,
+    		List<List<ResultSetCell>> headers,
+            double boxHeight, 
+            int yPosition, 
+            boolean forcePrintHeaders) 
+    {
+    	boolean headerAreIn = false;
+    	List<List<ResultSetCell>> rowsToPrint = new ArrayList<List<ResultSetCell>>();
 
-    /**
-     * This is a helper method for
-     * {@link #createResultSetLayout(Graphics2D, ResultSet)}. This will add the
-     * cells to the current or next page of the cellsGroupedPerPage as well as
-     * increment the yPosition and possibly the current page count.
-     * 
-     * @param cells
-     *            The {@link ResultSetCell}s to add to the pages
-     * @param cellsGroupedPerPage
-     *            The list of pages that contain cells. This value will be
-     *            modified to contain the given cells in the current or next
-     *            page.
-     * @param contentBox
-     *            The content box the {@link ResultSetRenderer} is contained in
-     *            to get visible dimesnsions.
-     * @param yPosition
-     *            The current y position that can be used to layout cells. The
-     *            space above this position contains cells already.
-     * @param sectionHeaders
-     *            The cells that represent the section header. If the cells
-     *            given are placed on a new page these headers may be copied and
-     *            repeated on the next page as well. If this is null header
-     *            sections will not be repeated on new pages.
-     * @param columnHeaders
-     *            The cells that represent the column header. If the cells given
-     *            are placed on a new page these headers may be copied and
-     *            repeated on the next page as well. If this is null column
-     *            headers will not be repeated on new pages.
-     * @return The new y position that defines where new cells can be placed
-     *         below
-     */
-    private int addRowCells(List<ResultSetCell> cells, List<List<ResultSetCell>> cellsGroupedPerPage,
-            ContentBox contentBox, int yPosition, List<ResultSetCell> sectionHeaders, List<ResultSetCell> columnHeaders,
-            Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation) throws SQLException {
-        int maxY = 0;
-        for (ResultSetCell columnHeaderCell : cells) {
-            maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
-        }
-        yPosition += maxY;
-        
-        if (yPosition < contentBox.getHeight()) {
-            cellsGroupedPerPage.get(currentPage).addAll(cells);
-        } else {
-            yPosition = 0;
-            cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
-            currentPage++;
-            
-            if (addSectionHeaderToNewPage && sectionHeaders != null) {
-                List<ResultSetCell> copiedHeaders = new ArrayList<ResultSetCell>();
-                for (ResultSetCell cellToCopy : sectionHeaders) {
-                    ResultSetCell newCell = new ResultSetCell(cellToCopy);
-                    newCell.moveCell(new Point(newCell.getBounds().x, yPosition));
-                    copiedHeaders.add(newCell);
-                }
-                yPosition = addCells(copiedHeaders, cellsGroupedPerPage, contentBox, yPosition);
-            }
-            if (addColumnHeaderToNewPage && columnHeaders != null) {
-                List<ResultSetCell> copiedHeaders = new ArrayList<ResultSetCell>();
-                for (ResultSetCell cellToCopy : columnHeaders) {
-                    ResultSetCell newCell = new ResultSetCell(cellToCopy);
-                    newCell.moveCell(new Point(newCell.getBounds().x, yPosition));
-                    copiedHeaders.add(newCell);
-                }
-                yPosition = addCells(copiedHeaders, cellsGroupedPerPage, contentBox, yPosition);
-            }
-            
-            cells = renderRow(g, rs, columnInformation, yPosition, true);
-            maxY = 0;
-            for (ResultSetCell columnHeaderCell : cells) {
-                maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
-            }
-            yPosition += maxY;
-            cellsGroupedPerPage.get(currentPage).addAll(cells);
-        }
-        
+    	// Maybe we need to force the headers to appear
+    	if (forcePrintHeaders) {
+    		rowsToPrint.addAll(headers);
+    		headerAreIn = true;
+    	}
+    	rowsToPrint.addAll(rows);
+    	
+    	// First, figure the total height of this group of rows.
+    	int totalHeight = 0;
+    	for (List<ResultSetCell> currentRow : rowsToPrint) {
+    		
+    		// For each row, find the tallest cell
+    		int maxHeight = 0;
+    		for (ResultSetCell cell : currentRow) {
+    			maxHeight = Math.max(cell.getBounds().height, maxHeight);
+    		}
+    		totalHeight += maxHeight;
+    	}
+    	
+    	// Build the list of all rows/cells to print.
+    	// We might have to add the headers rows
+    	if (!headerAreIn && (totalHeight + yPosition) > boxHeight) {
+    		rowsToPrint.clear();
+    		rowsToPrint.addAll(headers);
+    		rowsToPrint.addAll(rows);
+    	}
+    	
+    	// Now we need to space the rows vertically.
+    	int tmpY = yPosition;
+    	totalHeight = 0;
+    	for (List<ResultSetCell> currentRow : rowsToPrint) {
+    		
+    		// For each row, find the tallest cell
+    		int maxHeight = 0;
+    		for (ResultSetCell cell : currentRow) {
+    			maxHeight = Math.max(cell.getBounds().height, maxHeight);
+    		}
+    		
+    		// we move the cells a bit further down
+    		// for the next row...
+    		for (ResultSetCell movingCell : currentRow) {
+    			movingCell.moveCell(
+						new Point(movingCell.getBounds().x, 
+						tmpY));
+			}
+    		
+    		tmpY += maxHeight;
+    		totalHeight += maxHeight;
+    	}
+    	
+    	// Does this group fit in the remaining space...
+    	if (yPosition == 0 || (totalHeight + yPosition) < boxHeight) {
+    		
+    		// It fits. we can add them all to this page.
+    		for (List<ResultSetCell> currentRow : rowsToPrint) {
+    			cellsGroupedPerPage.get(currentPage).addAll(currentRow);
+    		}
+    		
+    		// Let's not forget to increment the yPosition pointer.
+    		yPosition += totalHeight;
+    		
+    	} else {
+    		
+    		// We need to start a new page because the group of rows
+    		// is taller than the remaining space on this page
+    		
+			yPosition = 0;
+			currentPage++;
+			cellsGroupedPerPage.add(new ArrayList<ResultSetCell>());
+			
+			// For every row of cells...
+			for (List<ResultSetCell> currentRow : rowsToPrint) {
+				
+				// Move those cells to their new position
+				for (ResultSetCell movingCell : currentRow) {
+					movingCell.moveCell(new Point(movingCell.getBounds().x, yPosition));
+				}
+			
+				// Find the actual height of this row
+				int maxY = 0;
+				for (ResultSetCell columnHeaderCell : currentRow) {
+					maxY = Math.max(columnHeaderCell.getBounds().height, maxY);
+				}
+				
+				yPosition += maxY;
+				cellsGroupedPerPage.get(currentPage).addAll(currentRow);
+			}
+    	}
+    	
         return yPosition;
     }
 
@@ -499,8 +539,12 @@ public class ReportPositionRenderer {
      *            If true cells that would be blank as they are repeated values
      *            will appear but marked as a continued value.
      */
-    public List<ResultSetCell> renderRow(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInformation, 
-            int yPosition, boolean showGroupsAsRepeat) throws SQLException {
+    private List<ResultSetCell> renderRow(
+    		Graphics2D g, 
+    		ResultSet rs, 
+    		List<ColumnInfo> columnInformation, 
+            boolean showGroupsAsRepeat) throws SQLException 
+    {
         
         if (rs.getMetaData().getColumnCount() != columnInformation.size()) 
             throw new IllegalArgumentException("The column information for rendering a row was " +
@@ -512,23 +556,25 @@ public class ReportPositionRenderer {
         g.setFont(bodyFont);
         int x = 0;
         for (int col = 0; col < columnInformation.size(); col++) {
-            int y = fm.getHeight();
+            int cellHeight = fm.getHeight();
             ColumnInfo ci = columnInformation.get(col);
             if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
             
             Insets padding = getPadding(ci);
-            y += padding.top;
+            cellHeight += padding.top;
             
             Object value = rs.getObject(col + 1);
             String formattedValue;
             if (ci.getFormat() != null && value != null) {
-                logger.debug("Format iss:"+ ci.getFormat()+ "string is:"+ rs.getString(col + 1));
+                if (logger.isDebugEnabled()) {
+                	logger.debug("Format is:"+ ci.getFormat()+ "string is:"+ rs.getString(col + 1));
+                }
                 formattedValue = ci.getFormat().format(value);
             } else {
                 formattedValue = replaceNull(rs.getString(col + 1));
             }
             
-            y += padding.bottom;
+            cellHeight += padding.bottom;
             
             Font cellFont = bodyFont;
             if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
@@ -563,10 +609,18 @@ public class ReportPositionRenderer {
                 }
             }
             
-            rowCells.add(new ResultSetCell(formattedValue, cellFont,
-                    new Rectangle(x, yPosition, ci.getWidth(), y),
-                    padding, ci.getHorizontalAlignment(),
-                    borders));
+            rowCells.add(
+            		new ResultSetCell(
+            				formattedValue, 
+            				cellFont,
+            				new Rectangle(
+            						x, 
+            						0, 
+            						ci.getWidth(), 
+            						cellHeight),
+            				padding, 
+            				ci.getHorizontalAlignment(),
+            				borders));
             
             x += ci.getWidth();
         }
@@ -599,8 +653,11 @@ public class ReportPositionRenderer {
      *            The column information describing the columns of the result
      *            set.
      */
-    public ResultSetCell renderSectionHeader(Graphics2D g, List<Object> sectionHeader, 
-            List<ColumnInfo> colInfo, int yPosition) {
+    private ResultSetCell renderSectionHeader(
+    		Graphics2D g, 
+    		List<Object> sectionHeader, 
+            List<ColumnInfo> colInfo) 
+    {
         StringBuffer headerBuffer = new StringBuffer();
         for (Object headerObject : sectionHeader) {
             if (headerObject != null) {
@@ -612,7 +669,7 @@ public class ReportPositionRenderer {
         }
         String header = headerBuffer.toString();
         
-        //Centres the header if there is enough space and the header
+        //Centers the header if there is enough space and the header
         //isn't too large.
         FontMetrics fm = g.getFontMetrics(headerFont);
         int tableWidth = 0;
@@ -634,14 +691,14 @@ public class ReportPositionRenderer {
         int height = fm.getHeight() + padding.top + padding.bottom;
         height += BORDER_LINE_SIZE;
         return new ResultSetCell(header, headerFont,
-                new Rectangle(0, yPosition, maxWidth, height), 
+                new Rectangle(0, 0, maxWidth, height), 
                 padding, HorizontalAlignment.CENTER, borders);
     }
     
     /**
      * Creates new {@link ResultSetCell}s for each column header.
      */
-    public List<ResultSetCell> renderColumnHeader(Graphics2D g, List<ColumnInfo> colInfo, int yPosition) {
+    private List<ResultSetCell> renderColumnHeaders(Graphics2D g, List<ColumnInfo> colInfo) {
         List<ResultSetCell> headerCells = new ArrayList<ResultSetCell>();
         
         int x = 0;
@@ -659,7 +716,7 @@ public class ReportPositionRenderer {
             final String colHeaderName = replaceNull(ci.getName());
             y += padding.bottom;
             ResultSetCell newCell = new ResultSetCell(colHeaderName, headerFont,
-                    new Rectangle(x, yPosition, ci.getWidth(), y), padding, 
+                    new Rectangle(x, 0, ci.getWidth(), y), padding, 
                     ci.getHorizontalAlignment(), new ArrayList<BorderType>());
             headerCells.add(newCell);
             x += ci.getWidth();
@@ -680,93 +737,105 @@ public class ReportPositionRenderer {
      * @param colInfo
      *            A list of column information for each column in the result
      *            set.
+     * @param cellsGroupedPerPage 
      */
-    public List<ResultSetCell> renderTotals(Graphics2D g, List<BigDecimal> totalsRow, List<ColumnInfo> colInfo,
-            boolean isGrandTotal, String breakText, int breakTextPosition, int yPosition) {
-        List<ResultSetCell> newCells = new ArrayList<ResultSetCell>();
+    private List<List<ResultSetCell>> renderTotals(
+    		Graphics2D g, 
+    		List<BigDecimal> totalsRow, 
+    		List<ColumnInfo> colInfo,
+            boolean isGrandTotal, 
+            String breakText, 
+            int breakTextPosition,
+            List<List<ResultSetCell>> cellsGroupedPerPage,
+            double boxHeight) 
+    {
         
+    	List<List<ResultSetCell>> rowsToAdd = new ArrayList<List<ResultSetCell>>();
         int localX = 0;
         
         boolean hasTotals = false;
         for (BigDecimal total : totalsRow) {
             if (total != null) {
                 hasTotals = true;
+                break;
             }
         }
-        if (!hasTotals) {
-            return newCells;
+        
+        if (hasTotals) {
+        	Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
+        	FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
+        	FontMetrics headerFM = g.getFontMetrics(headerFont);
+        	
+        	final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
+        	
+        	int totalTextX = 0;
+        	for (int i = 0; i < breakTextPosition; i++) {
+        		if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+        			totalTextX += colInfo.get(i).getWidth();
+        		}
+        	}
+        	Insets textInsets = getPadding(null);
+        	final int width = colInfo.get(breakTextPosition).getWidth();
+        	int height = headerFM.getHeight() + textInsets.top + textInsets.bottom;
+        	height += headerFM.getHeight() / 2;
+        	if (isGrandTotal) {
+        		height += 2 * BORDER_LINE_SIZE;
+        	}
+        	
+        	// Create the "Total:" alike label
+        	ResultSetCell textCell = new ResultSetCell(
+        			breakText, 
+        			headerFont, 
+        			new Rectangle(totalTextX, 0, width, height),
+        			textInsets, 
+        			colInfo.get(breakTextPosition).getHorizontalAlignment(), 
+        			new ArrayList<BorderType>());
+        	rowsToAdd.add(Collections.singletonList(textCell));
+        	
+        	List<ResultSetCell> newCells = new ArrayList<ResultSetCell>();
+        	for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
+        		int y = rowHeight;
+        		ColumnInfo ci = colInfo.get(subCol);
+        		if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
+        		
+        		Insets padding = getPadding(ci);
+        		y += padding.top;
+        		BigDecimal subtotal = totalsRow.get(subCol);
+        		y += padding.bottom;
+        		if (subtotal != null) {
+        			String formattedValue;
+        			if (ci.getFormat() != null) {
+        				formattedValue = ci.getFormat().format(subtotal);
+        			} else {
+        				formattedValue = subtotal.toString();
+        			}
+        			
+        			List<BorderType> grandTotalBorders = new ArrayList<BorderType>();
+        			grandTotalBorders.add(BorderType.TOP);
+        			y += BORDER_LINE_SIZE;
+        			if (isGrandTotal) {
+        				grandTotalBorders.add(BorderType.TOP);
+        				y += BORDER_LINE_SIZE;
+        			}
+        			
+        			ResultSetCell totalCell = new ResultSetCell(formattedValue, boldBodyFont, 
+        					new Rectangle(localX, 0, ci.getWidth(), y), 
+        					padding, ci.getHorizontalAlignment(),
+        					grandTotalBorders);
+        			newCells.add(totalCell);
+        		}
+        		localX += ci.getWidth();
+        	}
+        	rowsToAdd.add(newCells);
         }
         
-        Font boldBodyFont = bodyFont.deriveFont(Font.BOLD);
-        FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
-        FontMetrics headerFM = g.getFontMetrics(headerFont);
-        
-        final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
-        
-        String text;
-        if (isGrandTotal) {
-            text = "Grand Total";
-        } else {
-            text = "Total: " + breakText;
-        }
-        
-        int totalTextX = 0;
-        for (int i = 0; i < breakTextPosition; i++) {
-            if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
-                totalTextX += colInfo.get(i).getWidth();
-            }
-        }
-        Insets textInsets = getPadding(null);
-        final int width = (int) headerFM.getStringBounds(text, g).getWidth() + 1 + textInsets.left + textInsets.right;
-        int height = headerFM.getHeight() + textInsets.top + textInsets.bottom;
-        height += headerFM.getHeight() / 2;
-        if (isGrandTotal) {
-            height += 2 * BORDER_LINE_SIZE;
-        }
-        ResultSetCell textCell = new ResultSetCell(text, headerFont, 
-                new Rectangle(totalTextX, yPosition, width, height),
-                textInsets, HorizontalAlignment.LEFT, new ArrayList<BorderType>());
-        newCells.add(textCell);
-        
-        for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
-            int y = rowHeight;
-            ColumnInfo ci = colInfo.get(subCol);
-            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
-
-            Insets padding = getPadding(ci);
-            y += padding.top;
-            BigDecimal subtotal = totalsRow.get(subCol);
-            y += padding.bottom;
-            if (subtotal != null) {
-                String formattedValue;
-                if (ci.getFormat() != null) {
-                    formattedValue = ci.getFormat().format(subtotal);
-                } else {
-                    formattedValue = subtotal.toString();
-                }
-                
-                List<BorderType> grandTotalBorders = new ArrayList<BorderType>();
-                if (isGrandTotal) {
-                    grandTotalBorders.add(BorderType.TOP);
-                    grandTotalBorders.add(BorderType.TOP);
-                    y += 2 * BORDER_LINE_SIZE;
-                }
-                
-                ResultSetCell totalCell = new ResultSetCell(formattedValue, boldBodyFont, 
-                        new Rectangle(localX, yPosition, ci.getWidth(), y), 
-                        padding, ci.getHorizontalAlignment(),
-                        grandTotalBorders);
-                newCells.add(totalCell);
-            }
-            localX += ci.getWidth();
-        }
-        return newCells;
+        return rowsToAdd;
     }
     
     /**
      * This will replace null values with the designated null string.
      */
-    public String replaceNull(String string) {
+    private String replaceNull(String string) {
         if (string == null) {
             return nullString;
         } else {

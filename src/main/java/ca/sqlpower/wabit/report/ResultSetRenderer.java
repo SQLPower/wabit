@@ -747,15 +747,15 @@ public class ResultSetRenderer extends AbstractWabitObject
         				(int) getParent().getWidth(), 
         				nullString);
         
-        List<List<ResultSetCell>> createResultSetLayout = 
+        List<List<ResultSetCell>> layout = 
         		reportPositionRenderer.createResultSetLayout(
         				zeroClipGraphics, 
         				rsCopy, 
         				getColumnInfoList(), 
-        				getParent(), 
+        				height, 
         				isPrintingGrandTotals());
         
-        pageCells.set(createResultSetLayout);
+        pageCells.set(layout);
     }
     
     /**
