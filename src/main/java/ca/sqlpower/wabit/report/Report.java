@@ -86,7 +86,7 @@ public class Report extends Layout {
     @Override
     protected boolean removeChildImpl(SPObject child) {
         if (child instanceof Selector) {
-        	int indexOf = this.selectors.indexOf(child);
+        	int indexOf = getChildren().indexOf(child);
         	boolean removed = this.selectors.remove(child);
         	if (removed) {
         		fireChildRemoved(Selector.class, child, indexOf);
@@ -101,7 +101,7 @@ public class Report extends Layout {
     protected void addChildImpl(SPObject child, int index) {
         if (child instanceof Selector) {
         	this.selectors.add(index, (Selector)child);
-        	fireChildAdded(Selector.class, child, index);
+        	fireChildAdded(Selector.class, child, getChildren().indexOf(child));
         } else {
         	throw new IllegalArgumentException("Only Selectors are possible children of reports.");
         }
