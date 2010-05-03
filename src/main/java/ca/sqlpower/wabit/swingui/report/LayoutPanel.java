@@ -269,6 +269,7 @@ public class LayoutPanel implements WabitPanel, MouseState {
 					dtde.dropComplete(false);
 					dtde.rejectDrop();
 					resetUIAfterDrag();
+					return;
 				}
 				if (focusedCBNode == null) {
 					Point2D location = canvas.getCamera().localToView(dtde.getLocation());
