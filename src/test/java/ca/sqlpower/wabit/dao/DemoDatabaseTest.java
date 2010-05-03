@@ -21,7 +21,6 @@ package ca.sqlpower.wabit.dao;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 
 import junit.framework.TestCase;
 import ca.sqlpower.sql.DataSourceCollection;
@@ -50,8 +49,8 @@ public class DemoDatabaseTest extends TestCase {
 	public void testVersionNumberUpToDate() throws Exception {
     
     	final PlDotIni plIni = new PlDotIni();
-    	plIni.read(ClassLoader.getSystemClassLoader().getSystemResourceAsStream("ca/sqlpower/sql/default_database_types.ini"));
-    	plIni.read(ClassLoader.getSystemClassLoader().getSystemResourceAsStream("ca/sqlpower/demodata/example_database.ini"));
+    	plIni.read(DemoDatabaseTest.class.getResourceAsStream("/ca/sqlpower/sql/default_database_types.ini"));
+    	plIni.read(DemoDatabaseTest.class.getResourceAsStream("/ca/sqlpower/demodata/example_database.ini"));
         
         final Olap4jDataSource olapDS = plIni.getDataSource("World Facts OLAP Connection", 
         		Olap4jDataSource.class);
