@@ -352,12 +352,14 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
     protected void addChildImpl(SPObject child, int index) {
         
     	if (ReportContentRenderer.class.isAssignableFrom(child.getClass())) {
-    		setContentRenderer((ReportContentRenderer) child);    		
+    		setContentRenderer((ReportContentRenderer) child);
     	} else if (Selector.class.isAssignableFrom(child.getClass())) {
     		this.selectors.add(index, (Selector)child);
+    		fireChildAdded(child.getClass(), child, index);
     	} else {
     		throw new AssertionError("Content boxes don't have children of type " + child);
     	}
+    	
     }
 
     /**
@@ -389,6 +391,7 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
     	types.add(ChartRenderer.class);
     	types.add(ImageRenderer.class);
     	types.add(Label.class);
+    	types.add(Selector.class);
     	return types;
     }
     
