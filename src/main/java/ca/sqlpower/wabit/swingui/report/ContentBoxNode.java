@@ -44,9 +44,8 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPChildEvent;
-import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
@@ -259,24 +258,26 @@ public class ContentBoxNode extends PNode implements ReportNode {
      * This is the {@link ContentBox} listener which listens to changes is the
      * content box that is the model to this swing component. 
      */
-    private SPListener contentRendererListener = new AbstractSPListener() {
-        
-		public void childRemoved(SPChildEvent e) {
-			setSwingContentRenderer(null);
+    private class ContentRendererListener extends AbstractPoolingSPListener {
+    	protected void childRemovedImpl(SPChildEvent e) {
+			if (e instanceof ReportContentRenderer) {
+				setSwingContentRenderer(null);
+			}
 		}
-		
-		public void childAdded(SPChildEvent e) {
-			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
-	        setSwingContentRenderer(renderer);
+		protected void childAddedImpl(SPChildEvent e) {
+			
+			if (e instanceof ReportContentRenderer) {
+				ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
+				setSwingContentRenderer(renderer);
+			}
 
 		}
-
-        public void propertyChanged(PropertyChangeEvent evt) {
+        protected void propertyChangeImpl(PropertyChangeEvent evt) {
             updateBoundsFromContentBox();
             repaint();
         }
-
 	};
+	private ContentRendererListener contentRendererListener = new ContentRendererListener();
 	
 	private void displaySelectorsDialog() {
 		
