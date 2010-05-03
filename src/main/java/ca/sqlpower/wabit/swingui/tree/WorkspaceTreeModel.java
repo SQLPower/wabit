@@ -41,8 +41,8 @@ import org.olap4j.OlapConnection;
 
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPChildEvent;
-import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
@@ -54,7 +54,6 @@ import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.SQLPowerUtils;
-import ca.sqlpower.util.TransactionEvent;
 import ca.sqlpower.wabit.WabitDataSource;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitSessionContext;
@@ -524,14 +523,14 @@ public class WorkspaceTreeModel implements TreeModel {
 	 * {@link WabitChildEvent} from the business model and 'translates' them
 	 * into {@link TreeModelEvent} for the WorkspaceTreeModel.
 	 */
-    private class WabitTreeModelEventAdapter implements SPListener {
+    private class WabitTreeModelEventAdapter extends AbstractPoolingSPListener {
         
-		public void propertyChanged(PropertyChangeEvent evt) {
+    	protected void propertyChangeImpl(PropertyChangeEvent evt) {
 			SPObject node = (SPObject) evt.getSource();
 			if (!appearsInTree(node)) {
 			    return;
 			}
-			TreeModelEvent e;
+			final TreeModelEvent e;
 			if (node == getRoot()) {
 				// special case for root node
 				e = new TreeModelEvent(this, new Object[] { getRoot() }, null,
@@ -565,13 +564,17 @@ public class WorkspaceTreeModel implements TreeModel {
                 treePath = treePath.getParentPath();
                 int index = node.getParent().getChildren(node.getClass()).indexOf(node);
                 if (index < 0) {
-                    throw new IllegalStateException(
-                            "Got an event from a WabitObject that isn't one " +
-                            "of its own parent's children! Parent : " + node.getParent().getName());
+                    // This is normal since not all objects are connected at once.
+                	return;
                 }
+                
                 if (node instanceof OlapQuery) {
                 	index += workspace.getChildren(QueryCache.class).size();
+                } else if (node.getParent() instanceof Report
+                		&& node instanceof Selector) {
+                	index = ((Report)node.getParent()).getSelectors().indexOf(node) + ((Report)node.getParent()).getPage().getContentBoxes().size();
                 }
+                
 				e = new TreeModelEvent(this, treePath,
 						new int[] { index }, new Object[] { node });
 				
@@ -584,7 +587,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesChanged(e);
 		}
 
-		public void childAdded(SPChildEvent e) {
+		protected void childAddedImpl(SPChildEvent e) {
 			SQLPowerUtils.listenToHierarchy(e.getChild(), this);
 		    if (!appearsInTree(e.getChild())) {
 		        return;
@@ -600,6 +603,9 @@ public class WorkspaceTreeModel implements TreeModel {
 			int index;
 			if (e.getChild() instanceof OlapQuery) {
 				index = e.getIndex() + workspace.getChildren(QueryCache.class).size();
+			} else if (e.getSource() instanceof Report
+					&& e.getChild() instanceof Selector) {
+				index = ((Report)e.getSource()).getSelectors().indexOf(e.getChild()) + ((Report)e.getSource()).getPage().getContentBoxes().size();
 			} else {
 				index = e.getIndex();
 			}
@@ -610,7 +616,7 @@ public class WorkspaceTreeModel implements TreeModel {
 			fireTreeNodesInserted(treeEvent);
 		}
 
-		public void childRemoved(SPChildEvent e) {
+		protected void childRemovedImpl(SPChildEvent e) {
 			SQLPowerUtils.unlistenToHierarchy(e.getChild(), this);
             if (!appearsInTree(e.getChild())) {
                 return;
@@ -626,6 +632,9 @@ public class WorkspaceTreeModel implements TreeModel {
 		    int index;
 			if (e.getChild() instanceof OlapQuery) {
 				index = e.getIndex() + workspace.getChildren(QueryCache.class).size();
+			} else if (e.getSource() instanceof Report
+					&& e.getChild() instanceof Selector) {
+				index = e.getIndex() - 1 + ((Report)e.getSource()).getPage().getContentBoxes().size();
 			} else {
 				index = e.getIndex();
 			}
@@ -635,20 +644,6 @@ public class WorkspaceTreeModel implements TreeModel {
 			
 			fireTreeNodesRemoved(treeEvent);
 		}
-
-        public void transactionEnded(TransactionEvent e) {
-            //do nothing
-            
-        }
-
-        public void transactionRollback(TransactionEvent e) {
-            //do nothing            
-        }
-
-        public void transactionStarted(TransactionEvent e) {
-            //do nothing            
-        }
-
     }
 
     /**
@@ -671,6 +666,7 @@ public class WorkspaceTreeModel implements TreeModel {
             	for (FolderNode folder : folderList) {
             		if (folderType == folder.getFolderType()) {
             			path.add(0, folder);
+            			break;
             		}
             	}
             }
