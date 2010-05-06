@@ -147,8 +147,8 @@ import ca.sqlpower.swingui.Search;
 import ca.sqlpower.swingui.SearchTextField;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.swingui.action.FaqAction;
 import ca.sqlpower.swingui.action.ForumAction;
+import ca.sqlpower.swingui.action.OpenUrlAction;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
 import ca.sqlpower.util.SQLPowerUtils;
@@ -1407,7 +1407,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 // The main registration method.  Takes quitAction, prefsAction, aboutAction.
                 Class[] defArgs = { Action.class, Action.class, Action.class };
                 Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
-                Object[] args = { exitAction, prefsAction, aboutAction };
+                Object[] args = { exitAction, prefsAction, aboutAction, new CheckForUpdateAction("Check for Updates...", frame) };
                 registerMethod.invoke(osxAdapter, args);
 
                 // The enable prefs method.  Takes a boolean.
@@ -1732,12 +1732,19 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         menuBar.add(helpMenu);
         if (!isMacOSX()) {
             helpMenu.add(aboutAction);
+            helpMenu.add(new CheckForUpdateAction("Check for Updates...", frame));
             helpMenu.addSeparator();
         }
-        helpMenu.add(new CheckForUpdateAction("Check for updates...", frame));
-        helpMenu.add(new FaqAction(null));
+        
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_GS_URL, "Getting Started"));
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_DEMO_URL, "Tutorials"));
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_FAQ_URL, "Frequently Asked Questions"));
         helpMenu.add(SPSUtils.forumAction);
-    
+        helpMenu.addSeparator();
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_UPGRADE_URL, "Upgrade to Enterprise Edition"));
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_PS_URL, "Premium Support"));
+        helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_UG_URL, "User Guide"));
+        
         frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
         
