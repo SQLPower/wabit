@@ -1407,7 +1407,7 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 // The main registration method.  Takes quitAction, prefsAction, aboutAction.
                 Class[] defArgs = { Action.class, Action.class, Action.class };
                 Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
-                Object[] args = { exitAction, prefsAction, aboutAction, new CheckForUpdateAction("Check for Updates...", frame) };
+                Object[] args = { exitAction, prefsAction, aboutAction };
                 registerMethod.invoke(osxAdapter, args);
 
                 // The enable prefs method.  Takes a boolean.
@@ -1732,7 +1732,6 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         menuBar.add(helpMenu);
         if (!isMacOSX()) {
             helpMenu.add(aboutAction);
-            helpMenu.add(new CheckForUpdateAction("Check for Updates...", frame));
             helpMenu.addSeparator();
         }
         
@@ -1744,6 +1743,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_UPGRADE_URL, "Upgrade to Enterprise Edition"));
         helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_PS_URL, "Premium Support"));
         helpMenu.add(new OpenUrlAction(SPSUtils.WABIT_UG_URL, "User Guide"));
+        helpMenu.addSeparator();
+        helpMenu.add(new CheckForUpdateAction("Check for Updates...", frame));
         
         frame.setJMenuBar(menuBar);
         frame.setContentPane(cp);
