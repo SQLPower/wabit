@@ -1082,4 +1082,9 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	public List<UserDefinedSQLType> getSQLTypes() {
 		throw new UnsupportedOperationException("We currently do not support this");
 	}
+
+	@Override
+	public UserDefinedSQLType getNewSQLType(String name, int jdbcCode) {
+		throw new UnsupportedOperationException("We currently do not support this");
+	}
 }
