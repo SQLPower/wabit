@@ -257,4 +257,11 @@ public class StubWabitSessionContext implements WabitSessionContext {
         
     }
 
+	@Override
+	public <T> UserPrompter createListUserPrompter(String question,
+			List<T> responses, T defaultResponse) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

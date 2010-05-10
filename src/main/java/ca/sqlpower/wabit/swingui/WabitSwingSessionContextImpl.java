@@ -2411,4 +2411,10 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 	public SwingWorkerRegistry getLoadingRegistry() {
         return loadingRegistry;
     }
+
+	@Override
+	public <T> UserPrompter createListUserPrompter(String question,
+			List<T> responses, T defaultResponse) {
+		return upf.createListUserPrompter(question, responses, defaultResponse);
+	}
 }

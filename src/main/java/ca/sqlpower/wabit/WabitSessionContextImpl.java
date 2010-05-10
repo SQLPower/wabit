@@ -555,4 +555,10 @@ public class WabitSessionContextImpl implements WabitSessionContext {
 		return newSession;
 	}
 
+	@Override
+	public <T> UserPrompter createListUserPrompter(String question,
+			List<T> responses, T defaultResponse) {
+		return new DefaultUserPrompter(UserPromptOptions.OK, UserPromptResponse.OK, defaultResponse);
+	}
+
 }
