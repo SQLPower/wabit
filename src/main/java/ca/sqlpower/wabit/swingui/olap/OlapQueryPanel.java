@@ -30,14 +30,10 @@ import java.awt.dnd.DragSource;
 import java.awt.dnd.DragSourceAdapter;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
 import java.awt.event.InputEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -61,12 +57,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
-import javax.swing.Popup;
-import javax.swing.PopupFactory;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.border.BevelBorder;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.UndoableEditEvent;
@@ -91,6 +83,8 @@ import ca.sqlpower.sql.DatabaseListChangeEvent;
 import ca.sqlpower.sql.DatabaseListChangeListener;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.swingui.MultiDragTreeUI;
+import ca.sqlpower.swingui.PopupListenerHandler;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.query.Messages;
 import ca.sqlpower.wabit.rs.ResultSetEvent;
 import ca.sqlpower.wabit.rs.ResultSetHandle;
@@ -442,7 +436,33 @@ public class OlapQueryPanel implements WabitPanel {
                         row++;
                     }
                     
-                    popupChooseCube(parentFrame, cubeChooserButton, tree);
+                    // Calculate the window location to popup the cube choosing tree
+                    Point windowLocation = new Point(0, 0);
+                    SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
+                    windowLocation.y += cubeChooserButton.getHeight();
+                    
+                    // Popup the cube choosing tree and attach the 
+                    // popup listener handler to the tree
+                    final PopupListenerHandler popupListenerHandler = 
+                    	SPSUtils.popupComponent(parentFrame, tree, windowLocation);
+                    popupListenerHandler.connect();
+                    tree.addTreeSelectionListener(new TreeSelectionListener() {
+                        public void valueChanged(TreeSelectionEvent e) {
+                            try {
+                                TreePath path = e.getNewLeadSelectionPath();
+                                Object node = path.getLastPathComponent();
+                                if (node instanceof Cube) {
+                                    Cube cube = (Cube) node;
+                                    cubeChooserButton.setEnabled(true);
+                                    setCurrentCube(cube);
+                                    popupListenerHandler.cleanup();
+                                }
+                            } catch (SQLException ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        }
+                    });
+                    
                 } finally {
                     cubeChooserButton.setEnabled(true);
                 }        
@@ -653,153 +673,6 @@ public class OlapQueryPanel implements WabitPanel {
         } catch (Exception ex) {
             updateMdxText("Exception thrown while retrieving MDX statement:\n" + ex.getMessage());
             logger.error("Error while retrieving MDX statement", ex);
-        }
-    }
-    
-    /**
-     * This function will popup the Cube chooser popup from the 'Choose Cube'
-     * button. It will popup the window in the bounds of the screen no matter
-     * what happens, it will add scrollbars in the right circumstances as well
-     * 
-     * @param owningFrame
-     *      The frame which the popup is being popped up on
-     * @param cubeChooserButton
-     *      The button which pops up the cube chooser
-     * @param tree
-     *      The tree in the cube chooser
-     */
-    private void popupChooseCube(final JFrame owningFrame, final JButton cubeChooserButton, JTree tree) {
-        JScrollPane treeScroll = new JScrollPane(tree);
-        treeScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        treeScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-
-        Point windowLocation = new Point(0, 0);
-        SwingUtilities.convertPointToScreen(windowLocation, cubeChooserButton);
-        windowLocation.y += cubeChooserButton.getHeight();
-        
-        Point frameLocation = new Point(0, 0);
-        SwingUtilities.convertPointToScreen(frameLocation, owningFrame);
-        
-        int popupScreenSpaceY = (windowLocation.y - frameLocation.y);
-        int maxHeight = (int)(owningFrame.getSize().getHeight() - popupScreenSpaceY);
-        
-        int width = (int) Math.min(treeScroll.getPreferredSize().getWidth(), owningFrame.getSize().getWidth());
-        int height = (int) Math.min(treeScroll.getPreferredSize().getHeight(), maxHeight);
-        treeScroll.setPreferredSize(new java.awt.Dimension(width, height));
-        
-        double popupWidth = treeScroll.getPreferredSize().getWidth();
-        int popupScreenSpaceX = (int) (owningFrame.getSize().getWidth() - (windowLocation.x - frameLocation.x));
-        int x;
-        if (popupWidth > popupScreenSpaceX) {
-            x = (int) (windowLocation.x - (popupWidth - popupScreenSpaceX));
-        } else {
-            x = windowLocation.x;
-        }
-        
-        treeScroll.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED, Color.GRAY, Color.GRAY));
-        
-        JFrame frame = (JFrame)owningFrame;
-        final JComponent glassPane; 
-        if (frame.getGlassPane() == null) {
-            glassPane = new JPanel();
-            frame.setGlassPane(glassPane);
-        } else {
-            glassPane = (JComponent) frame.getGlassPane();
-        }
-        glassPane.setVisible(true);
-        glassPane.setOpaque(false);
-        
-        PopupFactory pFactory = new PopupFactory();
-        final Popup popup = pFactory.getPopup(glassPane, treeScroll, x, windowLocation.y);
-        popup.show();
-        
-        final PopupListenerHandler popupListenerHandler = new PopupListenerHandler(popup, glassPane,owningFrame);
-        
-        tree.addTreeSelectionListener(new TreeSelectionListener() {
-            public void valueChanged(TreeSelectionEvent e) {
-                try {
-                    TreePath path = e.getNewLeadSelectionPath();
-                    Object node = path.getLastPathComponent();
-                    if (node instanceof Cube) {
-                        Cube cube = (Cube) node;
-                        cubeChooserButton.setEnabled(true);
-                        setCurrentCube(cube);
-                        popupListenerHandler.cleanup();
-                    }
-                } catch (SQLException ex) {
-                    throw new RuntimeException(ex);
-                }
-            }
-        });
-        
-    }
-
-    /**
-     * This class is a helper class for the
-     * {@link OlapQueryPanel#popupChooseCube(JFrame, JButton, JTree)} method.
-     * This will add listeners to the popup for clicking on the glass pane and
-     * resizing the owning frame. If the popup passed in is hidden in other
-     * places the cleanup method should be called.<br>
-     * TODO Refactor the cube chooser popup into its own action.
-     */
-    private static class PopupListenerHandler {
-        
-        private final MouseAdapter clickListener;
-        private final ComponentListener resizeListener;
-        private final Popup popup;
-        private final JComponent glassPane;
-        private final JFrame owningFrame;
-        
-        public PopupListenerHandler(final Popup popup, final JComponent glassPane, final JFrame owningFrame) {
-            this.popup = popup;
-            this.glassPane = glassPane;
-            this.owningFrame = owningFrame;
-            
-            clickListener = new MouseAdapter() {
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    super.mouseReleased(e);
-                    popup.hide();
-                    glassPane.removeMouseListener(this);
-                    owningFrame.removeComponentListener(resizeListener);
-                }
-            };
-
-            resizeListener = new ComponentListener() {
-
-                public void componentHidden(ComponentEvent e) {
-                    //Do nothing
-                }
-
-                public void componentMoved(ComponentEvent e) {
-                    popup.hide();
-                    owningFrame.removeComponentListener(this);
-                    glassPane.removeMouseListener(clickListener);
-                }
-
-                public void componentResized(ComponentEvent e) {
-                    //Do nothing
-
-                }
-
-                public void componentShown(ComponentEvent e) {
-                    //Do nothing
-                }
-
-            };
-            
-            glassPane.addMouseListener(clickListener);
-            owningFrame.addComponentListener(resizeListener);
-        }
-        
-        /**
-         * This method removes the listeners this class added to the
-         * glass pane and the owning frame. This also hides the pop-up.
-         */
-        public void cleanup() {
-            popup.hide();
-            owningFrame.removeComponentListener(resizeListener);
-            glassPane.removeMouseListener(clickListener);
         }
     }
     
