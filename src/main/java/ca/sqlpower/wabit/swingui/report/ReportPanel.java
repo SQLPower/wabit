@@ -19,6 +19,10 @@
 
 package ca.sqlpower.wabit.swingui.report;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.prefs.Preferences;
+
 import javax.swing.JComponent;
 import javax.swing.JSplitPane;
 import javax.swing.SwingUtilities;
@@ -33,8 +37,9 @@ public class ReportPanel extends LayoutPanel {
 	final private JSplitPane splitPane;
 	private final Report report;
 	
-	
-	
+	private final static Preferences prefs = Preferences.userRoot();
+	private final static String SEPARATOR_POSITION_PREFERENCES_KEY = "Wabit.ReportPanel.SeparatorPosition";
+	private final static Double DEFAULT_SEPARATOR_POSITION = 0.5d;
 	
 	
 	private final Runnable reportRefresher = new Runnable() {
@@ -60,11 +65,26 @@ public class ReportPanel extends LayoutPanel {
 		// Setting a divider location needs the divider
 		// to be visible, so we wrap this in a runnable.
 		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				splitPane.setDividerLocation(0.5d);
+			public void run() 
+			{
+				splitPane.setDividerLocation(
+						prefs.getDouble(
+								SEPARATOR_POSITION_PREFERENCES_KEY, 
+								DEFAULT_SEPARATOR_POSITION));
+				
+				splitPane.addPropertyChangeListener(
+						"dividerLocation",
+						new PropertyChangeListener() {
+							public void propertyChange(PropertyChangeEvent e) {
+								Number value = (Number) e.getNewValue();
+								prefs.putDouble(
+										SEPARATOR_POSITION_PREFERENCES_KEY, 
+										value.doubleValue() / splitPane.getBounds().height);
+							}
+						}
+				);
 			}
 		});
-		
 	}
 	
 	

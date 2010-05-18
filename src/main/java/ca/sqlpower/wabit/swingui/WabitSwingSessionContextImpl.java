@@ -309,12 +309,14 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
     
     /**
      * Prefs key for the location of the source list split pane divider.
-     * 
-     * XXX should store source list component's width in case user shrinks the frame!
-     * (change the key value when making this change)
      */
     private static final String SOURCE_LIST_DIVIDER_LOCATON =
-        "WabitSwingSessionContext.sourceList.dividerLoc";
+        "WabitSwingSessionContext.sourceList.dividerLoc2";
+
+    private static final Double SOURCE_LIST_DEFAULT_DIVIDER_LOCATON = 0.75d;
+
+    
+    
 
     /**
      * Prefs key for source list dialog's x coordinate.
@@ -420,11 +422,21 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                     
                     SwingUtilities.invokeLater(new Runnable() {
 						public void run() {
-							// TODO This stuff doesn't work properly
-//							sp.setDividerLocation(prefs.getInt(
-//		                            WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
-//		                            (context.frame.getWidth() * 3 / 4)));
-							sp.setDividerLocation(0.75d);
+							sp.setDividerLocation(
+									WabitSwingSessionContextImpl.prefs.getDouble(
+			                            WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON,
+			                            WabitSwingSessionContextImpl.SOURCE_LIST_DEFAULT_DIVIDER_LOCATON));
+							sp.addPropertyChangeListener(
+									"dividerLocation",
+									new PropertyChangeListener() {
+										public void propertyChange(PropertyChangeEvent e) {
+											Number value = (Number) e.getNewValue();
+											WabitSwingSessionContextImpl.prefs.putDouble(
+													WabitSwingSessionContextImpl.SOURCE_LIST_DIVIDER_LOCATON, 
+													value.doubleValue() / sp.getBounds().width);
+										}
+									}
+							);
 						}
 					});
                     
