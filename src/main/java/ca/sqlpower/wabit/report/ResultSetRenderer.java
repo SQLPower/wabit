@@ -509,15 +509,16 @@ public class ResultSetRenderer extends AbstractWabitObject
         		logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
         		for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
         			
-        			// Notify listeners that we remove this column for now.
-        			removeChild(columnInfo.get(i));
-        			
         			// Keep this column in the graveyard
         			String oldColumnName = columnInfo.get(i).getColumnAlias();
         			if (oldColumnName == null) {
         				oldColumnName = columnInfo.get(i).getName();
         			}
         			columnsGraveyard.put(oldColumnName.toUpperCase(), columnInfo.get(i));
+        			
+        			// Notify listeners that we remove this column for now.
+        			removeChild(columnInfo.get(i));
+        			
         		}
         	}
         } catch (Exception e) {

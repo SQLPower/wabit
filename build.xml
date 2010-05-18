@@ -335,6 +335,10 @@ SQL Power Wabit Ant build file
 				showoutput="no"
 				maxmemory="1024m">
 	   	   
+			<sysproperty 
+					key="ca.sqlpower.wabit.rs.ResultSetHandle.forceSync" 
+					value="true"/>
+			
 			<classpath>
 				<path refid="test.classpath"/>
 				<path path="${build.tests}"/>

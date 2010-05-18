@@ -425,7 +425,11 @@ public class ResultSetHandle {
     		return;
     	}
     	
-    	if (async && !System.getProperty("java.class.path").contains("junit")) {
+    	Boolean forceSync = 
+    			Boolean.valueOf(
+						System.getProperty("ca.sqlpower.wabit.rs.ResultSetHandle.forceSync"));
+    	
+    	if (async && !forceSync) {
     		executorService.execute(task);
     		return;
     	} else {
