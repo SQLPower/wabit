@@ -466,6 +466,7 @@ public class QueryPanel implements WabitPanel {
 			if (evt.getSourceHandle().getException() != null) {
 				String errorMessage = SQLQueryUIComponents.createErrorStringMessage(evt.getSourceHandle().getException());
     			queryUIComponents.getLogTextArea().append(errorMessage + "\n");
+    			queryUIComponents.getLogTextArea().setCaretPosition(queryUIComponents.getLogTextArea().getDocument().getLength());
     			SwingUtilities.invokeLater(new Runnable() {
 					public void run() {
 						queryUIComponents.getResultTabPane().setSelectedIndex(0);
