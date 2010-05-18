@@ -50,7 +50,6 @@ import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
-import ca.sqlpower.query.Item;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
@@ -197,7 +196,18 @@ public class ResultSetRenderer extends AbstractWabitObject
     
     private BorderStyles borderType = BorderStyles.NONE;
     
+    /**
+     * This is the list of current columns in this object.
+     */
     private final List<ColumnInfo> columnInfo;
+    
+    /**
+     * This is a temporary list of column info objects that
+     * we removed. we keep those during runtime only so we can
+     * restore the formatting.
+     */
+    private final Map<String,ColumnInfo> columnsGraveyard;
+    
     
     /**
      * The string that will be rendered for null values in the result set.
@@ -307,6 +317,7 @@ public class ResultSetRenderer extends AbstractWabitObject
         this.query = query;
         query.addResultSetProducerListener(queryChangeListener);
         columnInfo = new ArrayList<ColumnInfo>(columnInfoList);
+        columnsGraveyard = new HashMap<String, ColumnInfo>();
         setName("Result Set: " + query.getName());
 	}
     
@@ -323,6 +334,7 @@ public class ResultSetRenderer extends AbstractWabitObject
     	this.nullString = resultSetRenderer.nullString;
     	this.resultSetHandle = resultSetRenderer.resultSetHandle;
     	this.printingGrandTotals = resultSetRenderer.printingGrandTotals;
+    	this.columnsGraveyard = resultSetRenderer.columnsGraveyard;
     	
     	this.columnInfo = new ArrayList<ColumnInfo>();
     	for (ColumnInfo column : resultSetRenderer.columnInfo) {
@@ -389,39 +401,52 @@ public class ResultSetRenderer extends AbstractWabitObject
         	ResultSetMetaData rsmd = rs.getMetaData();
         	
         	//id columns by items and alias in cases where the query is text based.
-        	Map<Item, ColumnInfo> colKeyToInfoMap = new HashMap<Item, ColumnInfo>();
+        	Map<String, ColumnInfo> colKeyToInfoMap = new HashMap<String, ColumnInfo>();
         	for (ColumnInfo info : columnInfo) {
         		logger.debug("Loaded key " + info.getColumnInfoItem());
         		if (info.getColumnInfoItem() != null) {
-        			colKeyToInfoMap.put(info.getColumnInfoItem(), info);
+        			colKeyToInfoMap.put(
+        					info.getColumnInfoItem().getAlias() == null
+        							? info.getColumnInfoItem().getName().toUpperCase()
+									: info.getColumnInfoItem().getAlias().toUpperCase(), 
+							info);
         		}
         	}
         	Map<String, ColumnInfo> colAliasToInfoMap = new HashMap<String, ColumnInfo>();
         	for (ColumnInfo info : columnInfo) {
         		colAliasToInfoMap.put(
         				info.getColumnAlias() == null
-        						? info.getName()
-        						: info.getColumnAlias(), 
+        						? info.getName().toUpperCase()
+        						: info.getColumnAlias().toUpperCase(), 
         				info);
         	}
         	
-        	//sort column info into the new desired positions.
+        	//Sort column info objects into the new desired positions.
         	List<ColumnInfo> newColumnInfo = new ArrayList<ColumnInfo>();
         	
         	for (int col = 1; col <= rsmd.getColumnCount(); col++) {
         		
         		logger.debug(rsmd.getColumnClassName(col));
-        		
-        		ColumnInfo ci;
-        		
+
+        		// This is the column name we are looking for.
         		String columnKey = rsmd.getColumnLabel(col).toUpperCase();
-        		if (colAliasToInfoMap.get(columnKey) != null) {
+        		final ColumnInfo ci;
+        		if (colAliasToInfoMap.containsKey(columnKey)) {
         			
         			ci = colAliasToInfoMap.get(columnKey);
         		
+        		} else if (colKeyToInfoMap.containsKey(columnKey)) {
+        			
+        			ci = colKeyToInfoMap.get(columnKey);
+        			
+        		} else if (columnsGraveyard.containsKey(columnKey)) {
+        			
+        			ci = columnsGraveyard.get(columnKey);
+        			columnsGraveyard.remove(columnKey);
+        			
         		} else {
-        		
-        			ci = new ColumnInfo(columnKey);
+        			
+        			ci = new ColumnInfo(rsmd.getColumnLabel(col));
         			
         			ci.setDataType(ResultSetRenderer.getDataType(rsmd, col));
             		
@@ -442,6 +467,9 @@ public class ResultSetRenderer extends AbstractWabitObject
         	//can cause us to run off the end before we finish iterating through 
         	//newColumnInfo
         	for (int i = 0 ; i < newColumnInfo.size(); i++) {
+        		
+        		// Try to find it's old col info object.
+        		
         		
         		if (i >= columnInfo.size()) {
         			
@@ -480,13 +508,21 @@ public class ResultSetRenderer extends AbstractWabitObject
         	if (newColumnInfo.size() < columnInfo.size()) {
         		logger.debug("Columns have been removed. There should be " + (columnInfo.size() - newColumnInfo.size()) + " columns removed.");
         		for (int i = columnInfo.size() - 1; i >= newColumnInfo.size(); i--) {
+        			
+        			// Notify listeners that we remove this column for now.
         			removeChild(columnInfo.get(i));
+        			
+        			// Keep this column in the graveyard
+        			String oldColumnName = columnInfo.get(i).getColumnAlias();
+        			if (oldColumnName == null) {
+        				oldColumnName = columnInfo.get(i).getName();
+        			}
+        			columnsGraveyard.put(oldColumnName.toUpperCase(), columnInfo.get(i));
         		}
         	}
         } catch (Exception e) {
         	
         	logger.error(e);
-        	e.printStackTrace();
         	this.internalError = e;
         	
         }
@@ -883,7 +919,7 @@ public class ResultSetRenderer extends AbstractWabitObject
 	}
 	
 	public List<ColumnInfo> getColumnInfoList() {
-		return columnInfo;
+		return Collections.unmodifiableList(columnInfo);
 	}
 
     /**
