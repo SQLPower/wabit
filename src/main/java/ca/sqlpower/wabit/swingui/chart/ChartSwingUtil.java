@@ -34,7 +34,6 @@ import org.jfree.chart.StandardChartTheme;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.labels.PieToolTipGenerator;
 import org.jfree.chart.labels.StandardPieToolTipGenerator;
@@ -114,13 +113,15 @@ public class ChartSwingUtil {
             return null;
         }
         
-        JFreeChart chart;
+        final JFreeChart chart;
         if (chartType.getDatasetType().equals(DatasetType.CATEGORY)) {
-            JFreeChart categoryChart = createCategoryChart(c);
+        
+        	JFreeChart categoryChart = createCategoryChart(c);
             logger.debug("Made a new category chart: " + categoryChart);
             
-            if (categoryChart != null) {
-                double rotationRads = Math.toRadians(c.getXAxisLabelRotation());
+            if (categoryChart != null && categoryChart.getPlot() instanceof CategoryPlot) {
+            	
+            	double rotationRads = Math.toRadians(c.getXAxisLabelRotation());
                 CategoryLabelPositions clp;
                 if (Math.abs(rotationRads) < 0.05) {
                     clp = CategoryLabelPositions.STANDARD;
@@ -129,21 +130,25 @@ public class ChartSwingUtil {
                 } else {
                     clp = CategoryLabelPositions.createDownRotationLabelPositions(rotationRads);
                 }
-                
-                if (categoryChart.getPlot() instanceof CategoryPlot) {
-                    CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
-                    domainAxis.setCategoryLabelPositions(clp);
-                }
+            
+                CategoryAxis domainAxis = categoryChart.getCategoryPlot().getDomainAxis();
+                domainAxis.setMaximumCategoryLabelLines(5);
+                domainAxis.setCategoryLabelPositions(clp);
             }
             
             chart = categoryChart;
+            
         } else if (chartType.getDatasetType().equals(DatasetType.XY)) {
-            JFreeChart xyChart = createXYChart(c);
+            
+        	JFreeChart xyChart = createXYChart(c);
             logger.debug("Made a new XY chart: " + xyChart);
             chart = xyChart;
+        
         } else {
-            throw new IllegalStateException(
+        
+        	throw new IllegalStateException(
                     "Unknown chart dataset type " + chartType.getDatasetType());
+        
         }
         
         if (chart != null) {
@@ -166,9 +171,14 @@ public class ChartSwingUtil {
         chart.setBorderPaint(new Color(0xDDDDDD));
         chart.setBorderVisible(true);
         
+        // TODO Should we add an option for subtitles, this is where it would go.
+//        TextTitle subTitle = new TextTitle("What's up doc?",
+//    			new Font("SansSerif", Font.BOLD, 8));
+//    	chart.addSubtitle(subTitle);
+        
         // overall plot
         plot.setOutlinePaint(null);
-        plot.setInsets(new RectangleInsets(20, 20, 20, 20)); // also the overall chart panel
+        plot.setInsets(new RectangleInsets(0, 5, 0, 5)); // also the overall chart panel
         plot.setBackgroundPaint(null);
         plot.setDrawingSupplier(new WabitDrawingSupplier());
         
@@ -177,6 +187,7 @@ public class ChartSwingUtil {
         if (legend != null) {
             legend.setBorder(0, 0, 0, 0);
             legend.setBackgroundPaint(null);
+            legend.setPadding(2,2,2,2);
         }
 
         if (plot instanceof CategoryPlot) {
@@ -214,7 +225,6 @@ public class ChartSwingUtil {
                 ValueAxis axis = cplot.getRangeAxis(i);
                 axis.setAxisLineVisible(false);
             }
-
         }
         
         if (plot instanceof MultiplePiePlot){
@@ -244,7 +254,17 @@ public class ChartSwingUtil {
             		pplot.setSidePaint(data.getColumnKey(i), gradient);
             	}
             }
-        }        
+        }
+        
+        
+        
+        // Tweak the title font size
+        chart.getTitle().setFont(chart.getTitle().getFont().deriveFont(14f));
+        chart.getTitle().setPadding(5,0,5,0);
+        chart.setAntiAlias(true);
+        
+        // shrink padding
+        chart.setPadding(new RectangleInsets(0,0,0,0));
     }
 
     /**
@@ -361,7 +381,7 @@ public class ChartSwingUtil {
         
         if (legendPosition != LegendPosition.NONE) {
             chart.getLegend().setPosition(legendPosition.getRectangleEdge());
-            chart.getTitle().setPadding(4,4,15,4);
+            //chart.getTitle().setPadding(4,4,15,4);
         }
         
         if (chart.getPlot() instanceof MultiplePiePlot) {
@@ -415,11 +435,14 @@ public class ChartSwingUtil {
 
     	JFreeChart pieChart = new JFreeChart(new PiePlot3DGradient(null));
     	TextTitle seriesTitle = new TextTitle("Series Title",
-    			new Font("SansSerif", Font.BOLD, 12));
+    			new Font("SansSerif", Font.BOLD, 10));
     	seriesTitle.setPosition(RectangleEdge.BOTTOM);
     	pieChart.setTitle(seriesTitle);
+    	pieChart.getTitle().setPadding(0, 0, 0, 0);
     	pieChart.removeLegend();
     	pieChart.setBackgroundPaint(null);
+    	pieChart.setPadding(new RectangleInsets(0, 0, 0, 0));
+    	pieChart.getPlot().setInsets(new RectangleInsets(0, 0, 0, 0));
     	plot.setPieChart(pieChart);
 
     	if (tooltips) {
