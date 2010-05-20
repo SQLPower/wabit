@@ -675,8 +675,7 @@ public class ResultSetRenderer extends AbstractWabitObject
     		
         	if (rs.getData().size() == 0) {
         	    renderMessage(g, width, height, 
-        	            Collections.singletonList("The result set from " 
-        	                    + query.getName() + " is empty."));
+        	            Collections.singletonList("The query '" + query.getName() + "' didn't return any data."));
         	    return false;
         	}
         	
