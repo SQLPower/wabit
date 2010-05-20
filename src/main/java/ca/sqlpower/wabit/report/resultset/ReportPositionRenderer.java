@@ -118,7 +118,9 @@ public class ReportPositionRenderer {
      */
     public List<List<ResultSetCell>> createResultSetLayout(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInfoList,
     		double boxHeight, boolean isPrintingGrandTotals) throws SQLException {
-        if (hasLayoutStarted) throw new IllegalStateException("The layout of a report position renderer should only " +
+        
+    	if (hasLayoutStarted) 
+    			throw new IllegalStateException("The layout of a report position renderer should only " +
         		"be done once per renderer. Create a new renderer if a new layout is needed");
         hasLayoutStarted = true;
         
