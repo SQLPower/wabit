@@ -262,13 +262,16 @@ public class ContentBoxNode extends PNode implements ReportNode {
     private SPListener contentRendererListener = new AbstractSPListener() {
         
 		public void childRemoved(SPChildEvent e) {
-			setSwingContentRenderer(null);
+			if (e instanceof ReportContentRenderer) {
+				setSwingContentRenderer(null);
+			}
 		}
 		
 		public void childAdded(SPChildEvent e) {
-			ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
-	        setSwingContentRenderer(renderer);
-
+			if (e instanceof ReportContentRenderer) {
+				ReportContentRenderer renderer = (ReportContentRenderer) e.getChild();
+				setSwingContentRenderer(renderer);
+			}
 		}
 
         public void propertyChanged(PropertyChangeEvent evt) {
