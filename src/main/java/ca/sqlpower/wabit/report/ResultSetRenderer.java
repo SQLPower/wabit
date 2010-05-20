@@ -774,6 +774,14 @@ public class ResultSetRenderer extends AbstractWabitObject
     	
     	CachedRowSet rsCopy = rs.sort(comparator);
     	
+    	// Little validation. In some rare cases, the rending is started
+    	// while the columns are still being put in. Should that happens,
+    	// return and wait. The next RS event will trigger a new rending anyways.
+    	if (rsCopy.getMetaData().getColumnCount() != getColumnInfoList().size()) {
+    		logger.debug("Stopping rending. Columns are out of sync.");
+    		return;
+    	}
+    	
 	    autosizeColumnInformation(g, width, height, rsCopy);
 	    Graphics2D zeroClipGraphics = (Graphics2D) g.create(0, 0, 0, 0);
     	
@@ -792,6 +800,8 @@ public class ResultSetRenderer extends AbstractWabitObject
         				getColumnInfoList(), 
         				height, 
         				isPrintingGrandTotals());
+        
+        zeroClipGraphics.dispose();
         
         pageCells.set(layout);
     }
