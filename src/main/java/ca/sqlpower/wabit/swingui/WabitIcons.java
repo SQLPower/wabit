@@ -52,6 +52,7 @@ public class WabitIcons {
 	public static final Icon CLOSE_WORKSPACE = makeIcon("closeWorkspace-12");
 	public static final Icon EDIT = makeIcon("edit-12");
 	public static final Icon QUERY_32 = makeIcon("32x32/query");
+	public static final Icon CHART_32 = makeIcon("32x32/chart");
 	public static final Icon COPY_16 = makeIcon("page_white_stack");
 	public static final Icon CONNECTION_16 = makeIcon("connection-16");
 	public static final Icon CONNECTION_STREAM_16 = makeIcon("connection-stream-16");

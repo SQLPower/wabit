@@ -61,7 +61,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
+import net.miginfocom.swing.MigLayout;
+
 import org.apache.log4j.Logger;
+import org.jdesktop.swingx.JXLabel;
 import org.jfree.chart.JFreeChart;
 
 import ca.sqlpower.object.AbstractPoolingSPListener;
@@ -69,6 +72,7 @@ import ca.sqlpower.object.SPListener;
 import ca.sqlpower.swingui.table.EditableJTable;
 import ca.sqlpower.swingui.table.ResultSetTableModel;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartDataChangedEvent;
@@ -78,6 +82,7 @@ import ca.sqlpower.wabit.report.chart.ColumnRole;
 import ca.sqlpower.wabit.report.chart.DatasetType;
 import ca.sqlpower.wabit.report.chart.LegendPosition;
 import ca.sqlpower.wabit.rs.WabitResultSetProducer;
+import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.WabitPanel;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
 import ca.sqlpower.wabit.swingui.WabitToolBarBuilder;
@@ -86,6 +91,7 @@ import ca.sqlpower.wabit.swingui.chart.effect.ChartAnimation;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.debug.FormDebugPanel;
 import com.jgoodies.forms.layout.FormLayout;
+import com.lowagie.text.Font;
 
 /**
  * Provides a complete GUI for setting up and modifying a Wabit Chart object.
@@ -188,7 +194,7 @@ public class ChartPanel implements WabitPanel {
      * <p>
      * To modify this value (that is, set or clear it), use the {@link #showError()} method.
      */
-    private final JLabel chartError = new JLabel();
+    private final JXLabel chartError = new JXLabel();
 
     /**
      * This is the default renderer for the headers of the table displaying the
@@ -223,13 +229,13 @@ public class ChartPanel implements WabitPanel {
     private final JLabel yAxisAutoLabel = new JLabel("Y axis auto range");
     
     private final JSpinner xAxisMax = new JSpinner();
-    private final JLabel xAxisMaxLabel = new JLabel("          X axis maximum");
+    private final JLabel xAxisMaxLabel = new JLabel("      X axis max");
     private final JSpinner yAxisMax = new JSpinner();
-    private final JLabel yAxisMaxLabel = new JLabel("          Y axis maximum");
+    private final JLabel yAxisMaxLabel = new JLabel("      Y axis max");
     private final JSpinner xAxisMin = new JSpinner();
-    private final JLabel xAxisMinLabel = new JLabel("          X axis minimum");
+    private final JLabel xAxisMinLabel = new JLabel("      X axis min");
     private final JSpinner yAxisMin = new JSpinner();
-    private final JLabel yAxisMinLabel = new JLabel("          Y axis minimum");
+    private final JLabel yAxisMinLabel = new JLabel("      Y axis min");
     
 
     /**
@@ -405,11 +411,14 @@ public class ChartPanel implements WabitPanel {
         queryComboBox.addItemListener(genericItemListener);
         legendPositionComboBox.addItemListener(genericItemListener);
         
-        showError(null);
+        this.chartError.setAlignmentX(JXLabel.CENTER_ALIGNMENT);
+        this.chartError.setAlignmentY(JXLabel.CENTER_ALIGNMENT);
+        this.chartError.setLineWrap(true);
+        this.chartError.setIcon(WabitIcons.CHART_32);
         
         buildUI();
 
-        chartPanel.setChart(null);
+        //chartPanel.setChart(null);
         chart.addSPListener(chartListener);
         chart.addChartDataListener(chartDataListener);
         
@@ -426,41 +435,23 @@ public class ChartPanel implements WabitPanel {
      *            The exception to show. If null, the error component will
      *            become invisible.
      */
-    private void showError(Exception ex) {
-    	if (ex != null) {
-            logger.debug("Showing exception message in chart editor", ex);
-            chartError.setText(
-                    "<html><h2>Charting Failed</h2>" +
-                    "<p>" + ex.getMessage());
-            chartError.setVisible(true);
-        } else {
-            chartError.setText(null);
-            chartError.setVisible(false);
-        }
+    private void showError(String message) {
+    	
+    	logger.debug("Showing exception message in chart editor:" + message);
+        
+    	chartError.setText(message);
+        
+    	chartError.setVisible(true);
     	chartPanel.setChart(null);
+    	chartPanel.setVisible(false);
     }
-
-	/**
-	 * Displays an informational message in the chart preview area. For
-	 * displaying an error message from an Exception, use
-	 * {@link #showError(Exception)} instead.
-	 * 
-	 * @param header A short summary message that will be displayed in a header
-	 * @param message More detailed message text
-	 */
-    private void showMessage(String header, String message) {
-        if (message != null) {
-            logger.info("Showing message in chart editor:" + message);
-            chartError.setText(
-                    "<html>" +
-                    "<h2>" + header + "</h2>" +
-                    "<p>" + message + "</p></html>");
-            chartError.setVisible(true);
-        } else {
-            chartError.setText(null);
-            chartError.setVisible(false);
-        }
-    }
+    
+    private void showChart(JFreeChart chartToDisplay) {
+    	chartError.setText(null);
+        chartError.setVisible(false);
+        chartPanel.setChart(chartToDisplay);
+        chartPanel.setVisible(true);
+	}
     
     /**
      * When any aspect of the chart changes, this method should be called to set
@@ -553,7 +544,7 @@ public class ChartPanel implements WabitPanel {
         			try {
         				currentHeaderCellRenderer = new XYChartHeaderRenderer(this, resultTable.getTableHeader(), defaultHeaderCellRenderer);
         			} catch (SQLException e) {
-        				showError(e);
+        				showError(WabitUtils.getRootCause(e).getMessage());
         				return;
         			}
         			resultTable.getTableHeader().setDefaultRenderer(currentHeaderCellRenderer);
@@ -618,14 +609,12 @@ public class ChartPanel implements WabitPanel {
         try {
         	
         	if (chart.getQuery() == null) {
-        		showError(new Exception("No query was selected to feed this chart."));
-        		chartPanel.setChart(null);
+        		showError("Please select a query from the data source selector above.");
         		return;
         	}
         	
         	if (chart.getUnfilteredResultSet() == null) {
-        		showError(new Exception("The selected query does not return any data."));
-        		chartPanel.setChart(null);
+        		showError("The selected query does not return any data.");
         		return;
         	}
         	
@@ -633,60 +622,97 @@ public class ChartPanel implements WabitPanel {
         			(chart.getType() == ChartType.BAR
         					|| chart.getType() == ChartType.PIE
         					|| chart.getType() == ChartType.CATEGORY_LINE)) {
-        		showError(new Exception("Chart has no category."));
-        		chartPanel.setChart(null);
+        		showError("Map a column to the category role using the controls above.");
         		return;
         	}
         	if (chart.findRoleColumns(ColumnRole.SERIES).isEmpty()) {
-        		showError(new Exception("Chart has no series."));
-        		chartPanel.setChart(null);
+        		showError("Map a column to the series role using the controls above.");
         		return;
         	}
         	
         	
             JFreeChart newJFreeChart = ChartSwingUtil.createChartFromQuery(chart);
             logger.debug("Created new JFree chart: " + newJFreeChart);
-            showError(null);
-            chartPanel.setChart(newJFreeChart);
+            this.showChart(newJFreeChart);
             if (chart.isGratuitouslyAnimated()) {
                 ChartAnimation.animateIfPossible(newJFreeChart);
             }
         } catch (Exception ex) {
-            if (ex.getMessage() == null){
-            	showError(new RuntimeException("Unable to create chart " + chart.getName() + " from current settings.", ex));
-            }
-            else{
-            	showError(ex);
-            }
-            chartPanel.setChart(null);
+            showError("Unable to create a chart based on the current settings: " + WabitUtils.getRootCause(ex));
         }
     }
 
-    private void buildUI() {
-        panel.setBorder(BorderFactory.createCompoundBorder(
+	private void buildUI() {
+        
+    	// First level in the panel has only 2 rows of 1 column
+    	panel.setLayout(
+    			new MigLayout(
+    					"fill", 
+    					"[grow, fill]", 
+    					"[shrink]10[grow, fill]"));
+    	
+    	panel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(Color.GRAY), 
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
-        DefaultFormBuilder builder = new DefaultFormBuilder(
-                new FormLayout(
-                        "pref, 3dlu, pref:grow, 3dlu, pref:grow",
-                        "pref, 3dlu, fill:0:grow, 3dlu, fill:0:grow"),
-                panel);
-        
-        builder.append("Query", queryComboBox, 3);
-        builder.nextRow();
 
-        builder.append(headerLegendContainer );
-        
-        JScrollPane tableScrollPane = new JScrollPane(resultTable);
-        builder.append(tableScrollPane, 3);
-        builder.nextRow();
-        
-        JPanel chartAndErrorPanel = new JPanel(new BorderLayout());
-        chartAndErrorPanel.add(chartError, BorderLayout.NORTH);
-        chartAndErrorPanel.add(chartPanel, BorderLayout.CENTER);
-        builder.append(chartAndErrorPanel, 3);
-        
-        builder.append(buildChartPrefsPanel());
+    	
+    	// Now we build the upper part. 
+    	// The "data" section.
+    	JPanel topPanel = 
+    			new JPanel(
+    					new MigLayout(
+    							"fill",
+    							"[115]10[fill, grow]",
+    							"[]10[]10[400]"));
+    	
+    	JLabel dataCategoryLabel = new JLabel("Data");
+    	dataCategoryLabel.setFont(dataCategoryLabel.getFont().deriveFont(Font.BOLD));
+    	topPanel.add(dataCategoryLabel, "span, wrap");
+    	
+    	topPanel.add(new JLabel("Data source"), "gapleft 15");
+    	topPanel.add(queryComboBox, "wrap");
+    	
+		JScrollPane tableScrollPane = new JScrollPane(resultTable);
+		topPanel.add(headerLegendContainer, "gapleft 15, aligny top");
+		topPanel.add(tableScrollPane);
+    	
+    	
+    	panel.add(topPanel, "wrap");
+    	
+    	
+    	
+    	
+    	// Now the lower part. It has two parts. The options scrolling pane and the preview.
+    	JPanel bottomPanel = 
+			new JPanel(
+					new MigLayout(
+							"fill, hidemode 2",
+							"[grow]10[fill, grow]",
+							"[fill]"));
+	
+		JLabel optionsCategoryLabel = new JLabel("Options");
+		optionsCategoryLabel.setFont(optionsCategoryLabel.getFont().deriveFont(Font.BOLD));
+		bottomPanel.add(optionsCategoryLabel);
+	
+		JLabel previewCategoryLabel = new JLabel("Preview");
+		previewCategoryLabel.setFont(previewCategoryLabel.getFont().deriveFont(Font.BOLD));
+		bottomPanel.add(previewCategoryLabel, "wrap");
+    	
+		JScrollPane optionsScrollPane = 
+				new JScrollPane(
+						buildChartPrefsPanel(), 
+						JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
+						JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		optionsScrollPane.setBorder(null);
+		bottomPanel.add(optionsScrollPane, "push, width 280!, gapleft 15");
+		
+		JPanel chartAndErrorPanel = new JPanel(new BorderLayout());
+		chartAndErrorPanel.add(chartError, BorderLayout.NORTH);
+		chartAndErrorPanel.add(chartPanel, BorderLayout.CENTER);
+		bottomPanel.add(chartAndErrorPanel, "width 100%, alignx left, gapleft 15");
+		
+		
+		panel.add(bottomPanel, "height 100%");
         
         toolBarBuilder.add(refreshDataAction);
         toolBarBuilder.add(revertToDefaultsAction);
@@ -784,7 +810,7 @@ public class ChartPanel implements WabitPanel {
      */
     private Component buildChartPrefsPanel() {
         DefaultFormBuilder builder = new DefaultFormBuilder(
-                new FormLayout("pref, 3dlu, pref:grow"),
+                new FormLayout("70dlu, 3dlu, 90dlu"),
                 logger.isDebugEnabled() ? new FormDebugPanel() : new JPanel());
 
         builder.append("Legend Postion", legendPositionComboBox);

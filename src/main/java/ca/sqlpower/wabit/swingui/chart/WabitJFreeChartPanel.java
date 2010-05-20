@@ -24,9 +24,10 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 
+import javax.swing.SwingUtilities;
+
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.event.ChartChangeEvent;
 
 import ca.sqlpower.wabit.report.chart.ChartGradientPainter;
 
@@ -36,19 +37,15 @@ public class WabitJFreeChartPanel extends ChartPanel {
         super(chart, false, false, false, false, false);
         setBackground(new Color(0, true));
     }
-    
-    @Override
-    public void chartChanged(ChartChangeEvent event) {
-        super.chartChanged(event);
-    }
 
     @Override
     public void paintComponent(Graphics g) {
+    	
     	if (getChart() == null){
     		return;
     	}
     	
-        Graphics2D g2 = (Graphics2D) g;
+        Graphics2D g2 = (Graphics2D) g.create();
 
         float baseline = getXaxisBaseline();
         
@@ -60,14 +57,17 @@ public class WabitJFreeChartPanel extends ChartPanel {
         // this rendering has a different layout than last time;
         // have to paint again to update gradient position
         if (Math.abs(baseline - getXaxisBaseline()) > 1f) {
-            repaint();
+            SwingUtilities.invokeLater(new Runnable() {
+				public void run() {
+					repaint();					
+				}
+			});
         }
+        g2.dispose();
     }
 
     private float getXaxisBaseline() {
         Rectangle2D dataArea = getScreenDataArea();
         return (float) (dataArea.getY() + dataArea.getHeight());
     }
-    
-    
 }
