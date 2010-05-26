@@ -146,7 +146,7 @@ abstract class AbstractSelector extends AbstractWabitObject implements Selector 
 			super.setParent(parent);
 			this.resolver = ((SPVariableResolverProvider)parent).getVariableResolver();
 			if (this.resolver != null) {
-				this.resolver.update(getName(), getCurrentValue());
+				this.resolver.update(getName(), getDefaultValue());
 			}
 		} else {
 			throw new AssertionError("Selectors can only be children of instances of " + SPVariableResolverProvider.class.getCanonicalName());
