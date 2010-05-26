@@ -19,11 +19,35 @@
 
 package ca.sqlpower.wabit.report.selectors;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /**
  * Represents a report parameter that takes date value.
  */
 public class DateSelector extends AbstractSelector {
 
-	// Nothing special here.
+	@Override
+	public boolean setSelectedValue(Object newValue) {
+		
+		final Date value; 
+		if (newValue instanceof String) {
+			DateFormat dateFormatter = 
+					new SimpleDateFormat("yy-mm-dd");
+			try {
+				value = dateFormatter.parse((String)newValue);
+			} catch (ParseException e) {
+				throw new IllegalArgumentException("Invalid date format.");
+			}
+		} else if (newValue instanceof Date) {
+			value = (Date)newValue;
+		} else {
+			throw new IllegalArgumentException();
+		}
+		
+		return super.setSelectedValue(value);
+	}
 	
 }
