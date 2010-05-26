@@ -591,7 +591,7 @@ public class QueryPanel implements WabitPanel {
 						for (SQLObject child : rootNode.getChildren()) {
 							child.populate();
 						}
-						DBTreeModel tempTreeModel = new DBTreeModel(rootNode);
+						DBTreeModel tempTreeModel = new DBTreeModel(rootNode, dragTree);
 						dragTree.setModel(tempTreeModel);
 						dragTree.expandRow(0);
 						dragTree.setVisible(true);
