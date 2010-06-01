@@ -34,6 +34,7 @@ public class DateSelector extends AbstractSelector {
 		
 		final Date value; 
 		if (newValue instanceof String) {
+			
 			DateFormat dateFormatter = 
 					new SimpleDateFormat("yy-mm-dd");
 			try {
@@ -41,8 +42,11 @@ public class DateSelector extends AbstractSelector {
 			} catch (ParseException e) {
 				throw new IllegalArgumentException("Invalid date format.");
 			}
+			
 		} else if (newValue instanceof Date) {
+			
 			value = (Date)newValue;
+		
 		} else {
 			throw new IllegalArgumentException();
 		}
