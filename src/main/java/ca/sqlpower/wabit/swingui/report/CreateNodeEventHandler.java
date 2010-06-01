@@ -56,13 +56,22 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 		} else {
 			
 			if (panel.getMouseState().equals(MouseStates.CREATE_LABEL) || panel.getMouseState().equals(MouseStates.CREATE_BOX)) {
+				
 				ContentBox contentBox = new ContentBox();
-				ContentBoxNode newCBNode = new ContentBoxNode(panel.getLayer(), session, parentFrame, session.getWorkspace(), panel, contentBox);
 				
 				if (panel.getMouseState().equals(MouseStates.CREATE_LABEL)) {
 					Label label = new Label("New Content Box");
 					contentBox.setContentRenderer(label);
 				}
+				
+				ContentBoxNode newCBNode = 
+						new ContentBoxNode(
+								panel.getLayer(), 
+								session, 
+								parentFrame, 
+								session.getWorkspace(), 
+								panel, 
+								contentBox);
 				
 				Page page = panel.getLayout().getPage();
 				newCBNode.setBounds(event.getPosition().getX(), event.getPosition().getY(), (page.getRightMarginOffset() - page.getLeftMarginOffset()) / 2, panel.getPageNode().getHeight() / 10);

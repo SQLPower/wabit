@@ -356,7 +356,14 @@ public class ContentBoxNode extends PNode implements ReportNode {
 
 	private final PLayer topLayer;
 	
-    public ContentBoxNode(PLayer topLayer, WabitSwingSession session, Window dialogOwner, WabitWorkspace workspace, LayoutPanel parentPanel, ContentBox contentBox) {
+    public ContentBoxNode(
+    		PLayer topLayer, 
+    		WabitSwingSession session, 
+    		Window dialogOwner, 
+    		WabitWorkspace workspace, 
+    		LayoutPanel parentPanel, 
+    		ContentBox contentBox) 
+    {
     	this.topLayer = topLayer;
 		this.session = session;
         this.dialogOwner = dialogOwner;
