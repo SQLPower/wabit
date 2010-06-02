@@ -23,11 +23,31 @@ import ca.sqlpower.wabit.WabitObject;
 
 public interface Selector extends WabitObject {
 
+	/**
+	 * Sets the currently selected value of this selector.
+	 * The objects supported are selector-specific.
+	 * @param newValue
+	 * @return True if it is set. False otherwise.
+	 */
 	boolean setSelectedValue(Object newValue);
 	
+	/**
+	 * Returns the current value of this selector,
+	 * or it's default value if none have been set
+	 * already. The default could be null as well...
+	 * @return
+	 */
 	Object getCurrentValue();
 
+	/**
+	 * Registers a selector listener
+	 * @param listener
+	 */
 	public void addSelectorListener(SelectorListener listener);
 
+	/**
+	 * De-Registers a listener
+	 * @param listener
+	 */
 	public void removeSelectorListener(SelectorListener listener);
 }
