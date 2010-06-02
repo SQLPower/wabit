@@ -60,8 +60,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 				ContentBox contentBox = new ContentBox();
 				
 				if (panel.getMouseState().equals(MouseStates.CREATE_LABEL)) {
-					Label label = new Label("New Content Box");
-					contentBox.setContentRenderer(label);
+					contentBox.setContentRenderer(new Label("New Content Box"));
 				}
 				
 				ContentBoxNode newCBNode = 

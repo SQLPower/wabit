@@ -111,6 +111,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
                 if (contentBox.getContentRenderer() == null) {
                     Label newLabel = new Label();
                     contentBox.setContentRenderer(newLabel);
+                    setSwingContentRenderer(newLabel);
                 }
                 
                 DataEntryPanel propertiesPanel = getPropertiesPanel();
@@ -555,16 +556,23 @@ public class ContentBoxNode extends PNode implements ReportNode {
     }
 
     public DataEntryPanel getPropertiesPanel() {
-        if (contentBox.getContentRenderer() != null) {
-            DataEntryPanel propertiesPanel = swingRenderer.getPropertiesPanel();
-            if (propertiesPanel == null) {
-                logger.debug("Content renderer has no properties dialog: " + contentBox.getContentRenderer());
-            }
-            return propertiesPanel;
-        } else {
-            logger.debug("Content box has no renderer: " + contentBox);
+        if (contentBox.getContentRenderer() == null) {
+        	logger.debug("Content box has no renderer: " + contentBox);
             return null;
         }
+        
+        if (swingRenderer == null) {
+        	logger.error("No swing renderer: " + contentBox);
+        	return null;
+        }
+        
+        if (swingRenderer.getPropertiesPanel() == null)
+        {
+        	logger.debug("Content renderer has no properties dialog: " + contentBox.getContentRenderer());
+        	return null;
+        }
+        
+        return swingRenderer.getPropertiesPanel();
     }
     
     public PInputEventListener getKeyboardListener() {
