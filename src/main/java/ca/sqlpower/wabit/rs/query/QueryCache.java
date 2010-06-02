@@ -1110,8 +1110,13 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     
     @Override
     public void setUUID(String uuid) {
+    	
     	super.setUUID(uuid);
-    	query.setUUID(uuid);
+
+    	if (query != null) {
+    		query.setUUID(uuid);
+    	}
+    	
     	if (this.variableProvider != null)
     		this.variableProvider.setNamespace(uuid);
     }
