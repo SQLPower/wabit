@@ -1065,12 +1065,16 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
     
     public void setUUID(String uuid) {
     	super.setUUID(uuid);
-    	this.variableResolver.setNamespace(uuid);
+    	if (this.variableResolver != null) {
+    		this.variableResolver.setNamespace(uuid);
+    	}
     }
 
     public void setName(String name) {
     	super.setName(name);
-    	this.variableResolver.setUserFriendlyName("Workspace - " + this.getName());
+    	if (this.variableResolver != null) {
+    		this.variableResolver.setUserFriendlyName("Workspace - " + this.getName());
+    	}
     }
 
 	@Override
