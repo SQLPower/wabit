@@ -113,9 +113,13 @@ public class WabitDataSource extends AbstractWabitObject {
      *         data source.
 	 */
 	public void setUUID(String uuid){
-	    String oldUUID = dataSource.get(UUID_KEY_NAME);
-	    dataSource.put(UUID_KEY_NAME, uuid);
-	    firePropertyChange("UUID", oldUUID, uuid);
+		if (dataSource != null) {
+			String oldUUID = dataSource.get(UUID_KEY_NAME);
+			dataSource.put(UUID_KEY_NAME, uuid);
+			firePropertyChange("UUID", oldUUID, uuid);
+		} else {
+			firePropertyChange("UUID", null, uuid);
+		}
 	}
 	
 	public boolean allowsChildren() {
