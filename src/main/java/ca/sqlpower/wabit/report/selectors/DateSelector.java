@@ -40,7 +40,7 @@ public class DateSelector extends AbstractSelector {
 			try {
 				value = dateFormatter.parse((String)newValue);
 			} catch (ParseException e) {
-				throw new IllegalArgumentException("Invalid date format.");
+				throw new IllegalArgumentException("Invalid date format. Please use yy-mm-dd");
 			}
 			
 		} else if (newValue instanceof Date) {
@@ -48,7 +48,7 @@ public class DateSelector extends AbstractSelector {
 			value = (Date)newValue;
 		
 		} else {
-			throw new IllegalArgumentException();
+			return false;
 		}
 		
 		return super.setSelectedValue(value);
