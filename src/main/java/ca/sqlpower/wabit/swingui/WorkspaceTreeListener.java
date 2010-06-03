@@ -879,9 +879,9 @@ public class WorkspaceTreeListener extends MouseAdapter {
 									new SecurityAction(
 											this.session.getWorkspace(), 
 											systemWorkspace, 
-											null,
+											object == null ? null : object.getUUID(),
 											simpleName,
-											label));
+											object == null ? label : object.getName()));
     		action.setEnabled(false);
     		menu.add(action);
 
