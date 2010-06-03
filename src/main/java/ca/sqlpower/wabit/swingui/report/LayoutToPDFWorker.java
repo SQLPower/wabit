@@ -21,6 +21,7 @@ package ca.sqlpower.wabit.swingui.report;
 
 import java.awt.Component;
 import java.io.File;
+import java.io.FileNotFoundException;
 
 import javax.annotation.Nullable;
 
@@ -78,7 +79,11 @@ public class LayoutToPDFWorker extends SPSwingWorker {
 			@Nullable Watermarker watermarker) {
 		super(registry);
 		this.dialogOwner = dialogOwner;
-		pdfMaker = new LayoutToPDF(file, layout, watermarker);
+		try {
+			pdfMaker = new LayoutToPDF(file, layout, watermarker);
+		} catch (FileNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

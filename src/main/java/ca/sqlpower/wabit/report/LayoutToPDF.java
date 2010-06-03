@@ -43,7 +43,7 @@ import com.lowagie.text.pdf.PdfWriter;
 
 public class LayoutToPDF implements Monitorable {
 
-	private final File file;
+	private final OutputStream fileOS;
 	private final Layout layout;
 	private final Watermarker watermarker;
 
@@ -60,13 +60,34 @@ public class LayoutToPDF implements Monitorable {
 	 * @param watermarker
 	 *            The watermarker to use. null means do not watermark.
 	 */
-	public LayoutToPDF(File file, Layout layout, @Nullable Watermarker watermarker) {
+	public LayoutToPDF(File file, Layout layout, @Nullable Watermarker watermarker)
+			throws FileNotFoundException 
+	{
 		super();
-		this.file = file;
+		this.fileOS = new BufferedOutputStream(new FileOutputStream(file));
 		this.layout = layout;
 		this.watermarker = watermarker;
 	}
 
+	/**
+	 * Creates a PDF maker which does not watermark its output.
+	 * 
+	 * @param file
+	 *            The file to save to
+	 * @param layout
+	 *            The layout to transform into a PDF
+	 * @param watermarker
+	 *            The watermarker to use. null means do not watermark.
+	 */
+	public LayoutToPDF(OutputStream os, Layout layout, @Nullable Watermarker watermarker)
+			throws FileNotFoundException 
+	{
+		super();
+		this.fileOS = os;
+		this.layout = layout;
+		this.watermarker = watermarker;
+	}
+	
 	public void writePDF()
     throws DocumentException, FileNotFoundException, PrinterException {
     	monitorableHelper.setStarted(true);
@@ -75,7 +96,7 @@ public class LayoutToPDF implements Monitorable {
     	int numPages = layout.getNumberOfPages();
     	monitorableHelper.setJobSize(numPages);
     	Page page = layout.getPage();
-    	OutputStream out = new BufferedOutputStream(new FileOutputStream(file));
+    	OutputStream out = fileOS;
     	Rectangle pageSize;
     	pageSize = new Rectangle(page.getWidth(), page.getHeight());
 
