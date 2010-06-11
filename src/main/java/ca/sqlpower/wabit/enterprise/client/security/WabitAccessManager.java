@@ -92,14 +92,28 @@ public class WabitAccessManager implements SPAccessManager{
 	public void init(@Nonnull User currentUser, @Nonnull WabitSession systemSession) {
 		init(currentUser, null, systemSession);
 	}
-
+	
 	/**
 	 * Collects all grants that apply to the given user.
 	 * 
 	 * @return A {@link List} of all grants for the given user, or any group
 	 *         they are a member of.
 	 */
-	private List<Grant> aggregateGrants(@Nonnull User user) {
+	protected List<Grant> aggregateGrants(@Nonnull User user) {
+		synchronized (getSystemSession().getWorkspace()) {
+			return aggregateGrantsUnsafe(user);
+		}
+	}
+
+	/**
+	 * Collects all grants that apply to the given user. This method is not
+	 * thread safe, and must be externally synchronized. Use
+	 * {@link #aggregateGrants(User)} instead.
+	 * 
+	 * @return A {@link List} of all grants for the given user, or any group
+	 *         they are a member of.
+	 */
+	protected List<Grant> aggregateGrantsUnsafe(@Nonnull User user) {
 		List<Grant> grants = new ArrayList<Grant>();
 		grants.addAll(user.getGrants());
 
@@ -127,29 +141,44 @@ public class WabitAccessManager implements SPAccessManager{
 	 *            The UUID of the object in question.
 	 * @return A Collection of all objects that depend on the given object.
 	 */
-	private Collection<SPObject> aggregateDependantObjects(@Nonnull String rootUuid) {
+	protected Collection<SPObject> aggregateDependantObjects(@Nonnull String rootUuid) {
+		synchronized (getCurrentSession().getWorkspace()) {
+			return aggregateDependantObjectsUnsafe(rootUuid);
+		}
+	}
+
+	/**
+	 * Returns all objects that depend on the object represented by rootUuid. If
+	 * a user has read access on an object, he must also have read access on all
+	 * objects it depends upon. This method is not thread safe, and must be
+	 * externally synchronized. Use {@link #aggregateDependantObjects(String)}
+	 * instead.
+	 * 
+	 * @param rootUuid
+	 *            The UUID of the object in question.
+	 * @return A Collection of all objects that depend on the given object.
+	 */
+	protected Collection<SPObject> aggregateDependantObjectsUnsafe(@Nonnull String rootUuid) {
 		if (getCurrentSession() == null) {
 			return Collections.emptyList();
 		}
 		final SPObject workspace = getCurrentSession().getWorkspace();
-		synchronized (workspace) {
-			SPObject root = SQLPowerUtils.findByUuid(workspace, rootUuid, SPObject.class);
-			// Must find all dependent objects, but not ancestors
-			WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace,
-					root, true, true);
-			List<SPObject> parents = new LinkedList<SPObject>();
-			for (SPObject wo : graph.getNodes()) {
-				if (wo instanceof WabitWorkspace) {
-					parents.add(wo);
-					continue;
-				}
-				while (!(wo.getParent() instanceof WabitWorkspace)) {
-					wo = wo.getParent();
-				}
+		SPObject root = SQLPowerUtils.findByUuid(workspace, rootUuid, SPObject.class);
+		// Must find all dependent objects, but not ancestors
+		WorkspaceGraphModel graph = new WorkspaceGraphModel(workspace,
+				root, true, true);
+		List<SPObject> parents = new LinkedList<SPObject>();
+		for (SPObject wo : graph.getNodes()) {
+			if (wo instanceof WabitWorkspace) {
 				parents.add(wo);
+				continue;
 			}
-			return parents;
+			while (!(wo.getParent() instanceof WabitWorkspace)) {
+				wo = wo.getParent();
+			}
+			parents.add(wo);
 		}
+		return parents;
 	}
 
 	/**
@@ -200,52 +229,49 @@ public class WabitAccessManager implements SPAccessManager{
 		//
 		// If we decide to move the AccessManager into the library for use in
 		// Architect EE, this will have to change.
-		WabitWorkspace workspace = (WabitWorkspace) getCurrentUser().getParent();
-		synchronized (workspace) {
-			List<Grant> grants = aggregateGrants(getCurrentUser());
-			for (Grant grant : grants) {
-				if (grant.getSubject() != null) {
-					if (grant.getSubject().equals(subject)) {
-						if (grant.isModifyPrivilege()) {
-							permissions.remove(Permission.MODIFY);
-							permissions.remove(Permission.REMOVE_PROPERTY);
-							permissions.remove(Permission.EXECUTE);
-						}
-						if (grant.isDeletePrivilege()) {
-							permissions.remove(Permission.DELETE);
-							permissions.remove(Permission.REMOVE_PROPERTY);
-							permissions.remove(Permission.EXECUTE);
-						}
-						if (grant.isExecutePrivilege()) {
-							permissions.remove(Permission.EXECUTE);
-						}
-					} else if (dependants.contains(grant.getSubject())) {
-						if (grant.isModifyPrivilege()) {
-							permissions.remove(Permission.EXECUTE);
-						}
-						if (grant.isDeletePrivilege()) {
-							permissions.remove(Permission.EXECUTE);
-						}
-						if (grant.isExecutePrivilege()) {
-							permissions.remove(Permission.EXECUTE);
-						}
+		List<Grant> grants = aggregateGrants(getCurrentUser());
+		for (Grant grant : grants) {
+			if (grant.getSubject() != null) {
+				if (grant.getSubject().equals(subject)) {
+					if (grant.isModifyPrivilege()) {
+						permissions.remove(Permission.MODIFY);
+						permissions.remove(Permission.REMOVE_PROPERTY);
+						permissions.remove(Permission.EXECUTE);
+					}
+					if (grant.isDeletePrivilege()) {
+						permissions.remove(Permission.DELETE);
+						permissions.remove(Permission.REMOVE_PROPERTY);
+						permissions.remove(Permission.EXECUTE);
+					}
+					if (grant.isExecutePrivilege()) {
+						permissions.remove(Permission.EXECUTE);
+					}
+				} else if (dependants.contains(grant.getSubject())) {
+					if (grant.isModifyPrivilege()) {
+						permissions.remove(Permission.EXECUTE);
+					}
+					if (grant.isDeletePrivilege()) {
+						permissions.remove(Permission.EXECUTE);
+					}
+					if (grant.isExecutePrivilege()) {
+						permissions.remove(Permission.EXECUTE);
 					}
 				}
-				if (permissions.isEmpty()) {
-					logger.debug("    User has sufficient permissions (object-level)");
-					return true;
-				}
 			}
-
-			// specific object permissions didn't help; fall back on system
-			// permissions
-			if (doSystemGrantsPermit(type, grants, dependantObjects, permissions)) {
-				logger.debug("    User has sufficient permissions (system-level)");
+			if (permissions.isEmpty()) {
+				logger.debug("    User has sufficient permissions (object-level)");
 				return true;
-			} else {
-				logger.debug("    User does not have permission");
-				return false;
 			}
+		}
+
+		// specific object permissions didn't help; fall back on system
+		// permissions
+		if (doSystemGrantsPermit(type, grants, dependantObjects, permissions)) {
+			logger.debug("    User has sufficient permissions (system-level)");
+			return true;
+		} else {
+			logger.debug("    User does not have permission");
+			return false;
 		}
 	}
 
@@ -261,11 +287,9 @@ public class WabitAccessManager implements SPAccessManager{
 	 *            question. If empty, this method returns true.
 	 */
 	public boolean isGranted(@Nonnull String type, @Nonnull Set<Permission> permissions) {
-		synchronized (getSystemSession().getWorkspace()) {
-			List<Grant> grants = aggregateGrants(getCurrentUser());
-			Set<SPObject> empty = Collections.emptySet();
-			return doSystemGrantsPermit(type, grants, empty, permissions);
-		}
+		List<Grant> grants = aggregateGrants(getCurrentUser());
+		Set<SPObject> empty = Collections.emptySet();
+		return doSystemGrantsPermit(type, grants, empty, permissions);
 	}
 
 	/**
