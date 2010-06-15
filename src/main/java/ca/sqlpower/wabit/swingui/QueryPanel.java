@@ -1078,6 +1078,12 @@ public class QueryPanel implements WabitPanel {
 	}
 	
 	public void execute() {
+		if (queryCache.getPromptForCrossJoins() && queryCache.containsCrossJoins()) {
+	        CrossJoinDialog dialog = new CrossJoinDialog(context.getFrame());
+	        queryCache.setPromptForCrossJoins(!dialog.getDontAskAgain());
+	        queryCache.setExecuteQueriesWithCrossJoins(dialog.isContinuingExecution());
+	        if (!dialog.isContinuingExecution()) return;
+		}
 		queryUIComponents.executeQuery(this.queryCache);
 	}
 	
