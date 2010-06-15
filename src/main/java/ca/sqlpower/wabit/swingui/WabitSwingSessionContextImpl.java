@@ -1860,6 +1860,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
         		currentEditorPanel = new GroupPanel((Group) entryPanelModel);
         	} else if (entryPanelModel instanceof WabitWorkspace) {
         		currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
+        	} else if (entryPanelModel instanceof SQLDatabase) {
+        		currentEditorPanel = new WorkspacePanel(getActiveSwingSession());
         	} else {
         		if (entryPanelModel.getParent() != null) {
         			currentEditorPanel = createEditorPanel(entryPanelModel.getParent()); 
