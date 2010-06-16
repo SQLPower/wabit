@@ -55,6 +55,7 @@ import ca.sqlpower.sql.SQL;
 import ca.sqlpower.sql.CachedRowSet.RowComparator;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
+import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.resultset.ReportPositionRenderer;
 import ca.sqlpower.wabit.report.resultset.ResultSetCell;
@@ -251,7 +252,9 @@ public class ResultSetRenderer extends AbstractWabitObject
 	 */
 	private final SPListener parentChangeListener = new AbstractPoolingSPListener() {
         public void propertyChangeImpl(PropertyChangeEvent evt) {
-        	pageCells.remove();
+        	synchronized (pageCells) {
+        		pageCells.remove();
+			}
         }
     };
 
@@ -264,12 +267,16 @@ public class ResultSetRenderer extends AbstractWabitObject
 		public void newData(ResultSetEvent evt) {
 			if (evt.getSourceHandle().getResultSetType().equals(ResultSetType.STREAMING) &&
 					getParent() != null) {
-				pageCells.remove();
+				synchronized (pageCells) {
+					pageCells.remove();
+				}
 			    ResultSetRenderer.this.getParent().repaint();
 			}
 		}
 		public void executionComplete(ResultSetEvent evt) {
-			pageCells.remove();
+			synchronized (pageCells) {
+				pageCells.remove();
+			}
 			if (ResultSetRenderer.this.getParent() != null) {
 				ResultSetRenderer.this.getParent().repaint();
 			}
@@ -281,7 +288,9 @@ public class ResultSetRenderer extends AbstractWabitObject
 	
 	private final SPListener columnInfoListener = new AbstractPoolingSPListener() {
 		protected void propertyChangeImpl(PropertyChangeEvent evt) {
-			pageCells.remove();
+			synchronized (pageCells) {
+				pageCells.remove();
+			}
 			ResultSetRenderer.this.getParent().repaint();
 		};
 	};
@@ -365,9 +374,11 @@ public class ResultSetRenderer extends AbstractWabitObject
     }
     
     public void resetToFirstPage() {
-    	this.pageCells.remove();
-		this.executeException = null;
-		this.internalError = null;
+    	synchronized (pageCells) {
+    		this.pageCells.remove();
+    		this.executeException = null;
+    		this.internalError = null;
+		}
     }
     
     private void setResultSetHandle(ResultSetHandle rsh) {
@@ -669,65 +680,71 @@ public class ResultSetRenderer extends AbstractWabitObject
     		boolean printing) 
     {
     	
-    	try {
-    		
-    		CachedRowSet rs = (CachedRowSet)this.resultSetHandle.getResultSet();
-    		
-        	if (rs.getData().size() == 0) {
-        	    renderMessage(g, width, height, 
-        	            Collections.singletonList("The query '" + query.getName() + "' didn't return any data."));
+    	synchronized (pageCells) {
+    		try {
+        		
+        		CachedRowSet rs = (CachedRowSet)this.resultSetHandle.getResultSet();
+        		
+            	if (rs.getData().size() == 0) {
+            	    renderMessage(g, width, height, 
+            	            Collections.singletonList("The query '" + query.getName() + "' didn't return any data."));
+            	    return false;
+            	}
+            	
+                maybeCreateResultSetLayout(g, rs, width, height);
+                
+            } catch (SQLException e) {
+            	List<String> message = new ArrayList<String>();
+            	message.add("The query '" + query.getName() + "' returned an exception:");
+            	message.add(WabitUtils.getRootCause(e).getMessage());
+            	renderMessage(g, width, height,message);
         	    return false;
-        	}
-        	
-            maybeCreateResultSetLayout(g, rs, width, height);
-            
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+            }
 
-        if (pageIndex >= pageCells.get().size()) {
-            logger.warn("Trying to print page " + pageIndex + " but only " + pageCells.get().size() + " pages exist.");
-            return false;
-        }
-        
-        List<ResultSetCell> currentPagePositions = pageCells.get().get(pageIndex);
-        for (ResultSetCell position : currentPagePositions) {
-        	Graphics2D g2 = (Graphics2D) g.create();
-            position.paint(g2);
-            g2.dispose();
-        }
-        
-        if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
-			g.drawLine(0, 0, 0, (int)height - 1);
-			g.drawLine((int)width - 1, 0, (int)width - 1, (int)height);
-            g.drawLine(0, (int)height - 1, (int)width - 1, (int)height - 1);
-            g.drawLine(0, 0, (int)width - 1, 0);
-        }
-        
-        if (colBeingDragged != null) {
-            int xLocation = 0;
-            for (ColumnInfo ci : getColumnInfoList()) {
-                if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK
-                		|| ci.getWillGroupOrBreak() == GroupAndBreak.PAGEBREAK) continue;
-                if (ci != colBeingDragged) {
-                    xLocation += ci.getWidth();
-                } else {
-                    xLocation += ci.getWidth();
-                    break;
-                }
+            if (pageIndex >= pageCells.get().size()) {
+                logger.warn("Trying to print page " + pageIndex + " but only " + pageCells.get().size() + " pages exist.");
+                return false;
             }
             
-            Color oldColor = g.getColor();
-            Stroke oldStroke = g.getStroke();
-            g.setColor(DRAGGABLE_COL_LINE_COLOUR);
-            g.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1, new float[]{5, 5}, 0));
-            g.drawLine(xLocation, 0, xLocation, (int)height);
-            g.setColor(oldColor);
-            g.setStroke(oldStroke);
-        }
-        
-        boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
-        return !isLastPage;
+            List<ResultSetCell> currentPagePositions = pageCells.get().get(pageIndex);
+            for (ResultSetCell position : currentPagePositions) {
+            	Graphics2D g2 = (Graphics2D) g.create();
+                position.paint(g2);
+                g2.dispose();
+            }
+            
+            if (borderType == BorderStyles.OUTSIDE || borderType == BorderStyles.FULL) {
+    			g.drawLine(0, 0, 0, (int)height - 1);
+    			g.drawLine((int)width - 1, 0, (int)width - 1, (int)height);
+                g.drawLine(0, (int)height - 1, (int)width - 1, (int)height - 1);
+                g.drawLine(0, 0, (int)width - 1, 0);
+            }
+            
+            if (colBeingDragged != null) {
+                int xLocation = 0;
+                for (ColumnInfo ci : getColumnInfoList()) {
+                    if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK
+                    		|| ci.getWillGroupOrBreak() == GroupAndBreak.PAGEBREAK) continue;
+                    if (ci != colBeingDragged) {
+                        xLocation += ci.getWidth();
+                    } else {
+                        xLocation += ci.getWidth();
+                        break;
+                    }
+                }
+                
+                Color oldColor = g.getColor();
+                Stroke oldStroke = g.getStroke();
+                g.setColor(DRAGGABLE_COL_LINE_COLOUR);
+                g.setStroke(new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1, new float[]{5, 5}, 0));
+                g.drawLine(xLocation, 0, xLocation, (int)height);
+                g.setColor(oldColor);
+                g.setStroke(oldStroke);
+            }
+            
+            boolean isLastPage = pageCells.get().size() - 1 == pageIndex;
+            return !isLastPage;
+		}
     }
     
 
@@ -763,7 +780,9 @@ public class ResultSetRenderer extends AbstractWabitObject
     		double width,
     		double height) throws SQLException {
     	
-    	if (pageCells.get() != null) return; 
+    	synchronized (pageCells) {
+    		if (pageCells.get() != null) return; 
+		}
         
     	RowComparator comparator = new RowComparator();
     	for (int i = 0; i < getColumnInfoList().size(); i++) {
@@ -803,7 +822,9 @@ public class ResultSetRenderer extends AbstractWabitObject
         
         zeroClipGraphics.dispose();
         
-        pageCells.set(layout);
+        synchronized (pageCells) {
+        	pageCells.set(layout);
+		}
     }
     
     /**
