@@ -854,6 +854,12 @@ public class QueryPanel implements WabitPanel {
 					}
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
+					// Since the query controller sets the userModifiedQuery property
+					// on any insert to the query area, we need to revert the value
+					// back to null. This is to ensure that if the user has not made
+					// any changes, changing back to the query pen will not prompt
+					// the user that "changes will be lost".
+					queryCache.removeUserModifications();
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
 					whereText.setVisible(false);
