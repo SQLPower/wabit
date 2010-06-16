@@ -189,9 +189,9 @@ public class WorkspacePersisterListener implements SPListener {
 	 *            events occur in the workspace in the given session.
 	 */
 	public static WorkspacePersisterListener attachListener(
-			final WabitSession session, SPPersister targetPersister, WabitSessionPersister eventSource) {
+			final WabitSession session, SPPersister targetPersister, WabitSessionPersister eventSource, boolean containerDoPopulate) {
 		final WorkspacePersisterListener listener = 
-			new WorkspacePersisterListener(session, targetPersister, eventSource);
+			new WorkspacePersisterListener(session, targetPersister, eventSource, containerDoPopulate);
 		SQLPowerUtils.listenToHierarchy(session.getWorkspace(), listener);
 		
 		session.addSessionLifecycleListener(new SessionLifecycleListener<WabitSession>() {
@@ -238,8 +238,8 @@ public class WorkspacePersisterListener implements SPListener {
 	 *            persist calls.
 	 */
 	public WorkspacePersisterListener(WabitSession session,
-			SPPersister targetPersister) {
-		this(session, targetPersister, null);
+			SPPersister targetPersister, boolean containerDoPopulate) {
+		this(session, targetPersister, null, containerDoPopulate);
 	}
 
 	/**
@@ -260,9 +260,9 @@ public class WorkspacePersisterListener implements SPListener {
 	 *            order to perform 'echo-cancellation' of events.
 	 */
 	public WorkspacePersisterListener(WabitSession session,
-			SPPersister targetPersister, WabitSessionPersister eventSource) {
+			SPPersister targetPersister, WabitSessionPersister eventSource, boolean containerDoPopulate) {
 		this.session = session;
-		this.converter = new WabitSessionPersisterSuperConverter(session, session.getWorkspace());
+		this.converter = new WabitSessionPersisterSuperConverter(session, session.getWorkspace(), containerDoPopulate);
 		this.target = targetPersister;
 		this.eventSource = eventSource;
 	}

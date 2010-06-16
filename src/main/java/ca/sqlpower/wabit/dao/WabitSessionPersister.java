@@ -341,8 +341,8 @@ public class WabitSessionPersister implements SPPersister {
 	 * depending on the call. See the specific method being called for more
 	 * information about the exceptions that will be thrown.
 	 */
-	public WabitSessionPersister(String name, WabitSession session) {
-		this(name, session, session.getWorkspace());
+	public WabitSessionPersister(String name, WabitSession session, boolean containerDoPopulate) {
+		this(name, session, session.getWorkspace(), containerDoPopulate);
 	}
 
 	/**
@@ -353,12 +353,12 @@ public class WabitSessionPersister implements SPPersister {
 	 * will not be found.
 	 */
 	public WabitSessionPersister(String name, WabitSession session,
-			WabitObject root) {
+			WabitObject root, boolean containerDoPopulate) {
 		this.name = name;
 		this.session = session;
 		this.root = root;
 
-		converter = new WabitSessionPersisterSuperConverter(session, root);
+		converter = new WabitSessionPersisterSuperConverter(session, root, containerDoPopulate);
 	}
 
 	@Override
@@ -665,8 +665,9 @@ public class WabitSessionPersister implements SPPersister {
 			spo.setUUID(uuid);
 
 		} else if (type.equals(ChartRenderer.class.getSimpleName())) {
+		    Object contentValue = getPropertyAndRemove(uuid, "content");
 			Chart chart = (Chart) converter.convertToComplexType(
-					getPropertyAndRemove(uuid, "content"), Chart.class);
+					contentValue, Chart.class);
 			spo = new ChartRenderer(chart);
 
 		} else if (type.equals(ColumnInfo.class.getSimpleName())) {
@@ -4234,7 +4235,7 @@ public class WabitSessionPersister implements SPPersister {
 			List<PersistedPropertiesEntry> properties,
 			List<RemovedObjectEntry> removals) throws SPPersistenceException
 	{
-		WabitSessionPersister persister = new WabitSessionPersister("undoer", session);
+		WabitSessionPersister persister = new WabitSessionPersister("undoer", session, false);
 		persister.setGodMode(true);
 		persister.setObjectsToRemoveRollbackList(removals);
 		persister.setPersistedObjectsRollbackList(creations);

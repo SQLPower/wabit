@@ -46,8 +46,16 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 	
 	private final ItemConverter itemConverter;
 
-	public ContainerConverter(WabitSession session) {
+    /**
+     * If false the table named by the name of this container is considered
+     * populated and will not be populated again. If true the table may be
+     * populated if it is not already populated.
+     */
+    private final boolean doPopulate;
+
+	public ContainerConverter(WabitSession session, boolean doPopulate) {
 		this.session = session;
+        this.doPopulate = doPopulate;
 		itemConverter = new ItemConverter(session.getWorkspace());
 	}
 
@@ -85,7 +93,7 @@ public class ContainerConverter implements BidirectionalConverter<String, Contai
 				l.add((SQLObjectItem) itemConverter.convertToComplexType(tableAndItems[i]));
 			}
 			
-			TableContainer container = new TableContainer(pieces[0], db, pieces[2], pieces[3], pieces[4], l);
+			TableContainer container = new TableContainer(pieces[0], db, pieces[2], pieces[3], pieces[4], l, doPopulate);
 			return container;
 		} else {
 			throw new IllegalArgumentException("Unknown container class " + className + " for " + convertFrom);

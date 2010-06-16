@@ -116,13 +116,13 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
     	
     	WabitSession session = getWorkspace().getSession();
 		WabitSessionPersister persister = 
-			new WabitSessionPersister("test persister", session, getWorkspace());
+			new WabitSessionPersister("test persister", session, getWorkspace(), true);
 		
 		CountingWabitListener countingListener = new CountingWabitListener();
 		
 		ErrorWabitPersister errorPersister = new ErrorWabitPersister();
 		
-		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister);
+		WorkspacePersisterListener listener = new WorkspacePersisterListener(session, errorPersister, true);
 		
 		SQLPowerUtils.listenToHierarchy(getWorkspace(), listener);
 		cb.addSPListener(countingListener);
@@ -131,7 +131,7 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
 		
 		class PublicListener extends WorkspacePersisterListener {
 			public PublicListener(WabitSession session, SPPersister persister) {
-				super(session, persister);
+				super(session, persister, true);
 			}
 			
 			@Override

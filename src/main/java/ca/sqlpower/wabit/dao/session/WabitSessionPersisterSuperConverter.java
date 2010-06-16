@@ -59,13 +59,22 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 	
 	private final Olap4JAxisConverter olap4jAxisConverter = new Olap4JAxisConverter();
 
-	/**
-	 * @see SessionPersisterSuperConverter#SessionPersisterSuperConverter(ca.sqlpower.util.SPSession, ca.sqlpower.object.SPObject)
-	 */
-	public WabitSessionPersisterSuperConverter(WabitSession session, WabitObject root) {
+    /**
+     * @param containerDoPopulate
+     *            If set to false the container model objects will be considered
+     *            populated and will not try to populate again. This is useful
+     *            for places like the session on the server that can just accept
+     *            the objects given to it, it does not need to manipulate the
+     *            objects further. If true the container model object named in
+     *            containers created by this converter will be populated when
+     *            accessed.
+     * @see SessionPersisterSuperConverter#SessionPersisterSuperConverter(ca.sqlpower.util.SPSession,
+     *      ca.sqlpower.object.SPObject)
+     */
+	public WabitSessionPersisterSuperConverter(WabitSession session, WabitObject root, boolean containerDoPopulate) {
 		super(session.getDataSources(), root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
-		containerConverter = new ContainerConverter(session);
+		containerConverter = new ContainerConverter(session, containerDoPopulate);
 		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getDataSources());
 		olap4jDataSourceConverter = new Olap4jDataSourceConverter(session.getWorkspace());

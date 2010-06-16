@@ -151,7 +151,7 @@ public class WabitClientSession extends WabitSessionImpl {
         
         sessionPersister = new WabitSessionPersister(
         		"inbound-" + workspaceLocation.getUuid(),
-        		WabitClientSession.this);
+        		WabitClientSession.this, true);
         // Whatever updates come from the server, it can override the user's stuff.
         sessionPersister.setGodMode(true);
         updater = new Updater(workspaceLocation.getUuid(), new SPJSONMessageDecoder(sessionPersister));
@@ -625,11 +625,11 @@ public class WabitClientSession extends WabitSessionImpl {
 
 	public void startUpdaterThread() {
 		updater.start();
-		WorkspacePersisterListener.attachListener(this, jsonPersister, sessionPersister);
+		WorkspacePersisterListener.attachListener(this, jsonPersister, sessionPersister, true);
 	}
 
 	public void persistWorkspaceToServer() throws SPPersistenceException {
-		WorkspacePersisterListener tempListener = new WorkspacePersisterListener(this, jsonPersister);
+		WorkspacePersisterListener tempListener = new WorkspacePersisterListener(this, jsonPersister, true);
 		tempListener.persistObject(this.getWorkspace());
 	}
 	

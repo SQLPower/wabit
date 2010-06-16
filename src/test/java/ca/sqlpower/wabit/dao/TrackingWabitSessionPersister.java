@@ -52,7 +52,7 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 	private Map<String, String> savedObjectsToRemove;
 	
 	public TrackingWabitSessionPersister(WabitSession session, CountDownLatch latch) {
-		super("TrackingWabitSessionPersister", session);
+		super("TrackingWabitSessionPersister", session, true);
 		this.latch = latch;
 	}
 
