@@ -478,7 +478,10 @@ public class QueryPanel implements WabitPanel {
 	
 	private ResultSetProducerListener rsProducerListener =  new ResultSetProducerListener() {
 		public void structureChanged(ResultSetProducerEvent evt) {
-			execute();
+			boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+			if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+				execute();
+			}
 		}
 		public void executionStopped(ResultSetProducerEvent evt) {
 			// don't care
@@ -865,7 +868,11 @@ public class QueryPanel implements WabitPanel {
 					whereText.setVisible(false);
 					changeToTextToolBar();
 				}
-				execute();
+				
+				boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+				if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+					execute();
+				}
 			}
 		});
     	
@@ -875,7 +882,11 @@ public class QueryPanel implements WabitPanel {
 
     		public void actionPerformed(ActionEvent e) {
     			queryCache.setGroupingEnabled(groupingCheckBox.isSelected());
-    			execute();
+    			
+    			boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+    			if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+    				execute();
+    			}
     		}
     	});
     	FormLayout layout = new FormLayout("pref, 5dlu, pref, 3dlu, pref:grow, 5dlu, max(pref;50dlu)"
@@ -910,6 +921,7 @@ public class QueryPanel implements WabitPanel {
                 if ((e.getChangeFlags() & HierarchyEvent.PARENT_CHANGED) > 0
                         && mainSplitPane.getParent() != null
                         && !queryCache.isScriptModified()
+                        && queryCache.isAutomaticallyExecuting()
                         && !disableAutoExecute) {
                 	execute();
                     mainSplitPane.removeHierarchyListener(this);
