@@ -94,28 +94,32 @@ public class ReportPositionRenderer {
         this.nullString = nullString;
     }
     
-    /**
-     * This method does all of the layout of each section of a result set. This
-     * should be executed any time a part of the result set renderer changes. If
-     * all of the properties that defines a layout are set this method will
-     * return immediately. This includes but is not limited to: font changes,
-     * break changes, new columns being sub-totaled, different graphics in use
-     * such as printing vs painting, and changes to the query.
-     * 
-     * @param g
-     *            This should be a graphics object that is the same as the
-     *            graphics the result set will be rendered into. If this
-     *            graphics object is different the components may be laid out in
-     *            a way that will have text clipped by the bounding
-     *            {@link ContentBox}.
-     * @param rsCopy
-     *            This result set will be iterated over to lay out the result
-     *            set. If the result set pointer should not be changed a copy of
-     *            the result set, using a CachedRowSet or calling createShared
-     *            on a {@link CachedRowSet} should be passed instead. The result
-     *            set should also be sorted by the columns defined as breaks to
-     *            avoid sections that are identified by the same section.
-     */
+	/**
+	 * This method does all of the layout of each section of a result set. This
+	 * should be executed any time a part of the result set renderer changes. If
+	 * all of the properties that defines a layout are set this method will
+	 * return immediately. This includes but is not limited to: font changes,
+	 * break changes, new columns being sub-totaled, different graphics in use
+	 * such as printing vs painting, and changes to the query.
+	 * 
+	 * @param g
+	 *            This should be a graphics object that is the same as the
+	 *            graphics the result set will be rendered into. If this
+	 *            graphics object is different the components may be laid out in
+	 *            a way that will have text clipped by the bounding
+	 *            {@link ContentBox}.
+	 * @param rs
+	 *            This is the result set we want to display.
+	 * 
+	 * @param columnInfoList
+	 *            List of the columns metadata we know about.
+	 * 
+	 * @param boxHeight
+	 *            The height of the box that contains the result set.
+	 * 
+	 * @param isPrintingGrandTotals
+	 *            Wether or not to display grand totals at the end.
+	 */
     public List<List<ResultSetCell>> createResultSetLayout(Graphics2D g, ResultSet rs, List<ColumnInfo> columnInfoList,
     		double boxHeight, boolean isPrintingGrandTotals) throws SQLException {
         
@@ -185,6 +189,8 @@ public class ReportPositionRenderer {
                         "Cannot start laying out the result set.");
                       
             boolean forcePrintHeaders = false;
+            boolean forcePageBreak = false;
+            
             final List<Object> newSectionKey = createRowSectionKey(rsCopy, columnInfoList);
             
             if (sectionKey == null 
@@ -193,6 +199,9 @@ public class ReportPositionRenderer {
             {
                 sectionKey = newSectionKey;
                 forcePrintHeaders = true;
+                if (hasOnePageBreakingColumn(columnInfoList)){
+                	forcePageBreak = true;
+                }
             }
             
             headerRows.clear();
@@ -347,7 +356,8 @@ public class ReportPositionRenderer {
             				headerRows, 
             				boxHeight, 
             				yPosition, 
-            				forcePrintHeaders);
+            				forcePrintHeaders,
+            				forcePageBreak);
             
         }
         
@@ -367,6 +377,7 @@ public class ReportPositionRenderer {
     				headerRows,
     				boxHeight,
     				yPosition,
+    				false,
     				false);
         }
         
@@ -384,13 +395,24 @@ public class ReportPositionRenderer {
             List<ColumnInfo> columnInfoList) throws SQLException {
         List<Object> newSectionKey = new ArrayList<Object>();
         for (ColumnInfo ci : columnInfoList) {
-            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+            		|| ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
                 newSectionKey.add(rs.getObject(columnInfoList.indexOf(ci) + 1));
             } else {
                 newSectionKey.add(null);
             }
         }
         return newSectionKey;
+    }
+    
+    private boolean hasOnePageBreakingColumn(List<ColumnInfo> columnInfoList) 
+    {
+        for (ColumnInfo ci : columnInfoList) {
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     /**
@@ -424,7 +446,8 @@ public class ReportPositionRenderer {
     		List<List<ResultSetCell>> headers,
             double boxHeight, 
             int yPosition, 
-            boolean forcePrintHeaders) 
+            boolean forcePrintHeaders,
+            boolean forcePageBreak) 
     {
     	boolean headerAreIn = false;
     	List<List<ResultSetCell>> rowsToPrint = new ArrayList<List<ResultSetCell>>();
@@ -480,7 +503,8 @@ public class ReportPositionRenderer {
     	}
     	
     	// Does this group fit in the remaining space...
-    	if (yPosition == 0 || (totalHeight + yPosition) < boxHeight) {
+    	if (yPosition == 0 ||
+    			(totalHeight + yPosition) < boxHeight && !forcePageBreak) {
     		
     		// It fits. we can add them all to this page.
     		for (List<ResultSetCell> currentRow : rowsToPrint) {
@@ -560,7 +584,9 @@ public class ReportPositionRenderer {
         for (int col = 0; col < columnInformation.size(); col++) {
             int cellHeight = fm.getHeight();
             ColumnInfo ci = columnInformation.get(col);
-            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
+            
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+            		|| ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) continue;
             
             Insets padding = getPadding(ci);
             cellHeight += padding.top;
@@ -676,7 +702,8 @@ public class ReportPositionRenderer {
         FontMetrics fm = g.getFontMetrics(headerFont);
         int tableWidth = 0;
         for (ColumnInfo ci : colInfo) {
-            if (!ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+            if (!ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+            		&& !ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
                 tableWidth += ci.getWidth();
             }
         }
@@ -709,7 +736,9 @@ public class ReportPositionRenderer {
         for (int col = 0; col < colInfo.size(); col++) {
             int y = 0;
             ColumnInfo ci = colInfo.get(col);
-            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
+            
+            if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+            		|| ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) continue;
             
             Insets padding = getPadding(ci);
             y += padding.top;
@@ -772,7 +801,8 @@ public class ReportPositionRenderer {
         	
         	int totalTextX = 0;
         	for (int i = 0; i < breakTextPosition; i++) {
-        		if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
+        		if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+        				&& !colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
         			totalTextX += colInfo.get(i).getWidth();
         		}
         	}
@@ -798,7 +828,9 @@ public class ReportPositionRenderer {
         	for (int subCol = 0; subCol < totalsRow.size(); subCol++) {
         		int y = rowHeight;
         		ColumnInfo ci = colInfo.get(subCol);
-        		if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) continue;
+        		
+        		if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+        				|| ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) continue;
         		
         		Insets padding = getPadding(ci);
         		y += padding.top;
@@ -850,8 +882,16 @@ public class ReportPositionRenderer {
      * being used.
      */
     public Insets getPadding(ColumnInfo ci) {
-        if (ci != null && ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) return new Insets(0, 0, 0, 0);
+        
+    	if (ci != null && 
+        		(ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+        				|| ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK))) 
+        {
+        	return new Insets(0, 0, 0, 0);
+    	}
+        
         Insets insets = new Insets(1, 1, 1, 1);
+        
         if (borderType == BorderStyles.VERTICAL) {
             insets.left += ResultSetRenderer.BORDER_INDENT;
             insets.right += ResultSetRenderer.BORDER_INDENT;

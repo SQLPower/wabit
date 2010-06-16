@@ -37,6 +37,7 @@ public class ColumnInfo extends AbstractWabitObject{
     public enum GroupAndBreak {
         GROUP,
         BREAK,
+        PAGEBREAK,
         NONE
     }
 

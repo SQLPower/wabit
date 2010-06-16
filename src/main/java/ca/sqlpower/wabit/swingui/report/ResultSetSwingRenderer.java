@@ -306,6 +306,8 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         breakAndGroupButtons.add(noBreakOrGroupButton);
         final JRadioButton breakRadioButton = new JRadioButton("Break Into Sections");
         breakAndGroupButtons.add(breakRadioButton);
+        final JRadioButton pageBreakRadioButton = new JRadioButton("Break Into Sections (page break)");
+        breakAndGroupButtons.add(pageBreakRadioButton);
         final JRadioButton groupRadioButton = new JRadioButton("Group (Suppress Repeating Values)");
         breakAndGroupButtons.add(groupRadioButton);
         
@@ -424,14 +426,15 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
          * Row 8
          */
         fb.append(new JLabel(), 5);
-        fb.append(groupRadioButton);
+        fb.append(pageBreakRadioButton);
         fb.nextLine();
         
         
         /*
          * spacer
          */
-        fb.append(new JLabel(), 7);
+        fb.append(new JLabel(), 5);
+        fb.append(groupRadioButton);
         fb.nextLine();
         
         
@@ -471,6 +474,8 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
             groupRadioButton.setSelected(true);
         } else if (ci.getWillGroupOrBreak().equals(GroupAndBreak.BREAK)) {
             breakRadioButton.setSelected(true);
+        } else if (ci.getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
+            pageBreakRadioButton.setSelected(true);
         } else {
             noBreakOrGroupButton.setSelected(true);
         }
@@ -515,6 +520,8 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                     ci.setWillGroupOrBreak(GroupAndBreak.GROUP);
                 } else if (breakRadioButton.isSelected()) {
                     ci.setWillGroupOrBreak(GroupAndBreak.BREAK);
+                } else if (pageBreakRadioButton.isSelected()) {
+                    ci.setWillGroupOrBreak(GroupAndBreak.PAGEBREAK);
                 } else {
                     ci.setWillGroupOrBreak(GroupAndBreak.NONE);
                 }

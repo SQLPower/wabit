@@ -707,7 +707,8 @@ public class ResultSetRenderer extends AbstractWabitObject
         if (colBeingDragged != null) {
             int xLocation = 0;
             for (ColumnInfo ci : getColumnInfoList()) {
-                if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK) continue;
+                if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK
+                		|| ci.getWillGroupOrBreak() == GroupAndBreak.PAGEBREAK) continue;
                 if (ci != colBeingDragged) {
                     xLocation += ci.getWidth();
                 } else {
@@ -947,7 +948,8 @@ public class ResultSetRenderer extends AbstractWabitObject
         setColBeingDragged(null);
         int overallWidth = 0;
         for (ColumnInfo ci : getColumnInfoList()) {
-            if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK) continue;
+            if (ci.getWillGroupOrBreak() == GroupAndBreak.BREAK
+            		|| ci.getWillGroupOrBreak() == GroupAndBreak.PAGEBREAK) continue;
             overallWidth += ci.getWidth();
             if (mouseXPos > overallWidth - 5 && mouseXPos < overallWidth + 5) {
                 
