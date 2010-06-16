@@ -263,7 +263,7 @@ public class ReportPositionRenderer {
                 for (int i = columnInfoList.size() - 1; i >= 0; i--) {
                     if (groupingTotalMap.get(i) != null) {
                         List<BigDecimal> groupingTotals = groupingTotalMap.get(i);
-                        String groupingText = " " + rsCopy.getString(i + 1);
+                        String groupingText = "Total for " + rsCopy.getString(i + 1);
 
                         rowsToAdd.addAll(
                         		renderTotals(
@@ -274,7 +274,8 @@ public class ReportPositionRenderer {
 		                                groupingText, 
 		                                i,
 		                                cellsGroupedPerPage,
-		                                boxHeight));
+		                                boxHeight,
+		                                false));
 
                         for (int j = 0; j < groupingTotals.size(); j++) {
                             if (groupingTotals.get(j) != null) {
@@ -286,32 +287,36 @@ public class ReportPositionRenderer {
                 
                 StringBuffer sectionKeyText = new StringBuffer();
                 for (int i = 0; i < sectionKey.size(); i++) {
-                    Object value = sectionKey.get(i);
-                    if (value != null) {
-                        if (sectionKeyText.length() > 0) {
-                            sectionKeyText.append(";");
-                        }
-                        sectionKeyText.append("Total for " + columnInfoList.get(i).getName() + ": " + value);
-                    }
+                	Object value = sectionKey.get(i);
+                	if (value != null) {
+                		if (sectionKeyText.length() > 0) {
+                			sectionKeyText.append(";");
+                		}
+                		sectionKeyText.append("Total for " + value);
+                	}
                 }
-                rowsToAdd.addAll(
-                		renderTotals(
-	                			g, 
-	                			sectionTotals, 
-	                			columnInfoList, 
-	                			false,
-	                			sectionKeyText.toString(), 
-	                			0,
-	                			cellsGroupedPerPage,
-	                			boxHeight));
                 
-                sectionTotals = new ArrayList<BigDecimal>();
-                for (ColumnInfo ci : columnInfoList) {
-                    if (ci.getWillSubtotal()) {
-                        sectionTotals.add(BigDecimal.ZERO);
-                    } else {
-                        sectionTotals.add(null);
-                    }
+                if (!sectionKeyText.toString().equals("")) {
+                	rowsToAdd.addAll(
+                			renderTotals(
+                					g, 
+                					sectionTotals, 
+                					columnInfoList, 
+                					false,
+                					sectionKeyText.toString(), 
+                					0,
+                					cellsGroupedPerPage,
+                					boxHeight,
+                					false));
+                	
+                	sectionTotals = new ArrayList<BigDecimal>();
+                	for (ColumnInfo ci : columnInfoList) {
+                		if (ci.getWillSubtotal()) {
+                			sectionTotals.add(BigDecimal.ZERO);
+                		} else {
+                			sectionTotals.add(null);
+                		}
+                	}
                 }
                 
             // Now look for grouping changes
@@ -336,7 +341,8 @@ public class ReportPositionRenderer {
                         				"Total for " + groupingText, 
                         				i,
                         				cellsGroupedPerPage,
-                        				boxHeight));
+                        				boxHeight,
+                        				true));
                         
                         
                         for (int j = 0; j < groupingTotals.size(); j++) {
@@ -372,7 +378,8 @@ public class ReportPositionRenderer {
         				"Grand Total", 
         				0,
         				cellsGroupedPerPage,
-        				boxHeight),
+        				boxHeight,
+        				false),
     				cellsGroupedPerPage,
     				headerRows,
     				boxHeight,
@@ -418,7 +425,7 @@ public class ReportPositionRenderer {
     /**
      * This is a helper method for
      * {@link #createResultSetLayout(Graphics2D, ResultSet)}. This will add the
-     * groups of cells to the current or next page of the cellsGroupedPerPage as well as
+     * groups of rows to the current or next page of the cellsGroupedPerPage as well as
      * increment the yPosition and possibly the current page count.
      * 
      * This method takes a list of rows to add and will make all those stick
@@ -778,7 +785,8 @@ public class ReportPositionRenderer {
             String breakText, 
             int breakTextPosition,
             List<List<ResultSetCell>> cellsGroupedPerPage,
-            double boxHeight) 
+            double boxHeight,
+            boolean insertPaddingBelow) 
     {
         
     	List<List<ResultSetCell>> rowsToAdd = new ArrayList<List<ResultSetCell>>();
@@ -797,30 +805,48 @@ public class ReportPositionRenderer {
         	FontMetrics bodyFM = g.getFontMetrics(boldBodyFont);
         	FontMetrics headerFM = g.getFontMetrics(headerFont);
         	
+        	int tableWidth = 0;
+        	for (int i = breakTextPosition; i < colInfo.size(); i++) {
+                tableWidth += colInfo.get(i).getWidth();
+            }
+        	
         	final int rowHeight = Math.max(bodyFM.getHeight(), headerFM.getHeight());
         	
         	int totalTextX = 0;
-        	for (int i = 0; i < breakTextPosition; i++) {
-        		if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
-        				&& !colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
-        			totalTextX += colInfo.get(i).getWidth();
+        	if (!isGrandTotal) {
+        		for (int i = 0; i < breakTextPosition; i++) {
+        			if (!colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.BREAK)
+        					&& !colInfo.get(i).getWillGroupOrBreak().equals(GroupAndBreak.PAGEBREAK)) {
+        				totalTextX += colInfo.get(i).getWidth();
+        			}
         		}
         	}
+        	
         	Insets textInsets = getPadding(null);
-        	final int width = colInfo.get(breakTextPosition).getWidth();
         	int height = headerFM.getHeight() + textInsets.top + textInsets.bottom;
         	height += headerFM.getHeight() / 2;
         	if (isGrandTotal) {
         		height += 2 * BORDER_LINE_SIZE;
         	}
         	
+        	// Add an empty row before as a buffer.
+        	final ResultSetCell emptyCell = 
+    			new ResultSetCell(
+    					" ", 
+    					bodyFont, 
+    					new Rectangle(0, 0, 1, rowHeight), 
+    					getPadding(null), 
+    					HorizontalAlignment.LEFT,
+    					new ArrayList<BorderType>());
+    		rowsToAdd.add(Collections.singletonList(emptyCell));
+        	
         	// Create the "Total:" alike label
         	ResultSetCell textCell = new ResultSetCell(
         			breakText, 
         			headerFont, 
-        			new Rectangle(totalTextX, 0, width, height),
+        			new Rectangle(totalTextX, 0, tableWidth, height),
         			textInsets, 
-        			colInfo.get(breakTextPosition).getHorizontalAlignment(), 
+        			HorizontalAlignment.LEFT, 
         			new ArrayList<BorderType>());
         	rowsToAdd.add(Collections.singletonList(textCell));
         	
@@ -860,7 +886,15 @@ public class ReportPositionRenderer {
         		}
         		localX += ci.getWidth();
         	}
+
+        	// Add the totals to the list of rows to return.
         	rowsToAdd.add(newCells);
+        	
+        	// Maybe an empty row after as well
+        	if (insertPaddingBelow) {
+        		rowsToAdd.add(Collections.singletonList(emptyCell));
+        	}
+
         }
         
         return rowsToAdd;
