@@ -123,7 +123,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         
         final JLabel headerFontExample = new JLabel("Header Font Example");
         headerFontExample.setFont(renderer.getHeaderFont());
-        fb.append("Header Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
+        fb.append("Headers Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
         fb.nextLine();
         fb.append("");
         
@@ -135,12 +135,12 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         
 
 
-        final JLabel colourLabel = new JLabel("  ");
-        final JButton colorPickerButton = new JButton("Choose...");
-        colourLabel.setOpaque(true);
-        colourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        colourLabel.setBackground(renderer.getBackgroundColour() == null ? Color.WHITE : renderer.getBackgroundColour());
-        colourLabel.addMouseListener(new MouseListener() {
+        final JLabel backgroundColourLabel = new JLabel("  ");
+        final JButton backgroundColorPickerButton = new JButton("Choose...");
+        backgroundColourLabel.setOpaque(true);
+        backgroundColourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        backgroundColourLabel.setBackground(renderer.getBackgroundColour() == null ? Color.WHITE : renderer.getBackgroundColour());
+        backgroundColourLabel.addMouseListener(new MouseListener() {
 			public void mouseReleased(MouseEvent e) {
 				// no op
 			}
@@ -156,31 +156,136 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
 			public void mouseClicked(MouseEvent e) {
 				Color c;
 		        c = JColorChooser.showDialog(
-		                  colorPickerButton,
+		                  backgroundColorPickerButton,
 		                  "Choose a background color", 
-		                  renderer.getBackgroundColour());
+		                  backgroundColourLabel.getBackground());
 		        if (c != null) {
-		        	colourLabel.setBackground(c);
+		        	backgroundColourLabel.setBackground(c);
 		        }
 			}
 		});
-        colorPickerButton.addActionListener(new ActionListener() {
+        backgroundColorPickerButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				Color c;
 		        c = JColorChooser.showDialog(
-		                  colorPickerButton,
+		                  backgroundColorPickerButton,
 		                  "Choose a background color", 
-		                  colourLabel.getBackground());
+		                  backgroundColourLabel.getBackground());
 		        if (c != null) {
-		        	colourLabel.setBackground(c);
+		        	backgroundColourLabel.setBackground(c);
 		        }
 			}
 		});
         
-        fb.append("Background", colourLabel, colorPickerButton);
+        fb.append("Background color", backgroundColourLabel, backgroundColorPickerButton);
         fb.append("");
         fb.nextLine();
         fb.append("");
+        
+        
+        
+        
+        
+        
+        final JLabel headerColourLabel = new JLabel("  ");
+        final JButton headerColorPickerButton = new JButton("Choose...");
+        headerColourLabel.setOpaque(true);
+        headerColourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        headerColourLabel.setBackground(renderer.getHeaderColour() == null ? Color.WHITE : renderer.getHeaderColour());
+        headerColourLabel.addMouseListener(new MouseListener() {
+			public void mouseReleased(MouseEvent e) {
+				// no op
+			}
+			public void mousePressed(MouseEvent e) {
+				// no op
+			}
+			public void mouseExited(MouseEvent e) {
+				// no op
+			}
+			public void mouseEntered(MouseEvent e) {
+				// no op
+			}
+			public void mouseClicked(MouseEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  headerColorPickerButton,
+		                  "Choose a header color", 
+		                  headerColourLabel.getBackground());
+		        if (c != null) {
+		        	headerColourLabel.setBackground(c);
+		        }
+			}
+		});
+        headerColorPickerButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  headerColorPickerButton,
+		                  "Choose a header color", 
+		                  headerColourLabel.getBackground());
+		        if (c != null) {
+		        	headerColourLabel.setBackground(c);
+		        }
+			}
+		});
+        
+        fb.append("Headers color", headerColourLabel, headerColorPickerButton);
+        fb.append("");
+        fb.nextLine();
+        fb.append("");
+        
+        
+        
+        
+        final JLabel dataColourLabel = new JLabel("  ");
+        final JButton dataColorPickerButton = new JButton("Choose...");
+        dataColourLabel.setOpaque(true);
+        dataColourLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        dataColourLabel.setBackground(renderer.getDataColour() == null ? Color.WHITE : renderer.getDataColour());
+        dataColourLabel.addMouseListener(new MouseListener() {
+			public void mouseReleased(MouseEvent e) {
+				// no op
+			}
+			public void mousePressed(MouseEvent e) {
+				// no op
+			}
+			public void mouseExited(MouseEvent e) {
+				// no op
+			}
+			public void mouseEntered(MouseEvent e) {
+				// no op
+			}
+			public void mouseClicked(MouseEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  dataColorPickerButton,
+		                  "Choose a data color", 
+		                  dataColourLabel.getBackground());
+		        if (c != null) {
+		        	dataColourLabel.setBackground(c);
+		        }
+			}
+		});
+        dataColorPickerButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Color c;
+		        c = JColorChooser.showDialog(
+		                  dataColorPickerButton,
+		                  "Choose a data color", 
+		                  dataColourLabel.getBackground());
+		        if (c != null) {
+		        	dataColourLabel.setBackground(c);
+		        }
+			}
+		});
+        
+        fb.append("Data cells color", dataColourLabel, dataColorPickerButton);
+        fb.append("");
+        fb.nextLine();
+        fb.append("");
+        
+        
+        
         
         final JComboBox borderComboBox = new JComboBox(BorderStyles.values());
         borderComboBox.setSelectedItem(renderer.getBorderType());
@@ -239,7 +344,9 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 renderer.setHeaderFont(headerFontExample.getFont());
                 renderer.setBodyFont(bodyFontExample.getFont());
                 renderer.setNullString(nullStringField.getText());
-                renderer.setBackgroundColour(colourLabel.getBackground());
+                renderer.setBackgroundColour(backgroundColourLabel.getBackground());
+                renderer.setDataColour(dataColourLabel.getBackground());
+                renderer.setHeaderColour(headerColourLabel.getBackground());
                 renderer.setBorderType((BorderStyles) borderComboBox.getSelectedItem());
                 renderer.setPrintingGrandTotals(grandTotalsCheckBox.isSelected());
                 

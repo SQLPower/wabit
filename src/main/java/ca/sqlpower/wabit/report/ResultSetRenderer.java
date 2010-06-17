@@ -241,6 +241,16 @@ public class ResultSetRenderer extends AbstractWabitObject
 	private Color backgroundColour;
 	
 	/**
+	 * This will store the color of the data cells.
+	 */
+	private Color dataColour = Color.BLACK;
+	
+	/**
+	 * This will store the color of the table headers.
+	 */
+	private Color headerColour = Color.BLACK;
+	
+	/**
      * This is the column whose right side is currently being dragged in the editor.
      * If this is null then no column is being dragged.
      */
@@ -336,6 +346,8 @@ public class ResultSetRenderer extends AbstractWabitObject
     public ResultSetRenderer(ResultSetRenderer resultSetRenderer) {
     	this.query = resultSetRenderer.query;
     	this.backgroundColour = resultSetRenderer.backgroundColour;
+    	this.dataColour = resultSetRenderer.dataColour;
+    	this.headerColour = resultSetRenderer.headerColour;
     	this.borderType = resultSetRenderer.borderType;
     	this.executeException = resultSetRenderer.executeException;
     	this.headerFont = resultSetRenderer.headerFont;
@@ -701,6 +713,14 @@ public class ResultSetRenderer extends AbstractWabitObject
         	    return false;
             }
 
+            // XXX FIXME this is a flaky fix at best.
+            // Sometimes the rending is called just moments before the
+            // paint routine is called and the data is still null.
+            if (pageCells.get() == null) {
+            	renderMessage(g, width, height, Collections.singletonList("Loading..."));
+            	return false;
+            }
+            
             if (pageIndex >= pageCells.get().size()) {
                 logger.warn("Trying to print page " + pageIndex + " but only " + pageCells.get().size() + " pages exist.");
                 return false;
@@ -807,7 +827,9 @@ public class ResultSetRenderer extends AbstractWabitObject
         final ReportPositionRenderer reportPositionRenderer = 
         		new ReportPositionRenderer(
         				getHeaderFont(), 
-        				getBodyFont(), 
+        				getBodyFont(),
+        				dataColour,
+        				headerColour,
         				borderType, 
         				(int) getParent().getWidth(), 
         				nullString);
@@ -942,6 +964,25 @@ public class ResultSetRenderer extends AbstractWabitObject
 	public Color getBackgroundColour() {
 		return backgroundColour;
 	}
+	
+	public void setDataColour(Color dataColour) {
+		firePropertyChange("dataColour", this.dataColour, dataColour);
+		this.dataColour = dataColour;
+	}
+	
+	public Color getDataColour() {
+		return dataColour;
+	}
+	
+	public void setHeaderColour(Color headerColour) {
+		firePropertyChange("headerColour", this.headerColour, headerColour);
+		this.headerColour = headerColour;
+	}
+	
+	public Color getHeaderColour() {
+		return headerColour;
+	}
+	
 	public BorderStyles getBorderType() {
 		return borderType;
 	}

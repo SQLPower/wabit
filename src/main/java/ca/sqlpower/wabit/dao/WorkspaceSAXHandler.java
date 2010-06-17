@@ -1072,6 +1072,12 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         			Color color = new Color(Integer.parseInt(aval));
 					logger.debug("Renderer has background " + color.getRed() + ", " + color.getBlue() + ", " + color.getGreen());
         			rsRenderer.setBackgroundColour(color);
+        		} else if (aname.equals("data-colour")) {
+        			Color color = new Color(Integer.parseInt(aval));
+        			rsRenderer.setDataColour(color);
+        		} else if (aname.equals("header-colour")) {
+        			Color color = new Color(Integer.parseInt(aval));
+        			rsRenderer.setHeaderColour(color);
         		} else if (aname.equals("border")) {
         			rsRenderer.setBorderType(BorderStyles.valueOf(aval));
         		} else if (aname.equals("grand-totals")) {

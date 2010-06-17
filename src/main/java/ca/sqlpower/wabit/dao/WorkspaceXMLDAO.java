@@ -139,12 +139,13 @@ public class WorkspaceXMLDAO {
      *  <dt>1.2.6 <dd>Saves the grand-totals attribute of RS renderers
      *  <dt>1.2.7 <dd>Saves the chart's auto axis values and report selectors.
      *  <dt>1.2.8 <dd>Saves the date report selectors.
+     *  <dt>1.2.9 <dd>Adds page-breaking sections and colors for rs headers and data.
      *  
      * </dl> 
      * <!--Please update version number (below) if you updated the version documentation.-->
 	 */
 	//                                         UPDATE HISTORY!!!!!
-    static final Version FILE_VERSION = new Version("1.2.8"); // please update version history (above) when you change this
+    static final Version FILE_VERSION = new Version("1.2.9"); // please update version history (above) when you change this
     //                                         UPDATE HISTORY!!??!
 
     /**
@@ -382,6 +383,8 @@ public class WorkspaceXMLDAO {
 						if (rsRenderer.getBackgroundColour() != null) {
 							printAttribute("bg-colour", rsRenderer.getBackgroundColour().getRGB());
 						}
+						printAttribute("header-colour", rsRenderer.getHeaderColour().getRGB());
+						printAttribute("data-colour", rsRenderer.getDataColour().getRGB());
 						xml.niprintln(out, ">");
 						xml.indent++;
 						saveFont(rsRenderer.getHeaderFont(), "header-font");

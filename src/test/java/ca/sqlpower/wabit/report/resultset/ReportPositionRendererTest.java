@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report.resultset;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Insets;
@@ -51,8 +52,9 @@ public class ReportPositionRendererTest extends TestCase {
      */
     public void testPaddingIncreaseOnHorizontal() throws Exception {
         Font font = graphics.getFont();
-        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, BorderStyles.NONE, 1000, "");
-        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, BorderStyles.HORIZONTAL, 1000, "");
+        Color color = Color.BLACK;
+        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.NONE, 1000, "");
+        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.HORIZONTAL, 1000, "");
         ColumnInfo ci = new ColumnInfo("Column");
         Insets defaultPadding = defaultRenderer.getPadding(ci);
         Insets horizontalPadding = horizontalRenderer.getPadding(ci);
@@ -67,8 +69,9 @@ public class ReportPositionRendererTest extends TestCase {
      */
     public void testPaddingIncreaseOnVertical() throws Exception {
         Font font = graphics.getFont();
-        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, BorderStyles.NONE, 1000, "");
-        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, BorderStyles.VERTICAL, 1000, "");
+        Color color = Color.BLACK;
+        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.NONE, 1000, "");
+        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.VERTICAL, 1000, "");
         ColumnInfo ci = new ColumnInfo("Column");
         Insets defaultPadding = defaultRenderer.getPadding(ci);
         Insets horizontalPadding = horizontalRenderer.getPadding(ci);
@@ -83,8 +86,9 @@ public class ReportPositionRendererTest extends TestCase {
      */
     public void testPaddingIncreaseOnFull() throws Exception {
         Font font = graphics.getFont();
-        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, BorderStyles.NONE, 1000, "");
-        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, BorderStyles.FULL, 1000, "");
+        Color color = Color.BLACK;
+        ReportPositionRenderer defaultRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.NONE, 1000, "");
+        ReportPositionRenderer horizontalRenderer = new ReportPositionRenderer(font, font, color, color, BorderStyles.FULL, 1000, "");
         ColumnInfo ci = new ColumnInfo("Column");
         Insets defaultPadding = defaultRenderer.getPadding(ci);
         Insets horizontalPadding = horizontalRenderer.getPadding(ci);

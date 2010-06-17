@@ -709,6 +709,12 @@ public class WorkspacePersisterListener implements SPListener {
 			this.persistProperty(uuid, "backgroundColour",
 					DataType.STRING,
 					converter.convertToBasicType(renderer.getBackgroundColour()));
+			this.persistProperty(uuid, "dataColour",
+					DataType.STRING,
+					converter.convertToBasicType(renderer.getDataColour()));
+			this.persistProperty(uuid, "headerColour",
+					DataType.STRING,
+					converter.convertToBasicType(renderer.getHeaderColour()));
 			
 		} else if (child instanceof User) {
 			User user = (User) child;

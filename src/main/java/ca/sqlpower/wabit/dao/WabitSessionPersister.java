@@ -3663,6 +3663,14 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (propertyName.equals("backgroundColour")) {
 			return converter.convertToBasicType(rsRenderer
 					.getBackgroundColour());
+			
+		} else if (propertyName.equals("dataColour")) {
+			return converter.convertToBasicType(rsRenderer
+					.getDataColour());
+			
+		} else if (propertyName.equals("headerColour")) {
+			return converter.convertToBasicType(rsRenderer
+					.getHeaderColour());
 
 		} else if (propertyName.equals("headerFont")) {
 			return converter.convertToBasicType(rsRenderer.getHeaderFont());
@@ -3707,6 +3715,14 @@ public class WabitSessionPersister implements SPPersister {
 
 		} else if (propertyName.equals("backgroundColour")) {
 			rsRenderer.setBackgroundColour((Color) converter
+					.convertToComplexType(newValue, Color.class));
+			
+		} else if (propertyName.equals("dataColour")) {
+			rsRenderer.setDataColour((Color) converter
+					.convertToComplexType(newValue, Color.class));
+			
+		} else if (propertyName.equals("headerColour")) {
+			rsRenderer.setHeaderColour((Color) converter
 					.convertToComplexType(newValue, Color.class));
 
 		} else if (propertyName.equals("headerFont")) {
