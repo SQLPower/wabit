@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report.resultset;
 
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -85,10 +86,16 @@ public class ReportPositionRenderer {
      * be done once.
      */
     private boolean hasLayoutStarted = false;
+
+	private final Color dataColour;
+
+	private final Color headerColour;
     
-    public ReportPositionRenderer(Font headerFont, Font bodyFont, BorderStyles borderType, int availableWidth, String nullString) {
+    public ReportPositionRenderer(Font headerFont, Font bodyFont, Color dataColour, Color headerColour, BorderStyles borderType, int availableWidth, String nullString) {
         this.headerFont = headerFont;
         this.bodyFont = bodyFont;
+		this.dataColour = dataColour;
+		this.headerColour = headerColour;
         this.borderType = borderType;
         this.availableWidth = availableWidth;
         this.nullString = nullString;
@@ -648,6 +655,7 @@ public class ReportPositionRenderer {
             		new ResultSetCell(
             				formattedValue, 
             				cellFont,
+            				dataColour,
             				new Rectangle(
             						x, 
             						0, 
@@ -719,16 +727,28 @@ public class ReportPositionRenderer {
         Insets padding = getPadding(null);
         
         if (header.trim().length() == 0) {
-            return new ResultSetCell("", headerFont, new Rectangle(0, 0), new Insets(0, 0, 0, 0), 
-                    HorizontalAlignment.LEFT, new ArrayList<BorderType>());
+            return new ResultSetCell(
+            		"", 
+            		headerFont, 
+            		headerColour,
+            		new Rectangle(0, 0), 
+            		new Insets(0, 0, 0, 0), 
+                    HorizontalAlignment.LEFT, 
+                    new ArrayList<BorderType>());
         }
+        
         List<BorderType> borders = new ArrayList<BorderType>();
         borders.add(BorderType.BOTTOM);
         int height = fm.getHeight() + padding.top + padding.bottom;
         height += BORDER_LINE_SIZE;
-        return new ResultSetCell(header, headerFont,
-                new Rectangle(0, 0, maxWidth, height), 
-                padding, HorizontalAlignment.CENTER, borders);
+        return new ResultSetCell(
+        				header, 
+        				headerFont,
+        				headerColour,
+        				new Rectangle(0, 0, maxWidth, height), 
+        				padding, 
+        				HorizontalAlignment.CENTER, 
+        				borders);
     }
     
     /**
@@ -753,9 +773,14 @@ public class ReportPositionRenderer {
             
             final String colHeaderName = replaceNull(ci.getName());
             y += padding.bottom;
-            ResultSetCell newCell = new ResultSetCell(colHeaderName, headerFont,
-                    new Rectangle(x, 0, ci.getWidth(), y), padding, 
-                    ci.getHorizontalAlignment(), new ArrayList<BorderType>());
+            ResultSetCell newCell = new ResultSetCell(
+            							colHeaderName, 
+            							headerFont,
+            							headerColour,
+            							new Rectangle(x, 0, ci.getWidth(), y), 
+            							padding, 
+            							ci.getHorizontalAlignment(), 
+            							new ArrayList<BorderType>());
             headerCells.add(newCell);
             x += ci.getWidth();
         }
@@ -834,6 +859,7 @@ public class ReportPositionRenderer {
     			new ResultSetCell(
     					" ", 
     					bodyFont, 
+    					dataColour,
     					new Rectangle(0, 0, 1, rowHeight), 
     					getPadding(null), 
     					HorizontalAlignment.LEFT,
@@ -844,6 +870,7 @@ public class ReportPositionRenderer {
         	ResultSetCell textCell = new ResultSetCell(
         			breakText, 
         			headerFont, 
+        			dataColour,
         			new Rectangle(totalTextX, 0, tableWidth, height),
         			textInsets, 
         			HorizontalAlignment.LEFT, 
@@ -878,10 +905,15 @@ public class ReportPositionRenderer {
         				y += BORDER_LINE_SIZE;
         			}
         			
-        			ResultSetCell totalCell = new ResultSetCell(formattedValue, boldBodyFont, 
-        					new Rectangle(localX, 0, ci.getWidth(), y), 
-        					padding, ci.getHorizontalAlignment(),
-        					grandTotalBorders);
+        			ResultSetCell totalCell = 
+        					new ResultSetCell(
+        							formattedValue, 
+        							boldBodyFont, 
+        							dataColour,
+        							new Rectangle(localX, 0, ci.getWidth(), y), 
+        							padding, 
+        							ci.getHorizontalAlignment(),
+        							grandTotalBorders);
         			newCells.add(totalCell);
         		}
         		localX += ci.getWidth();

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.report.resultset;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
@@ -79,10 +80,20 @@ public class ResultSetCell {
 
     private final HorizontalAlignment align;
 
-    public ResultSetCell(String text, Font font, Rectangle bounds, Insets insets, 
-            HorizontalAlignment align, List<BorderType> borderTypes) {
+	private final Color foregroundColor;
+
+    public ResultSetCell(
+    		String text, 
+    		Font font, 
+    		Color foregroundColor,
+    		Rectangle bounds, 
+    		Insets insets, 
+            HorizontalAlignment align, 
+            List<BorderType> borderTypes) 
+    {
         this.text = text;
         this.font = font;
+		this.foregroundColor = foregroundColor;
         this.bounds = bounds;
         this.insets = insets;
         this.align = align;
@@ -97,6 +108,7 @@ public class ResultSetCell {
                 cellToCopy.insets.bottom, cellToCopy.insets.right);
         this.align = cellToCopy.align;
         this.borderTypes = cellToCopy.borderTypes;
+        this.foregroundColor = cellToCopy.foregroundColor;
     }
 
     public String getText() {
@@ -120,81 +132,89 @@ public class ResultSetCell {
      * The graphics object should not be translated to have it's origin at the
      * top left of this cell.
      */
-    public void paint(Graphics2D g) {
-        g.setFont(font);
-        final FontMetrics fm = g.getFontMetrics();
-        double offset = align.computeStartX(bounds.width - insets.left - insets.right, fm.stringWidth(text));
+    public void paint(Graphics2D rootGraphics) {
+    	
+    	Graphics2D cellGraphics = (Graphics2D) rootGraphics.create();
         
-        String printingText = text;
-        double stringLength = fm.getStringBounds(text, g).getWidth();
-        final double widthInsideInsets = getBounds().getWidth() - insets.left - insets.right;
-        
-        String ellipse = "...";
-        double ellipseLength = fm.getStringBounds(ellipse, g).getWidth();
-        
-        if (widthInsideInsets < ellipseLength) {
-            printingText = "";
-        } else if (stringLength > widthInsideInsets) {
-            int charLimit = 0;
-            while (fm.getStringBounds(text, 0, charLimit, g).getWidth() < widthInsideInsets - ellipseLength) {
-                charLimit++;
-            }
-            if (charLimit > 0) {
-                charLimit--;
-            }
-            printingText = text.substring(0, charLimit) + ellipse;
-        }
-        
-        int textY = getBounds().y + insets.top + fm.getHeight();
-        for (BorderType type : borderTypes) {
-            if (type.equals(BorderType.TOP)) {
-                textY += ReportPositionRenderer.BORDER_LINE_SIZE;
-            }
-        }
-        g.drawString(printingText, getBounds().x + insets.left + (int)offset, 
-                textY);
-        
-
-        //Thinning the stroke for the subtotal line for looks. We can't get the
-        //line width from a regular stroke so if the stroke is somehow different
-        //from a BasicStroke we will just log the warning. (For cases where the
-        //platform may make the Stroke significantly different.)
-        if (g.getStroke() instanceof BasicStroke) {
-            BasicStroke currentStroke = ((BasicStroke) g.getStroke());
-            BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
-                    currentStroke.getEndCap(), currentStroke.getLineJoin(), 
-                    currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
-                    currentStroke.getDashPhase());
-            g.setStroke(newStroke);
-        } else {
-            logger.warn("The stroke was of type " + g.getStroke().getClass() 
-                    + " when drawing the totals line. We only change BasicStroke lines.");
-        }
-        
-        int topIndent = 0;
-        for (BorderType border : getBorderTypes()) {
-            switch (border) {
-                case LEFT:
-                    g.drawLine(getBounds().x, getBounds().y,
-                            getBounds().x, getBounds().y + getBounds().height);
-                    break;
-                case RIGHT:
-                    g.drawLine(getBounds().x + getBounds().width, getBounds().y,
-                            getBounds().x + getBounds().width, getBounds().y + getBounds().height);
-                    break;
-                case TOP:
-                    g.drawLine(getBounds().x, getBounds().y + topIndent,
-                            getBounds().x + getBounds().width, getBounds().y + topIndent);
-                    topIndent += ReportPositionRenderer.BORDER_LINE_SIZE;
-                    break;
-                case BOTTOM:
-                    g.drawLine(getBounds().x, getBounds().y + getBounds().height,
-                            getBounds().x + getBounds().width, getBounds().y + getBounds().height);
-                    break;
-                default:
-                    throw new IllegalStateException("Unknown side of a cell " + border + ", " +
-                    		"cannot break out into the third or fourth dimension.");
-            }
+        try {
+        	cellGraphics.setColor(foregroundColor);
+        	cellGraphics.setFont(font);
+        	final FontMetrics fm = cellGraphics.getFontMetrics();
+        	double offset = align.computeStartX(bounds.width - insets.left - insets.right, fm.stringWidth(text));
+        	
+        	String printingText = text;
+        	double stringLength = fm.getStringBounds(text, cellGraphics).getWidth();
+        	final double widthInsideInsets = getBounds().getWidth() - insets.left - insets.right;
+        	
+        	String ellipse = "...";
+        	double ellipseLength = fm.getStringBounds(ellipse, cellGraphics).getWidth();
+        	
+        	if (widthInsideInsets < ellipseLength) {
+        		printingText = "";
+        	} else if (stringLength > widthInsideInsets) {
+        		int charLimit = 0;
+        		while (fm.getStringBounds(text, 0, charLimit, cellGraphics).getWidth() < widthInsideInsets - ellipseLength) {
+        			charLimit++;
+        		}
+        		if (charLimit > 0) {
+        			charLimit--;
+        		}
+        		printingText = text.substring(0, charLimit) + ellipse;
+        	}
+        	
+        	int textY = getBounds().y + insets.top + fm.getHeight();
+        	for (BorderType type : borderTypes) {
+        		if (type.equals(BorderType.TOP)) {
+        			textY += ReportPositionRenderer.BORDER_LINE_SIZE;
+        		}
+        	}
+        	cellGraphics.drawString(printingText, getBounds().x + insets.left + (int)offset, 
+        			textY);
+        	
+        	
+        	//Thinning the stroke for the subtotal line for looks. We can't get the
+        	//line width from a regular stroke so if the stroke is somehow different
+        	//from a BasicStroke we will just log the warning. (For cases where the
+        	//platform may make the Stroke significantly different.)
+        	if (cellGraphics.getStroke() instanceof BasicStroke) {
+        		BasicStroke currentStroke = ((BasicStroke) cellGraphics.getStroke());
+        		BasicStroke newStroke = new BasicStroke(currentStroke.getLineWidth() / 2, 
+        				currentStroke.getEndCap(), currentStroke.getLineJoin(), 
+        				currentStroke.getMiterLimit(), currentStroke.getDashArray(), 
+        				currentStroke.getDashPhase());
+        		cellGraphics.setStroke(newStroke);
+        	} else {
+        		logger.warn("The stroke was of type " + cellGraphics.getStroke().getClass() 
+        				+ " when drawing the totals line. We only change BasicStroke lines.");
+        	}
+        	
+        	int topIndent = 0;
+        	for (BorderType border : getBorderTypes()) {
+        		switch (border) {
+        		case LEFT:
+        			cellGraphics.drawLine(getBounds().x, getBounds().y,
+        					getBounds().x, getBounds().y + getBounds().height);
+        			break;
+        		case RIGHT:
+        			cellGraphics.drawLine(getBounds().x + getBounds().width, getBounds().y,
+        					getBounds().x + getBounds().width, getBounds().y + getBounds().height);
+        			break;
+        		case TOP:
+        			cellGraphics.drawLine(getBounds().x, getBounds().y + topIndent,
+        					getBounds().x + getBounds().width, getBounds().y + topIndent);
+        			topIndent += ReportPositionRenderer.BORDER_LINE_SIZE;
+        			break;
+        		case BOTTOM:
+        			cellGraphics.drawLine(getBounds().x, getBounds().y + getBounds().height,
+        					getBounds().x + getBounds().width, getBounds().y + getBounds().height);
+        			break;
+        		default:
+        			throw new IllegalStateException("Unknown side of a cell " + border + ", " +
+        					"cannot break out into the third or fourth dimension.");
+        		}
+        	}
+        } finally {
+        	cellGraphics.dispose();
         }
     }
 
