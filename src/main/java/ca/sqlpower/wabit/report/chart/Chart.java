@@ -414,6 +414,9 @@ public class Chart extends AbstractWabitObject {
                 logger.debug("Returning null data set because getResultSet() returned null");
                 return null;
             }
+            
+            // Need to update chart columns from the new ResultSet before using them.
+            syncWithRs(rs);
 
             switch (type.getDatasetType()) {
             case CATEGORY:
@@ -818,11 +821,20 @@ public class Chart extends AbstractWabitObject {
             					new SPVariableHelper(Chart.this.variablesContextSource), 
             					Chart.this.resultSetListener,
             					async);
+        		
+        		// Need to disable the refresh flag before getting result set
+        		// or else infinite recursion could occur.
+        		needsRefresh = false;
+        		ResultSet rs = getResultSet(async);
+        		if (rs != null) {
+        			syncWithRs(rs);
+        		}
         	}
-        	needsRefresh = false;
         } catch (ResultSetProducerException e) {
             throw new RuntimeException(e);
-        }
+        } catch (SQLException e) {
+        	throw new RuntimeException(e);
+		}
     }
     
     /**

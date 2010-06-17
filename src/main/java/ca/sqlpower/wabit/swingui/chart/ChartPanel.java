@@ -351,10 +351,7 @@ public class ChartPanel implements WabitPanel {
         }
     };
 
-	private final WabitSwingSession session;
-
     public ChartPanel(WabitSwingSession session, final Chart chart) {
-        this.session = session;
 		WabitWorkspace workspace = session.getWorkspace();
         this.chart = chart;
         
