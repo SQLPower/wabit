@@ -218,10 +218,13 @@ public class WabitAccessManager implements SPAccessManager{
 			return false;
 		}
 
-		Collection<SPObject> dependantObjects = aggregateDependantObjects(subject);
+		Collection<SPObject> dependantObjects = Collections.emptySet();
 		Set<String> dependants = new HashSet<String>();
-		for (SPObject wo : dependantObjects) {
-			dependants.add(wo.getUUID());
+		if (isReadOnly(permissions)) {
+			dependantObjects = aggregateDependantObjects(subject);
+			for (SPObject wo : dependantObjects) {
+				dependants.add(wo.getUUID());
+			}
 		}
 
 		// This unsafe casting is allowed and desirable because if we ever
