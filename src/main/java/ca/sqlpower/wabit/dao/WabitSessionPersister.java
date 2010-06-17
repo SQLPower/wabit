@@ -1312,9 +1312,11 @@ public class WabitSessionPersister implements SPPersister {
 			int index) throws SPPersistenceException {
 		synchronized (session) {
 			this.enforeThreadSafety();
-			logger.debug(String.format(
-					"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
-					type, uuid, index));
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format(
+						"wsp.persistObject(\"%s\", \"%s\", \"%s\", %d);", parentUUID,
+						type, uuid, index));
+			}
 			if (transactionCount == 0) {
 				this.rollback();
 				throw new SPPersistenceException("Cannot persist objects while outside a transaction.");
@@ -1366,9 +1368,11 @@ public class WabitSessionPersister implements SPPersister {
 		}
 		synchronized (session) {
 			this.enforeThreadSafety();
-			logger.debug(String.format(
-					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
-					uuid, propertyName, propertyType.name(), oldValue, newValue));
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format(
+						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s, %s);",
+						uuid, propertyName, propertyType.name(), oldValue, newValue));
+			}
 			try {
 				persistPropertyHelper(uuid, propertyName, propertyType, oldValue,
 						newValue, this.godMode);
@@ -1404,10 +1408,12 @@ public class WabitSessionPersister implements SPPersister {
 		}
 		synchronized (session) {
 			this.enforeThreadSafety();
-			logger.debug(String.format(
-					"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
-					uuid, propertyName, propertyType.name(),
-					newValue));
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format(
+						"wsp.persistProperty(\"%s\", \"%s\", DataType.%s, %s); // unconditional",
+						uuid, propertyName, propertyType.name(),
+						newValue));
+			}
 			try {
 				if (newValue instanceof InputStream && !((InputStream) newValue).markSupported()) {
 					newValue = new BufferedInputStream((InputStream) newValue);
@@ -4129,8 +4135,10 @@ public class WabitSessionPersister implements SPPersister {
 			throws SPPersistenceException {
 		synchronized (session) {
 			this.enforeThreadSafety();
-			logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
-					parentUUID, uuid));
+			if (logger.isDebugEnabled()) {
+				logger.debug(String.format("wsp.removeObject(\"%s\", \"%s\");",
+						parentUUID, uuid));
+			}
 			if (this.transactionCount==0) {
 				logger.error("Remove Object attempted while not in a transaction. Rollback initiated.");
 				this.rollback();
