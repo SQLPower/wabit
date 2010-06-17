@@ -141,8 +141,9 @@ public class ReportPositionRenderer {
         
         List<BigDecimal> grandTotals = new ArrayList<BigDecimal>();
         for (ColumnInfo ci : columnInfoList) {
-            if (ci.getWillSubtotal()
-            		&& ci.getDataType() == DataType.NUMERIC) {
+            if (ci.getDataType() == DataType.NUMERIC ||
+            		(ci.getWillSubtotal()
+            			&& ci.getDataType() == DataType.NUMERIC)) {
                 grandTotals.add(BigDecimal.ZERO);
             } else {
                 grandTotals.add(null);
@@ -234,8 +235,9 @@ public class ReportPositionRenderer {
                         subtotals.set(colIndex, groupTotal);
                     }
                 }
-                if (ci.getWillSubtotal()
-                		&& ci.getDataType() == DataType.NUMERIC) {
+                if (ci.getDataType() == DataType.NUMERIC ||
+                		(ci.getWillSubtotal()
+                				&& ci.getDataType() == DataType.NUMERIC)) {
                     final BigDecimal valueToAdd = rsCopy.getBigDecimal(colIndex + 1);
                     BigDecimal total = grandTotals.get(colIndex);
                     BigDecimal cellValue = valueToAdd;
