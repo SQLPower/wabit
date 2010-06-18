@@ -68,22 +68,22 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
 	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
 	 */
-	public enum WabitObjectOrder {
+	public enum SPObjectOrder {
 		WABIT_OLAP_INCLUSION(WabitOlapInclusion.class),
 		WABIT_OLAP_EXCLUSION(WabitOlapExclusion.class);
 		
-		private final Class<? extends WabitObject> clazz;
+		private final Class<? extends SPObject> clazz;
 		
-		private WabitObjectOrder(Class<? extends WabitObject> clazz) {
+		private SPObjectOrder(Class<? extends SPObject> clazz) {
 			this.clazz = clazz;
 		}
 		
-		public Class<? extends WabitObject> getChildClass() {
+		public Class<? extends SPObject> getChildClass() {
 			return clazz;
 		}
 		
-		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
-			for (WabitObjectOrder order : values()) {
+		public static SPObjectOrder getOrderBySimpleClassName(String name) {
+			for (SPObjectOrder order : values()) {
 				if (order.clazz.getSimpleName().equals(name)) {
 					return order;
 				}

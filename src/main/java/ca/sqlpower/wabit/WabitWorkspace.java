@@ -173,7 +173,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
 	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
 	 */
-	public enum WabitObjectOrder {
+	public enum SPObjectOrder {
 		WABIT_DATA_SOURCE(WabitDataSource.class),
 		QUERY_CACHE(QueryCache.class),
 		OLAP_QUERY(OlapQuery.class),
@@ -187,7 +187,7 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 		
 		private final Class<? extends SPObject> clazz;
 		
-		private WabitObjectOrder(Class<? extends SPObject> clazz) {
+		private SPObjectOrder(Class<? extends SPObject> clazz) {
 			this.clazz = clazz;
 		}
 		
@@ -195,8 +195,8 @@ public class WabitWorkspace extends AbstractWabitObject implements DataSourceCol
 			return clazz;
 		}
 		
-		public static WabitObjectOrder getOrderBySimpleClassName(String name) {
-			for (WabitObjectOrder order : values()) {
+		public static SPObjectOrder getOrderBySimpleClassName(String name) {
+			for (SPObjectOrder order : values()) {
 				if (order.clazz.getSimpleName().equals(name)) {
 					return order;
 				}

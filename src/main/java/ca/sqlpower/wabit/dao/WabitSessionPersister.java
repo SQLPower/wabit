@@ -269,26 +269,26 @@ public class WabitSessionPersister implements SPPersister {
 				c = index2 - index1;
 
 			} else if (previousAncestor instanceof WabitWorkspace) {
-				WabitWorkspace.WabitObjectOrder order1 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
-				WabitWorkspace.WabitObjectOrder order2 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+				WabitWorkspace.SPObjectOrder order1 = WabitWorkspace.SPObjectOrder.getOrderBySimpleClassName(simpleName1);
+				WabitWorkspace.SPObjectOrder order2 = WabitWorkspace.SPObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
 			} else if (previousAncestor instanceof QueryCache) {
-				QueryCache.WabitObjectOrder order1 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
-				QueryCache.WabitObjectOrder order2 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+				QueryCache.SPObjectOrder order1 = QueryCache.SPObjectOrder.getOrderBySimpleClassName(simpleName1);
+				QueryCache.SPObjectOrder order2 = QueryCache.SPObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
 			} else if (previousAncestor instanceof WabitOlapDimension) {
-				WabitOlapDimension.WabitObjectOrder order1 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
-				WabitOlapDimension.WabitObjectOrder order2 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+				WabitOlapDimension.SPObjectOrder order1 = WabitOlapDimension.SPObjectOrder.getOrderBySimpleClassName(simpleName1);
+				WabitOlapDimension.SPObjectOrder order2 = WabitOlapDimension.SPObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
 			} else if (previousAncestor instanceof Page) {
-				Page.WabitObjectOrder order1 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName1);
-				Page.WabitObjectOrder order2 = Page.WabitObjectOrder.getOrderBySimpleClassName(simpleName2);
+				Page.SPObjectOrder order1 = Page.SPObjectOrder.getOrderBySimpleClassName(simpleName1);
+				Page.SPObjectOrder order2 = Page.SPObjectOrder.getOrderBySimpleClassName(simpleName2);
 
 				c = order2.compareTo(order1);
 
@@ -547,34 +547,39 @@ public class WabitSessionPersister implements SPPersister {
 				c = ancestor1.getIndex() - ancestor2.getIndex();
 				
 			} else if (previousAncestor.getType().equals(WabitWorkspace.class.getSimpleName())) {
-				WabitWorkspace.WabitObjectOrder order1 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
-				WabitWorkspace.WabitObjectOrder order2 = WabitWorkspace.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				WabitWorkspace.SPObjectOrder order1 = WabitWorkspace.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				WabitWorkspace.SPObjectOrder order2 = WabitWorkspace.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
 				
 				c = order1.compareTo(order2);
 				
 			} else if (previousAncestor.getType().equals(QueryCache.class.getSimpleName())) {
-				QueryCache.WabitObjectOrder order1 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
-				QueryCache.WabitObjectOrder order2 = QueryCache.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				QueryCache.SPObjectOrder order1 = QueryCache.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				QueryCache.SPObjectOrder order2 = QueryCache.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
 				
 				c = order1.compareTo(order2);
 				
 			} else if (previousAncestor.getType().equals(WabitOlapDimension.class.getSimpleName())) {
-				WabitOlapDimension.WabitObjectOrder order1 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
-				WabitOlapDimension.WabitObjectOrder order2 = WabitOlapDimension.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				WabitOlapDimension.SPObjectOrder order1 = WabitOlapDimension.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				WabitOlapDimension.SPObjectOrder order2 = WabitOlapDimension.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
 				
 				c = order1.compareTo(order2);
 				
 			} else if (previousAncestor.getType().equals(Page.class.getSimpleName())) {
-				Page.WabitObjectOrder order1 = Page.WabitObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
-				Page.WabitObjectOrder order2 = Page.WabitObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				Page.SPObjectOrder order1 = Page.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				Page.SPObjectOrder order2 = Page.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
 				
 				c = order1.compareTo(order2);
 				
+			} else if (previousAncestor.getType().equals(Group.class.getSimpleName())) {
+				Group.SPObjectOrder order1 = Group.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				Group.SPObjectOrder order2 = Group.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
 			} else {
 				// XXX The comparator should really never reach
 				// this else block. However in the case that it does, compare by UUID.
-				
-				c = ancestor1.getUUID().compareTo(ancestor2.getUUID());
+				throw new AssertionError("Comparator ran out of options. Comparing " + o1 + " with " + o2);
+//				c = ancestor1.getUUID().compareTo(ancestor2.getUUID());
 				
 			}
 			
@@ -588,7 +593,8 @@ public class WabitSessionPersister implements SPPersister {
 	 * @throws SPPersistenceException
 	 */
 	private void commitObjects() throws SPPersistenceException {
-		List<PersistedSPObject> orderedPersistedObjects = new LinkedList<PersistedSPObject>(persistedObjects.values());
+		List<PersistedSPObject> orderedPersistedObjects = new ArrayList<PersistedSPObject>(persistedObjects.size());
+		orderedPersistedObjects.addAll(persistedObjects.values());
 		Collections.sort(orderedPersistedObjects, persistedObjectComparator);
 		
 		for (PersistedSPObject pwo : orderedPersistedObjects) {
