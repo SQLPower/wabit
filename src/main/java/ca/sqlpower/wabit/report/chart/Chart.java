@@ -341,7 +341,7 @@ public class Chart extends AbstractWabitObject {
         					if (existing != null) {
         						newCols.add(existing);
         					} else {
-        						// try to find it back in those we temporarely removed.
+        						// try to find it back in those we temporarily removed.
         						ChartColumn backup = findByName(missingColumns, columnName);
         						if (backup != null) {
         							newCols.add(backup);
@@ -375,7 +375,7 @@ public class Chart extends AbstractWabitObject {
 
 	public static ChartColumn findByName(List<ChartColumn> cols, String name) {
         for (ChartColumn col : cols) {
-            if (col.getName().equalsIgnoreCase(name)) {
+            if (col.getName() != null && col.getName().equalsIgnoreCase(name)) {
                 return col;
             }
         }
@@ -393,7 +393,8 @@ public class Chart extends AbstractWabitObject {
 	 */
 	public int findColumnIndexByName(String name) {
 		for (int i = 0; i < chartColumns.size(); i++) {
-			if (SQLPowerUtils.areEqual(chartColumns.get(i).getName(), name)) {
+			if (chartColumns.get(i).getName() != null && 
+					chartColumns.get(i).getName().equalsIgnoreCase(name)) {
 				return i;
 			}
 		}
