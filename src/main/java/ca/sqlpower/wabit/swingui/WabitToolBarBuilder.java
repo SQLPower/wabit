@@ -372,7 +372,7 @@ public class WabitToolBarBuilder {
 	}
 	
 	/**
-	 * Add a separatot to the toolbar.
+	 * Add a separator to the toolbar.
 	 */
 	public void addSeparator() {
 		buttonBar.addSeparator();
@@ -387,6 +387,7 @@ public class WabitToolBarBuilder {
         if (addForumButton) {
         	buttonBar.add(forumButton, ExpandLayout.RIGHT_IMAGE_CONSTRAINT);
         }
+        buttonBar.repaint();
     }
 
 }
