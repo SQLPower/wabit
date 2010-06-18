@@ -79,6 +79,8 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
      * Lists of Formatting Options for date
      */
     private final List<SimpleDateFormat> dateFormats = new ArrayList<SimpleDateFormat>();
+    
+    private final List<DecimalFormat> numberFormats = ReportUtil.getNumberFormats();
 
     private final LayoutPanel reportLayoutPanel;
 
@@ -398,6 +400,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         final JLabel dataTypeLabel = new JLabel("Type");
         
         final JComboBox formatComboBox = new JComboBox();
+        formatComboBox.setEditable(true);
         final JLabel formatLabel = new JLabel("Format");
         
         
@@ -551,13 +554,9 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         } else {
             setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
             if (ci.getFormat() != null) {
-                if (ci.getFormat() instanceof SimpleDateFormat) {
-                    formatComboBox.setSelectedItem(((SimpleDateFormat) ci.getFormat()).toPattern());
-                } else if (ci.getFormat() instanceof DecimalFormat) {
-                    formatComboBox.setSelectedItem(((DecimalFormat) ci.getFormat()).toPattern());
-                } else {
-                    throw new ClassCastException("Cannot cast the format " + ci.getFormat().getClass() + " to a known format");
-                }
+            	this.setOrInsertFormat(
+            			formatComboBox,
+            			ci.getFormat());                
             }
         }
         
@@ -576,6 +575,7 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 setItemforFormatComboBox(formatComboBox, (DataType)dataTypeComboBox.getSelectedItem());
             }
         });
+
         
         if (ci.getWillGroupOrBreak().equals(GroupAndBreak.GROUP)) {
             groupRadioButton.setSelected(true);
@@ -614,8 +614,9 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 ci.setDataType((DataType)dataTypeComboBox.getSelectedItem());
                 logger.debug("formatCombobBox.getSelectedItem is"+ (String)formatComboBox.getSelectedItem());
                 
-                if (formatComboBox.getSelectedItem() != null &&
-                        ((String)formatComboBox.getSelectedItem()).equals(ReportUtil.DEFAULT_FORMAT_STRING)) {
+                if (((DataType)dataTypeComboBox.getSelectedItem()).equals(DataType.TEXT) ||
+                		(formatComboBox.getSelectedItem() != null &&
+                        ((String)formatComboBox.getSelectedItem()).equals(ReportUtil.DEFAULT_FORMAT_STRING))) {
                         ci.setFormat(null);
                     }
                 else {
@@ -654,14 +655,41 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         };
     }
     
-    /**
+    private void setOrInsertFormat(
+    		JComboBox formatComboBox, 
+    		Format format) {
+		
+    	final String pattern;
+    	if (format instanceof SimpleDateFormat) {
+    		pattern = ((SimpleDateFormat)format).toPattern();
+    	} else if (format instanceof DecimalFormat) {
+    		pattern = ((DecimalFormat)format).toPattern();
+    	} else {
+    		throw new AssertionError("Unknown format class.");
+    	}
+    	
+    	for (int i = 0; i < formatComboBox.getItemCount(); i++) {
+    		String currentPattern = (String)formatComboBox.getItemAt(i);
+    		if (currentPattern.equals(pattern)) {
+    			// It's already there.
+    			formatComboBox.setSelectedIndex(i);
+    			return;
+    		}
+    	}
+    	
+    	// It was not in the list before. Add and select.
+    	formatComboBox.addItem(pattern);
+    	formatComboBox.setSelectedItem(pattern);
+	}
+
+	/**
      * Helper method for {@link #createColumnPropsPanel(FormLayout, ColumnInfo)}.
      */
     private void setItemforFormatComboBox(JComboBox combobox, DataType dataType) {
         combobox.removeAllItems();
         combobox.addItem(ReportUtil.DEFAULT_FORMAT_STRING);
         if(dataType == DataType.NUMERIC) {
-            for(NumberFormat item : ReportUtil.getNumberFormats()) {
+            for(NumberFormat item : numberFormats) {
                 combobox.addItem(((DecimalFormat)item).toPattern());
             }
         } else if(dataType == DataType.DATE) {
@@ -669,7 +697,6 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                 combobox.addItem(((SimpleDateFormat)item).toPattern());
             }
         }
-        
     }
     
     /**
@@ -683,15 +710,19 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
                     return decimalFormat;
                 }
             }
+            // Could not find it. Let's create one.
+            return new DecimalFormat(pattern);
         } else if(dataType == DataType.DATE) {
             for(SimpleDateFormat dateFormat: dateFormats) {
                 if((dateFormat.toPattern()).equals(pattern)){
                     return dateFormat;
                 }
             }
+            // Could not find it. Let's create one.
+            return new SimpleDateFormat(pattern);
+        } else {
+        	throw new AssertionError("Unknown expected format.");
         }
-        
-        return null;
     }
 
     public void processEvent(PInputEvent event, int type) {
