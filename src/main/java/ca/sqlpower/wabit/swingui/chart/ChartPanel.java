@@ -26,6 +26,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.beans.PropertyChangeEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -262,6 +265,17 @@ public class ChartPanel implements WabitPanel {
         }
     };
 
+	/**
+	 * {@link MouseListener} that listens for mouse clicks to update the chart
+	 * from GUI.
+	 */
+    private MouseListener genericMouseListener = new MouseAdapter() {
+    	@Override
+    	public void mouseClicked(MouseEvent e) {
+    		updateChartFromGUI();
+    	}
+	};
+
     private ChangeListener genericChangeHandler = new ChangeListener() {
         public void stateChanged(ChangeEvent e) {
             updateChartFromGUI();
@@ -372,32 +386,10 @@ public class ChartPanel implements WabitPanel {
 
         xaxisLabelRotationSlider.addChangeListener(genericChangeHandler);
         
-        gratuitousAnimationCheckbox.addChangeListener(genericChangeHandler);
+        gratuitousAnimationCheckbox.addMouseListener(genericMouseListener);
         
-        xAxisAuto.addChangeListener(genericChangeHandler);
-        xAxisAuto.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if (xAxisAuto.isSelected()) {
-					xAxisMax.setEnabled(false);
-					xAxisMin.setEnabled(false);
-				} else {
-					xAxisMax.setEnabled(true);
-					xAxisMin.setEnabled(true);
-				}
-			}
-		});
-        yAxisAuto.addChangeListener(genericChangeHandler);
-        yAxisAuto.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent e) {
-				if (yAxisAuto.isSelected()) {
-					yAxisMax.setEnabled(false);
-					yAxisMin.setEnabled(false);
-				} else {
-					yAxisMax.setEnabled(true);
-					yAxisMin.setEnabled(true);
-				}
-			}
-		});
+        xAxisAuto.addMouseListener(genericMouseListener);
+        yAxisAuto.addMouseListener(genericMouseListener);
         
         xAxisMax.addChangeListener(genericChangeHandler);
         yAxisMax.addChangeListener(genericChangeHandler);
@@ -467,6 +459,11 @@ public class ChartPanel implements WabitPanel {
     		
     		xAxisAuto.setSelected(chart.isAutoXAxisRange());
     		yAxisAuto.setSelected(chart.isAutoYAxisRange());
+    		
+    		xAxisMax.setEnabled(!chart.isAutoXAxisRange());
+    		xAxisMin.setEnabled(!chart.isAutoXAxisRange());
+    		yAxisMax.setEnabled(!chart.isAutoYAxisRange());
+    		yAxisMin.setEnabled(!chart.isAutoYAxisRange());
     		
     		xAxisMax.setValue(chart.getXAxisMaxRange());
     		yAxisMax.setValue(chart.getYAxisMaxRange());
