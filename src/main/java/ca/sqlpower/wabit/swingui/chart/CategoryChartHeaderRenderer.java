@@ -28,7 +28,6 @@ import javax.swing.table.TableColumnModel;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SQL;
-import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 
@@ -61,7 +60,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 TableColumnModel columnModel = tableHeader.getColumnModel();
                 int index = columnModel.getColumnIndexAtX(sourceCombo.getX());
                 ChartColumn identifier = getChartColumns().get(
-                		findColumnIndexByName(getChartColumns(), 
+                		chartPanel.getChart().findColumnIndexByName( 
                 				(String) columnModel.getColumn(index).getHeaderValue()));
                 identifier.setRoleInChart((ColumnRole) e.getItem());
                 tableHeader.repaint();
@@ -109,7 +108,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
             }
-            int properIndex = findColumnIndexByName(getChartColumns(), 
+            int properIndex = chartPanel.getChart().findColumnIndexByName(
             		(String) columnModel.getColumn(column).getHeaderValue());
             final JComboBox rolePopupBox = makeRoleBox(properIndex, getChartColumns());
             
@@ -180,7 +179,7 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
         	// the result set, and prunes out duplicates. However, this header
         	// is dependent on the result set so it is unaware of this pruning process.
         	// We need to locate the proper index of the duplicate column, if any.
-        	int index = findColumnIndexByName(getChartColumns(), (String) value);
+        	int index = chartPanel.getChart().findColumnIndexByName((String) value);
         	if (index != -1) {
         		JComboBox roleBox = makeRoleBox(index, getChartColumns());
         		newHeader.add(roleBox, BorderLayout.NORTH);
@@ -250,23 +249,4 @@ class CategoryChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 		return chartPanel.getChart().getColumns();
 	}
 
-	/**
-	 * Finds the index of a {@link ChartColumn} from a {@link List} given the
-	 * name to search for.
-	 * 
-	 * @param columns
-	 *            The {@link List} of {@link ChartColumn}s.
-	 * @param name
-	 *            The name of the {@link ChartColumn} to look for.
-	 * @return The index of the found {@link ChartColumn}, or -1 if it is not
-	 *         found.
-	 */
-	private int findColumnIndexByName(List<ChartColumn> columns, String name) {
-		for (int i = 0; i < columns.size(); i++) {
-			if (SQLPowerUtils.areEqual(columns.get(i).getName(), name)) {
-				return i;
-			}
-		}
-		return -1;
-	}
 }

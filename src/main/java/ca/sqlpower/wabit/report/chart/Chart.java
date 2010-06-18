@@ -39,6 +39,7 @@ import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
 import ca.sqlpower.swingui.ColourScheme;
+import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -372,7 +373,7 @@ public class Chart extends AbstractWabitObject {
         }
 	}
 
-	private static ChartColumn findByName(List<ChartColumn> cols, String name) {
+	public static ChartColumn findByName(List<ChartColumn> cols, String name) {
         for (ChartColumn col : cols) {
             if (col.getName().equalsIgnoreCase(name)) {
                 return col;
@@ -380,6 +381,24 @@ public class Chart extends AbstractWabitObject {
         }
         return null;
     }
+
+	/**
+	 * Finds the index of a {@link ChartColumn} from the {@link List} of
+	 * children based on the given name to search for.
+	 * 
+	 * @param name
+	 *            The name of the {@link ChartColumn} to look for.
+	 * @return The index of the found {@link ChartColumn}, or -1 if it is not
+	 *         found.
+	 */
+	public int findColumnIndexByName(String name) {
+		for (int i = 0; i < chartColumns.size(); i++) {
+			if (SQLPowerUtils.areEqual(chartColumns.get(i).getName(), name)) {
+				return i;
+			}
+		}
+		return -1;
+	}
 
     /**
      * For internal use only (while refreshing the column identifier list).

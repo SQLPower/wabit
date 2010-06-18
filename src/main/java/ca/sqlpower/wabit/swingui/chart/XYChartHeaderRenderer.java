@@ -25,10 +25,12 @@ import javax.swing.event.PopupMenuEvent;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.sql.SQL;
+import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.report.chart.ChartColumn;
 import ca.sqlpower.wabit.report.chart.ColumnRole;
 
@@ -76,7 +78,7 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 String xAxisColName = (String) e.getItem();
                 
                 ChartColumn foundColumn = null;
-                for (ChartColumn column : chartPanel.getChart().getColumns()) {
+                for (ChartColumn column : getChartColumns()) {
                 	if (column.getColumnName().equals(xAxisColName)) {
                 		foundColumn = column;
                 		break;
@@ -168,15 +170,19 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
                 return;
             }
             
-            final int column = tableHeader.getColumnModel().getColumnIndexAtX(e.getX());
+            final TableColumnModel columnModel = tableHeader.getColumnModel();
+            final int column = columnModel.getColumnIndexAtX(e.getX());
             final ChartColumn chartColumn;
             if (column < 0) {
                 logger.debug("Ignoring out-of-bounds click (x=" + e.getX() + " is not over a column)");
                 return;
-            } else {
-                chartColumn = getChartColumns().get(column);
-                logger.debug("Making box for column " + column + " (" + chartColumn + ")");
             }
+
+            
+            chartColumn = Chart.findByName(
+            		getChartColumns(), 
+            		(String) columnModel.getColumn(column).getHeaderValue());
+            logger.debug("Making box for column " + column + " (" + chartColumn + ")");
             
             currentColumn = chartColumn;
             
@@ -270,8 +276,15 @@ class XYChartHeaderRenderer implements ChartTableHeaderCellRenderer {
 	                table, value, isSelected, hasFocus, row, column);
 	        final JPanel newHeader = new JPanel(new BorderLayout());
 	        
-	        if (chartPanel.getChart().getColumns().size() > 0) {
-	        	ChartColumn chartColumn = getChartColumns().get(column);
+	        if (getChartColumns().size() > 0) {
+	        	
+	        	// If there is more than one column with the same name, there is going
+	        	// to be an index out of bounds exception unless we compensate.
+	        	// The Chart class' syncWithRs method matches column names from
+	        	// the result set, and prunes out duplicates. However, this header
+	        	// is dependent on the result set so it is unaware of this pruning process.
+	        	// We need to locate the first existing column with the same name, if any.
+	        	ChartColumn chartColumn = Chart.findByName(getChartColumns(), (String) value);
 		        newHeader.add(makeRoleBox(chartColumn), BorderLayout.NORTH);
 		        newHeader.add(makeXAxisBox(chartColumn), BorderLayout.CENTER);
 	        }
