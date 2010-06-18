@@ -34,6 +34,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -173,7 +174,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * Persisted {@link WabitObject} buffer, contains all the data that was
 	 * passed into the persistedObject call in the order of insertion
 	 */
-	protected List<PersistedSPObject> persistedObjects = new LinkedList<PersistedSPObject>();
+	protected Map<String, PersistedSPObject> persistedObjects = new HashMap<String, PersistedSPObject>();
 
 	/**
 	 * This will be the list we use to rollback persisted objects.
@@ -485,14 +486,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * null is returned.
 	 */
 	private PersistedSPObject findPersistedObjectByUUID(String uuid) {
-		if (uuid != null) {
-			for (PersistedSPObject pwo : persistedObjects) {
-				if (uuid.equals(pwo.getUUID())) {
-					return pwo;
-				}
-			}
-		}
-		return null;
+		return persistedObjects.get(uuid);
 	}
 	
 	protected final Comparator<PersistedSPObject> persistedObjectComparator = new Comparator<PersistedSPObject>() {
@@ -594,9 +588,10 @@ public class WabitSessionPersister implements SPPersister {
 	 * @throws SPPersistenceException
 	 */
 	private void commitObjects() throws SPPersistenceException {
-		Collections.sort(persistedObjects, persistedObjectComparator);
+		List<PersistedSPObject> orderedPersistedObjects = new LinkedList<PersistedSPObject>(persistedObjects.values());
+		Collections.sort(orderedPersistedObjects, persistedObjectComparator);
 		
-		for (PersistedSPObject pwo : persistedObjects) {
+		for (PersistedSPObject pwo : orderedPersistedObjects) {
 			if (pwo.isLoaded())
 				continue;
 			SPObject parent = SQLPowerUtils.findByUuid(root, pwo
@@ -1029,17 +1024,9 @@ public class WabitSessionPersister implements SPPersister {
 	 * @return Whether or not the {@link WabitObject} exists
 	 */
 	private boolean exists(String uuid) {
-		if (!objectsToRemove.containsKey(uuid)) {
-			for (PersistedSPObject pwo : persistedObjects) {
-				if (uuid.equals(pwo.getUUID())) {
-					return true;
-				}
-			}
-			if (SQLPowerUtils.findByUuid(root, uuid, SPObject.class) != null) {
-				return true;
-			}
-		}
-		return false;
+		return (!objectsToRemove.containsKey(uuid) && (persistedObjects
+				.containsKey(uuid) || SQLPowerUtils.findByUuid(root, uuid,
+				SPObject.class) != null));
 	}
 
 	/**
@@ -1048,7 +1035,7 @@ public class WabitSessionPersister implements SPPersister {
 	 */
 	private SPObject createObjectByCalls(String parentUUID, String classType)
 			throws SPPersistenceException {
-		for (PersistedSPObject pwo : persistedObjects) {
+		for (PersistedSPObject pwo : persistedObjects.values()) {
 			if (pwo.isLoaded())
 				continue;
 			if (pwo.getType().equals(classType)
@@ -1337,7 +1324,7 @@ public class WabitSessionPersister implements SPPersister {
 
 			PersistedSPObject pwo = new PersistedSPObject(parentUUID,
 					type, uuid, index);
-			persistedObjects.add(pwo);
+			persistedObjects.put(uuid, pwo);
 		}
 	}
 

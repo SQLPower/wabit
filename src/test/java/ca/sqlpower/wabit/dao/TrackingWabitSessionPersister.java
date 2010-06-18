@@ -77,10 +77,11 @@ public class TrackingWabitSessionPersister extends WabitSessionPersister {
 		persisterCalls.add(SPPersistMethod.commit);
 		
 		if (beginCount == commitCount) {
-			Collections.sort(persistedObjects, persistedObjectComparator);
+			List<PersistedSPObject> orderedPersistedObjects = new ArrayList<PersistedSPObject>(persistedObjects.values());
+			Collections.sort(orderedPersistedObjects, persistedObjectComparator);
 			
 			savedPersistedObjects = new ArrayList<PersistedSPObject>();
-			for (PersistedSPObject pwo : persistedObjects) {
+			for (PersistedSPObject pwo : orderedPersistedObjects) {
 				savedPersistedObjects.add(new PersistedSPObject(
 						pwo.getParentUUID(), pwo.getType(), pwo.getUUID(), pwo.getIndex()));
 			}
