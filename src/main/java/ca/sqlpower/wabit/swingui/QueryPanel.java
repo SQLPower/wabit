@@ -831,6 +831,7 @@ public class QueryPanel implements WabitPanel {
     	
     	queryPenAndTextTabPane.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e) {
+				boolean execute = false;
 				if (queryPenPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					//This is temporary until we can parse the user string and set the query cache to look like 
 					//the query the user modified.
@@ -850,11 +851,19 @@ public class QueryPanel implements WabitPanel {
 						queryUIComponents.getQueryArea().setText(null);
 						
 						queryCache.removeUserModifications();
+						
+						boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+						if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+							execute = true;
+						}
+						
 						queryPen.getGlobalWhereText().setVisible(true);
 						groupingCheckBox.setVisible(true);
 						whereText.setVisible(true);
 						changeToGUIToolBar();
+						
 					}
+					
 				} else if (queryToolPanel == queryPenAndTextTabPane.getSelectedComponent()) {
 					if (!queryCache.isScriptModified()) {
 						queryUIComponents.getQueryArea().setText(queryCache.generateQuery());
@@ -864,6 +873,11 @@ public class QueryPanel implements WabitPanel {
 						// any changes, changing back to the query pen will not prompt
 						// the user that "changes will be lost".
 						queryCache.removeUserModifications();
+						
+						boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
+						if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+							execute = true;
+						}
 					}
 					queryPen.getGlobalWhereText().setVisible(false);
 					groupingCheckBox.setVisible(false);
@@ -871,8 +885,7 @@ public class QueryPanel implements WabitPanel {
 					changeToTextToolBar();
 				}
 				
-				boolean disableAutoExecute = context.getPrefs().getBoolean(WabitSessionContext.DISABLE_QUERY_AUTO_EXECUTE, false);
-				if (queryCache.isAutomaticallyExecuting() && !disableAutoExecute) {
+				if (execute) {
 					execute();
 				}
 			}
