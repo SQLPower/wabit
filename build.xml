@@ -578,7 +578,7 @@ SQL Power Wabit Ant build file
 				mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"
 				icon="src/main/resources/icons/wabit.icns"
 				jvmversion="1.6+" 
-				shortname="Wabit"
+				shortname="SQL Power Wabit"
 				stubfile="ext-tools-home/osx/JavaApplicationStub"
 				vmoptions="-Xms256m -Xmx1024m">
 			
