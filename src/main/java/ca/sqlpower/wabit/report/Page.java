@@ -23,8 +23,11 @@ import java.awt.Font;
 import java.awt.print.PageFormat;
 import java.awt.print.Paper;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 
@@ -122,36 +125,80 @@ public class Page extends AbstractWabitObject {
      * points for the layout.
      */
     private final List<Guide> guides = new ArrayList<Guide>();
-    
+
 	/**
-	 * FIXME This enum defines the {@link WabitObject} child classes a
-	 * {@link Page} takes as well as the ordinal order of these child
-	 * classes such that the class going before does not depend on the class
-	 * that goes after. This is here temporarily, see bug 2327 for future enhancements.
+	 * FIXME This enum defines the {@link SPObject} child classes a {@link Page}
+	 * takes as well as the ordinal order of these child classes such that the
+	 * class going before does not depend on the class that goes after. This is
+	 * here temporarily, see bug 2327 for future enhancements.
 	 * http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
 	 */
 	public enum SPObjectOrder {
 		CONTENT_BOX(ContentBox.class),
 		GUIDE(Guide.class);
 		
-		private final Class<? extends SPObject> clazz;
+		/**
+		 * @see #getSuperChildClass()
+		 */
+		private final Class<? extends SPObject> superChildClass;
 		
-		private SPObjectOrder(Class<? extends SPObject> clazz) {
-			this.clazz = clazz;
+		/**
+		 * @see #getChildClasses()
+		 */
+		private final Set<Class<? extends SPObject>> classes;
+
+		/**
+		 * Creates a new {@link SPObjectOrder},
+		 * 
+		 * @param superChildClass
+		 *            The highest {@link SPObject} class that the
+		 *            {@link SPObject#childPositionOffset(Class)} method looks
+		 *            at to determine the index.
+		 * @param classes
+		 *            The list of child {@link SPObject} class varargs which
+		 *            share the same ordering in the list of children. These
+		 *            classes must be extending/implementing
+		 *            {@link #superChildClass}.
+		 */
+		private SPObjectOrder(Class<? extends SPObject> superChildClass, Class<? extends SPObject>... classes) {
+			this.superChildClass = superChildClass;
+			this.classes = new HashSet<Class<? extends SPObject>>(Arrays.asList(classes));
 		}
-		
-		public Class<? extends SPObject> getChildClass() {
-			return clazz;
+
+		/**
+		 * Returns the highest {@link SPObject} class that the
+		 * {@link SPObject#childPositionOffset(Class)} method looks at to
+		 * determine the index.
+		 */
+		public Class<? extends SPObject> getSuperChildClass() {
+			return superChildClass;
+		}
+
+		/**
+		 * Returns the {@link Set} of {@link SPObject} classes that share the
+		 * same ordering in the list of children. These classes must either
+		 * extend/implement from the same class type given by
+		 * {@link SPObjectOrder#getSuperChildClass()}.
+		 */
+		public Set<Class<? extends SPObject>> getChildClasses() {
+			return Collections.unmodifiableSet(classes);
 		}
 		
 		public static SPObjectOrder getOrderBySimpleClassName(String name) {
 			for (SPObjectOrder order : values()) {
-				if (order.clazz.getSimpleName().equals(name)) {
+				if (order.getSuperChildClass().getSimpleName().equals(name)) {
 					return order;
+				} else {
+					for (Class<? extends SPObject> childClass : order.getChildClasses()) {
+						if (childClass.getSimpleName().equals(name)) {
+							return order;
+						}
+					}
 				}
 			}
-			throw new IllegalArgumentException("The WabitObject class \"" + name + 
-					"\" does not exist or is not a child type of WabitWorkspace.");
+			throw new IllegalArgumentException("The " + SPObject.class.getSimpleName() + 
+					" class \"" + name + "\" does not exist or is not a child type " +
+							"of " + Page.class.getSimpleName() + ".");
 		}
 		
 	}

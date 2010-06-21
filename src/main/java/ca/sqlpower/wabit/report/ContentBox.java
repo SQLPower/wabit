@@ -23,8 +23,11 @@ import java.awt.Font;
 import java.awt.geom.Rectangle2D;
 import java.beans.PropertyChangeEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.CleanupExceptions;
@@ -39,7 +42,10 @@ import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitUtils;
 import ca.sqlpower.wabit.WabitWorkspace;
+import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
+import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.report.selectors.Selector;
+import ca.sqlpower.wabit.report.selectors.TextBoxSelector;
 
 /**
  * Represents a box on the page which has an absolute position and size.
@@ -49,6 +55,82 @@ import ca.sqlpower.wabit.report.selectors.Selector;
  * values will
  */
 public class ContentBox extends AbstractWabitObject implements SPVariableResolverProvider {
+
+	/**
+	 * FIXME This enum defines the {@link SPObject} child classes a
+	 * {@link ContentBox} takes as well as the ordinal order of these child
+	 * classes such that the class going before does not depend on the class
+	 * that goes after. This is here temporarily, see bug 2327 for future
+	 * enhancements. http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
+	 */
+	public enum SPObjectOrder {
+		REPORT_CONTENT_RENDERER(ReportContentRenderer.class),
+		SELECTOR(Selector.class, ComboBoxSelector.class, DateSelector.class, TextBoxSelector.class);
+		
+		/**
+		 * @see #getSuperChildClass()
+		 */
+		private final Class<? extends SPObject> superChildClass;
+		
+		/**
+		 * @see #getChildClasses()
+		 */
+		private final Set<Class<? extends SPObject>> classes;
+
+		/**
+		 * Creates a new {@link SPObjectOrder},
+		 * 
+		 * @param superChildClass
+		 *            The highest {@link SPObject} class that the
+		 *            {@link SPObject#childPositionOffset(Class)} method looks
+		 *            at to determine the index.
+		 * @param classes
+		 *            The list of child {@link SPObject} class varargs which
+		 *            share the same ordering in the list of children. These
+		 *            classes must be extending/implementing
+		 *            {@link #superChildClass}.
+		 */
+		private SPObjectOrder(Class<? extends SPObject> superChildClass, Class<? extends SPObject>... classes) {
+			this.superChildClass = superChildClass;
+			this.classes = new HashSet<Class<? extends SPObject>>(Arrays.asList(classes));
+		}
+
+		/**
+		 * Returns the highest {@link SPObject} class that the
+		 * {@link SPObject#childPositionOffset(Class)} method looks at to
+		 * determine the index.
+		 */
+		public Class<? extends SPObject> getSuperChildClass() {
+			return superChildClass;
+		}
+
+		/**
+		 * Returns the {@link Set} of {@link SPObject} classes that share the
+		 * same ordering in the list of children. These classes must either
+		 * extend/implement from the same class type given by
+		 * {@link SPObjectOrder#getSuperChildClass()}.
+		 */
+		public Set<Class<? extends SPObject>> getChildClasses() {
+			return Collections.unmodifiableSet(classes);
+		}
+		
+		public static SPObjectOrder getOrderBySimpleClassName(String name) {
+			for (SPObjectOrder order : values()) {
+				if (order.getSuperChildClass().getSimpleName().equals(name)) {
+					return order;
+				} else {
+					for (Class<? extends SPObject> childClass : order.getChildClasses()) {
+						if (childClass.getSimpleName().equals(name)) {
+							return order;
+						}
+					}
+				}
+			}
+			throw new IllegalArgumentException("The SPObject class \"" + name + 
+					"\" does not exist or is not a child type of ContentBox.");
+		}
+		
+	}
 	
 	private static final String EMPTY_BOX_NAME = "Empty Content Box";
 

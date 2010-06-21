@@ -575,10 +575,25 @@ public class WabitSessionPersister implements SPPersister {
 				Group.SPObjectOrder order2 = Group.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
 				
 				c = order1.compareTo(order2);
+				
+			} else if (previousAncestor.getType().equals(ContentBox.class.getSimpleName())) {
+				ContentBox.SPObjectOrder order1 = ContentBox.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				ContentBox.SPObjectOrder order2 = ContentBox.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
+			} else if (previousAncestor.getType().equals(Report.class.getSimpleName())) {
+				Report.SPObjectOrder order1 = Report.SPObjectOrder.getOrderBySimpleClassName(ancestor1.getType());
+				Report.SPObjectOrder order2 = Report.SPObjectOrder.getOrderBySimpleClassName(ancestor2.getType());
+				
+				c = order1.compareTo(order2);
+				
 			} else {
 				// XXX The comparator should really never reach
 				// this else block. However in the case that it does, compare by UUID.
-				throw new AssertionError("Comparator ran out of options. Comparing " + o1 + " with " + o2);
+				throw new AssertionError("Comparator ran out of options. " +
+						"Comparing " + o1 + " with " + o2 + ". " +
+								"Ancestor Type: " + previousAncestor.getType() + ". Ancestor UUID: " + previousAncestor.getUUID());
 //				c = ancestor1.getUUID().compareTo(ancestor2.getUUID());
 				
 			}
