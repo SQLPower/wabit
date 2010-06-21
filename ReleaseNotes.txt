@@ -1,17 +1,39 @@
 SQL Power Wabit Release Notes
 
-Noteworthy changes in 1.3.1
-Bug Fixes
-    * Fixes a bug where the parameters would reset after doing a print preview
-    * Fixes a bug in the way parameters were saved/loaded. Some would just disapear.
-    * fixes a bug where relational resultsets would overflow their allocated space in 
-        the thin client 
-    * Fixes bugs with the result set renderer totals
+Noteworthy changes in 1.3.2
+Bug Fixes:
 
-Improvements
-    * Performance fixes when updating a result set in the thin client
-    * Result sets embeded in reports display groupings properly
-    * Thin client now displays the report parameters
+    * Fixes a bug in the persistence order of OLAP queries properties.
+    * Fixed a bug where the query panel toolbar was not being painted correctly when switching from the query pen to the SQL text editor.
+    * Fixed a bug in the charts panel where column names were compared in a case-sensitive way.
+    * Fixed IOOBE when editing XY type charts.
+    * Fixed the bug where a creating a Chart with duplicate columns caused an IOOBE.
+    * Moved some very expensive string formatting into log level checks.
+    * Grand totals would not display without sub totals.
+    * Images data does not live in the user session anymore.
+    * Various other bugs were fixed and tons of performance optimizations were added.
+
+Improvements:
+
+    * Support for page breaks between each section of a report.
+    * Support for custom numeric and date formats in reports.
+    * Custom font color for the data cells and headers. 
+
+Noteworthy changes in 1.3.1
+
+Bug Fixes:
+
+    * Parameters no longer reset after doing a print preview
+    * Parameters no longer risk disappearance when they are saved and loaded.
+    * Relational result sets no longer overflow their allocated space in the thin client
+    * Totals are now calculated correctly in all cases in paginated reports
+    * The thin client now recognizes when there are no workspace available, rather than displaying 'loading' forever 
+
+Improvements:
+
+    * Faster performance when updating a result set in the thin client
+    * Result sets embedded in reports display groupings properly
+    * Thin client now displays the report parameters 
 
 Noteworthy changes in 1.3.0-RC2
 Bug Fixes
