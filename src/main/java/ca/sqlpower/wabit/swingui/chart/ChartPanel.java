@@ -681,7 +681,7 @@ public class ChartPanel implements WabitPanel {
 			new JPanel(
 					new MigLayout(
 							"fill, hidemode 2",
-							"[grow]10[fill, grow]",
+							"[grow]10[fill, shrinkprio 101]",
 							"[fill]"));
 	
 		JLabel optionsCategoryLabel = new JLabel("Options");
@@ -698,7 +698,7 @@ public class ChartPanel implements WabitPanel {
 						JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, 
 						JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		optionsScrollPane.setBorder(null);
-		bottomPanel.add(optionsScrollPane, "push, width 280!, gapleft 15");
+		bottomPanel.add(optionsScrollPane, "push, gapleft 15");
 		
 		JPanel chartAndErrorPanel = new JPanel(new BorderLayout());
 		chartAndErrorPanel.add(chartError, BorderLayout.NORTH);
