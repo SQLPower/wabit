@@ -1,8 +1,8 @@
 <installation version="1.0">
 	<!-- comment -->
 	<info>
-		<appname>Wabit</appname>
-		<appversion>1.3.1</appversion>
+		<appname>SQL Power Wabit</appname>
+		<appversion>1.3.2</appversion>
 		<url>http://code.google.com/p/wabit
 		</url>
 		<javaversion>1.6</javaversion>
