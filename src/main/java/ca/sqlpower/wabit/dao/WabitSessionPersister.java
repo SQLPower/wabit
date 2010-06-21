@@ -779,9 +779,11 @@ public class WabitSessionPersister implements SPPersister {
 					getPropertyAndRemove(uuid, "cubeName"), String.class);
 			String modifiedOlapQuery = (String) converter.convertToComplexType(
 					getPropertyAndRemove(uuid, "modifiedOlapQuery"), String.class);
+			Olap4jDataSource olapDataSource = (Olap4jDataSource) converter.convertToComplexType(
+					getPropertyAndRemove(uuid, "olapDataSource"), Olap4jDataSource.class);
 
-			spo = new OlapQuery(uuid, session.getContext(), name, queryName,
-					catalogName, schemaName, cubeName, modifiedOlapQuery);
+			spo = new OlapQuery(uuid, session.getContext(), name, queryName, catalogName,
+					schemaName, cubeName, modifiedOlapQuery, true, olapDataSource);
 
 		} else if (type.equals(Page.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(

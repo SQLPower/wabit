@@ -199,10 +199,9 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
             				oldOlapQuery.getSchemaName(), 
             				oldOlapQuery.getCubeName(),
             				oldOlapQuery.getModifiedOlapQuery(),
-            				oldOlapQuery.actsAsVariableProvider);
+            				oldOlapQuery.actsAsVariableProvider,
+            				oldOlapQuery.getOlapDataSource());
             
-            newQuery.setOlapDataSource(oldOlapQuery.getOlapDataSource());
-            newQuery.setName(oldOlapQuery.getName());
             newQuery.setNonEmpty(oldOlapQuery.isNonEmpty());
             
             oldOlapQuery.updateAttributes();
@@ -307,8 +306,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     
     /**
      * Creates a new, empty query that will use the given persistent object ID
-     * when it's saved. This constructor is only of particular use to the
-     * persistence layer.
+     * when it's saved.
      */
     public OlapQuery(
     		String uuid, 
@@ -325,8 +323,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     
     /**
      * Creates a new, empty query that will use the given persistent object ID
-     * when it's saved. This constructor is only of particular use to the
-     * persistence layer.
+     * when it's saved.
      * 
      * <p>This constructor exposes a supplemental parameter that tells the query if it should
      * provide the workspace with variables. Olap queries that are wrapped by a report should not 
@@ -344,6 +341,36 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
     		String modifiedOlapQuery, 
     		boolean actsAsVariableProvider) 
     {
+        this(uuid, olapMapping, name, queryName, catalogName, schemaName, cubeName, modifiedOlapQuery, actsAsVariableProvider, null);
+    }
+
+	/**
+	 * Creates a new, empty query that will use the given persistent object ID
+	 * when it's saved. This constructor is only of particular use to the
+	 * persistence layer.
+	 * 
+	 * <p>
+	 * This constructor exposes a supplemental parameter that tells the query if
+	 * it should provide the workspace with variables. Olap queries that are
+	 * wrapped by a report should not act as variable providers.
+	 * 
+	 * The extra {@link Olap4jDataSource} parameter is for the persistence
+	 * layer. The data source must exist before setting the current cube
+	 * property. By passing it in the constructor, this condition is enforced.
+	 * 
+	 */
+    public OlapQuery(
+    		String uuid, 
+    		OlapConnectionProvider olapMapping, 
+    		String name, 
+    		String queryName, 
+    		String catalogName, 
+    		String schemaName, 
+    		String cubeName, 
+    		String modifiedOlapQuery, 
+    		boolean actsAsVariableProvider,
+    		Olap4jDataSource olapDataSource) 
+    {
         super(uuid);
         this.olapMapping = olapMapping;
 		this.actsAsVariableProvider = actsAsVariableProvider;
@@ -353,6 +380,7 @@ public class OlapQuery extends AbstractWabitObject implements WabitResultSetProd
 		this.schemaName = schemaName;
 		this.cubeName = cubeName;
 		this.modifiedOlapQuery = modifiedOlapQuery;
+		setOlapDataSource(olapDataSource);
     }
     
     public void setCurrentCube(Cube currentCube) throws SQLException {

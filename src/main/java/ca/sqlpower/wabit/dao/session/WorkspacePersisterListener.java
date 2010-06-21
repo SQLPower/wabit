@@ -201,6 +201,7 @@ public class WorkspacePersisterListener implements SPListener {
 			}
 
 			public void sessionOpening(SessionLifecycleEvent<WabitSession> e) {
+				// no op
 			}
 		});
 		return listener;
@@ -603,12 +604,12 @@ public class WorkspacePersisterListener implements SPListener {
 					converter.convertToBasicType(olapQuery.getCubeName()));
 			this.persistProperty(uuid, "modifiedOlapQuery", DataType.STRING,
 					converter.convertToBasicType(olapQuery.getModifiedOlapQuery()));
+			this.persistProperty(uuid, "olapDataSource", DataType.STRING, 
+					converter.convertToBasicType(olapQuery.getOlapDataSource()));
 			
 			// Remaining properties
 			this.persistProperty(uuid, "nonEmpty", DataType.BOOLEAN,
 					converter.convertToBasicType(olapQuery.isNonEmpty()));
-			this.persistProperty(uuid, "olapDataSource", DataType.STRING, 
-					converter.convertToBasicType(olapQuery.getOlapDataSource()));
 			
 			if (olapQuery.getCurrentCube() != null) {
 				this.persistProperty(uuid, "currentCube", DataType.STRING,
