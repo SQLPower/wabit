@@ -669,8 +669,8 @@ SQL Power Wabit Ant build file
 					stayalive="false"
 					icon="${izpack.dir}/uninstall.ico">
 				<singleInstance
-					mutexName="Wabit Uninstaller"
-					windowTitle="Wabit Uninstaller"
+					mutexName="SQL Power Wabit Uninstaller"
+					windowTitle="SQL Power Wabit Uninstaller"
 				/>
 				<jre minVersion="1.6.0"/>
 			</config>
@@ -703,8 +703,8 @@ SQL Power Wabit Ant build file
 					stayalive="false"
 					icon="${izpack.dir}/installer-w.ico">
 				<singleInstance
-					mutexName="Wabit Installer"
-					windowTitle="Wabit Installer"
+					mutexName="SQL Power Wabit Installer"
+					windowTitle="SQL Power Wabit Installer"
 				/>
 				<jre minVersion="1.6.0"/>
 			</config>
