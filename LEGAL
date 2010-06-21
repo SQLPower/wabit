@@ -1,21 +1,21 @@
-The Wabit program source code, documentation, and binary packages are
+The SQL Power Wabit program source code, documentation, and binary packages are
 Copyright 2009 SQL Power Group Inc. All rights reserved.
 
-The Wabit relies on a number of third-party libraries, most of which
+The SQL Power Wabit relies on a number of third-party libraries, most of which
 are bundled with both the source and binary distributions.
 We redistribute those libraries under their own licensing terms,
 which are outlined in the user guide.  See the user guide (or its
 source file, doc/WabitUserGuide.xml) for details on the
 third-party libraries and their respective licences.
 
-Copyright 2009 SQL Power Group Inc. All rights reserved.
+Copyright 2010 SQL Power Group Inc. All rights reserved.
 
-Wabit is free software; you can redistribute it and/or
+SQL Power Wabit is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License as
 published by the Free Software Foundation; either version 3 of the
 License, or (at your option) any later version.
 
-Wabit is distributed in the hope that it will be useful,
+SQL Power Wabit is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 General Public License for more details.
@@ -24,48 +24,48 @@ You should have received a copy of the GNU General Public License
 along with this program (see the LICENSE file).  If not, see
 <http://www.gnu.org/licenses/>.
 
-Linking Wabit statically or dynamically with other modules
-is making a combined work based on Wabit.  Thus, the terms
+Linking SQL Power Wabit statically or dynamically with other modules
+is making a combined work based on SQL Power Wabit.  Thus, the terms
 and conditions of the GNU General Public License cover the whole
 combination.
 
 In addition, as a special exception, SQL Power gives you permission to
-combine Wabit program with free software programs or libraries that are
-released under the GNU LGPL and with the standard releases of the
+combine SQL Power Wabit program with free software programs or libraries that
+are released under the GNU LGPL and with the standard releases of the
 JavaBeans(TM) Activation Framework (JAF), JavaHelp(TM), and JavaMail (TM)
 reference implementations from Sun Microsystems, Inc. (or modified
 versions of such code, with unchanged license). You may copy and
-distribute such a system following the terms of the GNU GPL for Wabit
-and the licenses of the other code concerned.
+distribute such a system following the terms of the GNU GPL for
+SQL Power Wabit and the licenses of the other code concerned.
 
 As an additional special exception, SQL Power gives you permission to use
-Wabit together with publicly available JDBC drivers whether or not they
-are licensed compatibly with the GPL.
+SQL Power Wabit together with publicly available JDBC drivers whether or
+not they are licensed compatibly with the GPL.
 
 As a final special exception, SQL Power gives you permission to use
-Wabit together with any release of the JUnit test framework, and the
-Mondrian OLAP analysis engine, which are licensed under the Common
-Public License (CPL). The terms of the CPL govern our use and
+SQL Power Wabit together with any release of the JUnit test framework,
+and the Mondrian OLAP analysis engine, which are licensed under the
+Common Public License (CPL). The terms of the CPL govern our use and
 redistribution of these projects to you, and we do not extend any
 incompatible provisions of the GPL onto those packages.
 
-Note that people who make modified versions of Wabit are not obligated to
-grant this special exception for their modified versions; it is their
-choice whether to do so.  The GNU General Public License gives permission
-to release a modified version without this exception; this exception also
-makes it possible to release a modified version which carries forward
-this exception.
+Note that people who make modified versions of SQL Power Wabit are not
+obligated to grant this special exception for their modified versions; it is
+their choice whether to do so.  The GNU General Public License gives
+permission to release a modified version without this exception; this
+exception also makes it possible to release a modified version which carries
+forward this exception.
 
 
 Additional Restrictions for the Bundled SQL Server 2005 JDBC Driver
 
-The Wabit is bundled with Microsoft's JDBC driver for Microsoft
+The SQL Power Wabit is bundled with Microsoft's JDBC driver for Microsoft
 SQL Server.  That driver (the file sqlserver_2005.jar) is distributed
 under these additional restrictions:
 
-1. You may not redistribute copies of the Wabit download which
+1. You may not redistribute copies of the SQL Power Wabit download which
    includes the Oracle and/or Microsoft SQL Server JDBC drivers.  If
-   you wish to redistribute the Wabit, you must obtain and
+   you wish to redistribute the SQL Power Wabit, you must obtain and
    distribute the version which does not include these bundled drivers.
 
 2. You may not publish benchmark information about performance related
@@ -76,8 +76,8 @@ under these additional restrictions:
 
 4. You must comply with all domestic and international United States
    export laws when downloading and redistributing the software.  In
-   particular, you may not download the Wabit which includes bundled
-   3rd-party drivers to, or allow your copy of the Wabit with 3rd
+   particular, you may not download the SQL Power Wabit which includes bundled
+   3rd-party drivers to, or allow your copy of the SQL Power Wabit with 3rd
    party bundled drivers to be exported to a country on one of the
    export-controlled countries lists.
    
