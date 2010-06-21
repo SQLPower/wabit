@@ -6,12 +6,12 @@ Bug Fixes:
     * Fixes a bug in the persistence order of OLAP queries properties.
     * Fixed a bug where the query panel toolbar was not being painted correctly when switching from the query pen to the SQL text editor.
     * Fixed a bug in the charts panel where column names were compared in a case-sensitive way.
-    * Fixed IOOBE when editing XY type charts.
+    * Fixed an IndexOutOfBoundsException (IOOBE) when editing XY type charts.
     * Fixed the bug where a creating a Chart with duplicate columns caused an IOOBE.
-    * Moved some very expensive string formatting into log level checks.
-    * Grand totals would not display without sub totals.
-    * Images data does not live in the user session anymore.
-    * Various other bugs were fixed and tons of performance optimizations were added.
+    * Fixed a performance issue where memory intensive string formatting was performed when not necessary.
+    * Grand totals can now display without sub totals.
+    * Image data no longer resides in the user session, resulting in improved loading times.
+    * Various other bugs were fixed and several performance optimizations were added.
 
 Improvements:
 
