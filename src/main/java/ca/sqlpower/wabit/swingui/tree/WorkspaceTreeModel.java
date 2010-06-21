@@ -49,9 +49,11 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
 import ca.sqlpower.sql.PlDotIni;
 import ca.sqlpower.sql.SPDataSource;
+import ca.sqlpower.sqlobject.SQLColumn;
 import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLObject;
 import ca.sqlpower.sqlobject.SQLObjectException;
+import ca.sqlpower.sqlobject.SQLType;
 import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.wabit.WabitDataSource;
@@ -399,7 +401,11 @@ public class WorkspaceTreeModel implements TreeModel {
     	} else if (node instanceof SQLDatabase){
     		retval = false;
     	} else if (node instanceof SQLObject) {
-    		retval = !((SQLObject) node).allowsChildren();
+    		if (node instanceof SQLColumn) {
+    			retval = true;
+    		} else {
+    			retval = !((SQLObject) node).allowsChildren();
+    		}
     	} else if (node instanceof SPObject) {
     		retval = !((SPObject) node).allowsChildren();
     	} else {
