@@ -559,6 +559,10 @@ public class ChartSwingUtil {
             // axis.setDateFormatOverride(new SimpleDateFormat("MMM-yyyy"));
         }
         
+        if (legendPosition != LegendPosition.NONE) {
+            chart.getLegend().setPosition(legendPosition.getRectangleEdge());
+        }
+        
         if (!c.isAutoXAxisRange()) {
         	XYPlot xyplot = chart.getXYPlot();
             ValueAxis axis = xyplot.getDomainAxis();
