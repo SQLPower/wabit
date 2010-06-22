@@ -64,7 +64,7 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
 	 * enhancements. http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
 	 */
 	public enum SPObjectOrder {
-		REPORT_CONTENT_RENDERER(ReportContentRenderer.class),
+		REPORT_CONTENT_RENDERER(ReportContentRenderer.class, ChartRenderer.class, Label.class, CellSetRenderer.class, ImageRenderer.class, ResultSetRenderer.class),
 		SELECTOR(Selector.class, ComboBoxSelector.class, DateSelector.class, TextBoxSelector.class);
 		
 		/**
