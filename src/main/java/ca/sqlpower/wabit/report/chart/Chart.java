@@ -243,7 +243,11 @@ public class Chart extends AbstractWabitObject {
     	this.yaxisName = chartToCopy.yaxisName;
     	this.type = chartToCopy.type;
     	this.legendPosition = chartToCopy.legendPosition;
-    	this.chartColumns.addAll(chartToCopy.chartColumns);
+    	
+    	for (ChartColumn column : chartToCopy.chartColumns) {
+    		this.chartColumns.add(new ChartColumn(column));
+    	}
+    	
     	this.resultSetFilter = chartToCopy.resultSetFilter;
     	this.xAxisLabelRotation = chartToCopy.xAxisLabelRotation;
     	this.gratuitouslyAnimated = chartToCopy.gratuitouslyAnimated;

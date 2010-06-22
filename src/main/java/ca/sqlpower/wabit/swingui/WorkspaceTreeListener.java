@@ -346,13 +346,14 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			} else {
 			    if (lastPathComponent instanceof SPObject) {
 			    	
-			    	if (!(lastPathComponent instanceof WabitDataSource)) {
+			    	String uuid = ((SPObject)lastPathComponent).getUUID();
+					if (!(lastPathComponent instanceof WabitDataSource)) {
 			    		JMenuItem editItem = new JMenuItem(new ShowEditorAction(session.getWorkspace(),
 			    				(SPObject) lastPathComponent));
 			    		objectsMenu(
 			    				menu,
 			    				lastPathComponent.getClass().getSimpleName(),  
-			    				((SPObject)lastPathComponent).getUUID(),
+			    				uuid,
 			    				editItem,
 			    				WabitAccessManager.Permission.MODIFY);
 			    	}
@@ -363,7 +364,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				        	objectsMenu(
 				        			menu,
 				        			lastPathComponent.getClass().getSimpleName(),  
-				        			null,
+				        			uuid,
 				        			new JMenuItem(new EditCellAction(tree)),
 				        			WabitAccessManager.Permission.MODIFY);
 			        	}
@@ -371,7 +372,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			        	objectsMenu(
 			        			menu,
 			        			lastPathComponent.getClass().getSimpleName(),  
-			        			null,
+			        			uuid,
 			        			new JMenuItem(new DeleteFromTreeAction(session.getWorkspace(), 
 			        					(SPObject) lastPathComponent, context.getFrame(), context)),
 			        					WabitAccessManager.Permission.DELETE);
@@ -382,8 +383,8 @@ public class WorkspaceTreeListener extends MouseAdapter {
 			        	objectsMenu(
 			        			menu,
 			        			lastPathComponent.getClass().getSimpleName(),  
-			        			null,
-			        			new JMenuItem(new CopyUuidToClipboardAction(((SPObject)lastPathComponent).getUUID())),
+			        			uuid,
+			        			new JMenuItem(new CopyUuidToClipboardAction(uuid)),
 			        			WabitAccessManager.Permission.EXECUTE);
 			        }
 			        
@@ -399,7 +400,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 						sep = objectsMenu(
 								menu,
 								QueryCache.class.getSimpleName(),  
-								null,
+								uuid,
 								new JMenuItem(new AbstractAction("Stop Running", WabitIcons.STOP_16) {
 									public void actionPerformed(ActionEvent e) {
 										((QueryCache) lastPathComponent).cancel();
@@ -414,7 +415,7 @@ public class WorkspaceTreeListener extends MouseAdapter {
 						sep = objectsMenu(
 								menu,
 								OlapQuery.class.getSimpleName(),  
-								null,
+								uuid,
 								new JMenuItem(new AbstractAction("Stop Running", WabitIcons.STOP_16) {
 									public void actionPerformed(ActionEvent e) {
 										((OlapQuery) lastPathComponent).cancel();

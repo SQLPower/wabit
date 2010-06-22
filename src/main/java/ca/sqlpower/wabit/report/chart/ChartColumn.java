@@ -120,6 +120,14 @@ public class ChartColumn extends AbstractWabitObject {
         this.dataType = dataType;
         setRoleInChart(ColumnRole.NONE);
     }
+    
+    public ChartColumn(@Nonnull ChartColumn column) {
+    	setName(column.getName());
+    	this.columnName = column.getColumnName();
+    	this.dataType = column.getDataType();
+    	this.roleInChart = column.getRoleInChart();
+    	this.xAxisIdentifier = column.getXAxisIdentifier();
+    }
 
     public ColumnRole getRoleInChart() {
         return roleInChart;
@@ -210,6 +218,11 @@ public class ChartColumn extends AbstractWabitObject {
     
     public List<Class<? extends SPObject>> getAllowedChildTypes() {
     	return Collections.emptyList();
+    }
+    
+    @Override
+    public void setParent(SPObject parent) {
+    	super.setParent(parent);
     }
 
 }
