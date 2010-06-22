@@ -39,7 +39,6 @@ import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.sql.RowFilter;
 import ca.sqlpower.swingui.ColourScheme;
-import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.WebColour;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
@@ -336,7 +335,16 @@ public class Chart extends AbstractWabitObject {
         			// The meta data object might be null because of streaming queries.
         			if (rsmd != null) {
         				for (int i = 1; i <= rsmd.getColumnCount(); i++) {
-        					String columnName = rsmd.getColumnName(i);
+        					
+        					// Get the column alias first, as this would "uniquely" 
+        					// identify the columns within the result set.
+        					// However, if no alias is used, try to get it from the column name.
+        					// If both are null, we're screwed in any case, and it'll re-create the chart column each time.
+        					String columnName = rsmd.getColumnLabel(i);
+        					if (columnName == null) {
+        						columnName = rsmd.getColumnName(i);
+        					}
+        					
         					ChartColumn existing = findByName(oldCols, columnName);
         					if (existing != null) {
         						newCols.add(existing);
