@@ -328,6 +328,7 @@ public class GrantPanel implements DataEntryPanel {
 		panel.add(this.checkboxPanel, "east");
 		
 		updateGrantsList();
+		updateGrantSettings();
 	}
 	
 	void updateGrantsList() {
@@ -369,11 +370,23 @@ public class GrantPanel implements DataEntryPanel {
 				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, SPObject.class).getClass().getSimpleName(), false,false,false,false,false);
 			}
 			
-			this.createCheckBox.setSelected(grant.isCreatePrivilege());
-			this.modifyCheckBox.setSelected(grant.isModifyPrivilege());
-			this.deleteCheckBox.setSelected(grant.isDeletePrivilege());
-			this.executeCheckBox.setSelected(grant.isExecutePrivilege());
-			this.grantCheckBox.setSelected(grant.isGrantPrivilege());
+			createCheckBox.setEnabled(true);
+			modifyCheckBox.setEnabled(true);
+			deleteCheckBox.setEnabled(true);
+			executeCheckBox.setEnabled(true);
+			grantCheckBox.setEnabled(true);
+			
+			createCheckBox.setSelected(grant.isCreatePrivilege());
+			modifyCheckBox.setSelected(grant.isModifyPrivilege());
+			deleteCheckBox.setSelected(grant.isDeletePrivilege());
+			executeCheckBox.setSelected(grant.isExecutePrivilege());
+			grantCheckBox.setSelected(grant.isGrantPrivilege());
+		} else {
+			createCheckBox.setEnabled(false);
+			modifyCheckBox.setEnabled(false);
+			deleteCheckBox.setEnabled(false);
+			executeCheckBox.setEnabled(false);
+			grantCheckBox.setEnabled(false);
 		}
 	}
 
