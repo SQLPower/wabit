@@ -442,7 +442,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = group;
         	
         } else if (valueType.equals(Grant.class)) {
-        	Grant grant = new Grant(null, WabitWorkspace.class.getCanonicalName(), 
+        	Grant grant = new Grant(WabitWorkspace.class.getCanonicalName(), 
         			false, false, false, false, false);
         	
         	if (!propName.equals("addGrant")) {

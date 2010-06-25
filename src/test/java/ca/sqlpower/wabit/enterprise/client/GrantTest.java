@@ -36,6 +36,7 @@ public class GrantTest extends AbstractWabitObjectTest {
 		Set<String> ignored = super.getPropertiesToIgnoreForEvents();
 		ignored.add("readOnly");
 		ignored.add("name");
+		ignored.add("systemLevel");
 		return ignored;
 	}
 	
@@ -43,6 +44,7 @@ public class GrantTest extends AbstractWabitObjectTest {
 	public Set<String> getPropertiesToIgnoreForPersisting() {
 		Set<String> ignored = super.getPropertiesToIgnoreForPersisting();
 		ignored.add("name");
+		ignored.add("systemLevel");
 		return ignored;
 	}
 	

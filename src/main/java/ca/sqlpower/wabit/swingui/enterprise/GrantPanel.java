@@ -365,7 +365,7 @@ public class GrantPanel implements DataEntryPanel {
 			
 			// if grant is null, this means there was no grant given so far.
 			if(grant == null && systemMode) {
-				grant = new Grant(null, this.objectType, false,false,false,false,false);
+				grant = new Grant(this.objectType, false,false,false,false,false);
 			} else if(grant == null && !systemMode) {
 				grant = new Grant(this.objectUuid, this.workspace.findByUuid(this.objectUuid, SPObject.class).getClass().getSimpleName(), false,false,false,false,false);
 			}
@@ -503,7 +503,7 @@ public class GrantPanel implements DataEntryPanel {
         			GroupMember member = new GroupMember(user);
         			Group group = new Group("Server Administrators");
         			group.addMember(member);
-        			Grant workspaceGrant = new Grant(null, WabitWorkspace.class.getSimpleName(), true,true,true,true,true);
+        			Grant workspaceGrant = new Grant(WabitWorkspace.class.getSimpleName(), true,true,true,true,true);
         			group.addGrant(workspaceGrant);
         			Grant userGrant = new Grant(null, User.class.getSimpleName(), true,true,true,true,true);
         			group.addGrant(userGrant);
