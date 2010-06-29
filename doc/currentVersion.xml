@@ -23,12 +23,15 @@
 		
 	</comment>
 	
-	<entry key="currentVersion">1.3.0-RC2</entry>
+	<entry key="currentVersion">1.3.2</entry>
 	<entry key="downloadUrl">http://www.sqlpower.ca/wabit-download</entry>
 	<entry key="releaseNotes"><![CDATA[<html>
-<p><b>Noteworthy changes in 1.3.0-RC2</b></p>
+<p><b>Noteworthy changes in 1.3.2 include:</b></p>
 <ul>
-<li>Various bug fixes.</li>
+<li>Support for page breaks between report sections.</li>
+<li>Support for custom numeric and date formats.</li>
+<li>Custom font colours for data cells and headers</li>
+<li>Several bug fixes and performance enhancements.</li>
 </ul>
 </html>]]>
 	</entry>
