@@ -79,8 +79,8 @@ public class RemoteFontLoader implements SPFontLoader {
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		synchronized (fontCache) {
 			for (Font currentFont : ge.getAllFonts()) {
-				if (!fontCache.containsKey(currentFont.getName())) {
-					fontCache.put(currentFont.getName(), currentFont);
+				if (!fontCache.containsKey(currentFont.getFontName())) {
+					fontCache.put(currentFont.getFontName(), currentFont);
 				}
 			}
 		}

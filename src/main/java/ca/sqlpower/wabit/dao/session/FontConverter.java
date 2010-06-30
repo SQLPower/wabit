@@ -42,7 +42,7 @@ public class FontConverter implements BidirectionalConverter<String, Font> {
 
 	public String convertToSimpleType(Font convertFrom, Object ... additionalInfo) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(convertFrom.getName());
+		buffer.append(convertFrom.getFontName());
 		buffer.append("-");
 		buffer.append(FontStyle.getStyleByValue(convertFrom.getStyle()).getEncodedName());
 		buffer.append("-");
