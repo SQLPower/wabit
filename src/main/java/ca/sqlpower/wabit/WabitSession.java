@@ -21,6 +21,7 @@ package ca.sqlpower.wabit;
 
 import java.beans.PropertyChangeListener;
 
+import ca.sqlpower.dao.session.SPFontLoader;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.event.SessionLifecycleListener;
@@ -87,4 +88,10 @@ public interface WabitSession extends WorkspaceContainer, RunnableDispatcher {
      * @return
      */
     public WabitWorkspace getSystemWorkspace();
+    
+    /**
+     * Returns this session's font loader object.
+     * @return
+     */
+    public SPFontLoader getFontLoader();
 }

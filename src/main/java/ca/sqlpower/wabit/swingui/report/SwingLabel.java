@@ -27,6 +27,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.List;
 
 import javax.swing.Action;
 import javax.swing.Box;
@@ -51,11 +52,14 @@ import ca.sqlpower.swingui.FontSelector;
 import ca.sqlpower.swingui.object.InsertVariableAction;
 import ca.sqlpower.swingui.object.VariableInserter;
 import ca.sqlpower.swingui.object.VariableLabel;
+import ca.sqlpower.wabit.WabitUtils;
+import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
 import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ReportContentRenderer.BackgroundColours;
 import ca.sqlpower.wabit.swingui.Icons;
+import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -160,7 +164,28 @@ public class SwingLabel implements SwingContentRenderer {
         textLabel.setVerticalTextPosition(JLabel.TOP);
         
         fb.nextLine();
-        final FontSelector fontSelector = new FontSelector(renderer.getFont());
+        
+        // We might need to constrain the list of fonts available 
+        // to those on the server.
+        final FontSelector fontSelector;
+        if (WabitUtils.getWorkspace(renderer).isServerWorkspace()) {
+        	List<String> fonts;
+			try {
+				fonts = ServerInfoProvider.getServerFonts(
+    				((WabitSwingSessionImpl)WabitUtils.getWorkspace(renderer).getSession()).getEnterpriseServerInfos());
+			} catch (Exception e1) {
+				throw new RuntimeException("Failed to obtain a list of available fonts from the server.");
+			}
+        	fontSelector = 
+        		new FontSelector(
+    				renderer.getFont(), 
+    				fonts.toArray(new String[fonts.size()]),
+    				WabitUtils.getWorkspace(renderer).getSession().getFontLoader());
+        } else {
+        	fontSelector = new FontSelector(renderer.getFont());
+        }
+        
+        
         logger.debug("FontSelector got passed Font " + renderer.getFont());
         fontSelector.setShowingPreview(false);
         fontSelector.addPropertyChangeListener(new PropertyChangeListener() {

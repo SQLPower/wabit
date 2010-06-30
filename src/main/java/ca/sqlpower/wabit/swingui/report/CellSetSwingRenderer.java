@@ -72,13 +72,13 @@ public class CellSetSwingRenderer implements SwingContentRenderer {
         });
         headerFontExample.setFont(renderer.getHeaderFont());
         panel.add(headerFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(headerFontExample), "wrap");
+        panel.add(ReportUtil.createFontButton(headerFontExample, renderer), "wrap");
         
         panel.add(new JLabel("Body Font"), "gap related");
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(renderer.getBodyFont());
         panel.add(bodyFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(bodyFontExample), "wrap");
+        panel.add(ReportUtil.createFontButton(bodyFontExample, renderer), "wrap");
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(

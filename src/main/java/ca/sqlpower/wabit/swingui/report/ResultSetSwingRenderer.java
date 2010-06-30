@@ -125,13 +125,13 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         
         final JLabel headerFontExample = new JLabel("Header Font Example");
         headerFontExample.setFont(renderer.getHeaderFont());
-        fb.append("Headers Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
+        fb.append("Headers Font", headerFontExample, ReportUtil.createFontButton(headerFontExample, renderer));
         fb.nextLine();
         fb.append("");
         
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(renderer.getBodyFont());
-        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample));
+        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample, renderer));
         fb.nextLine();
         fb.append("");
         

@@ -101,7 +101,9 @@ public class ServerInfoManager {
 	 *            An action that will properly close the object displaying the
 	 *            panel.
 	 */
-    public ServerInfoManager(WabitSessionContext m_context, Component m_dialogOwner, 
+    public ServerInfoManager(
+    		WabitSessionContext m_context,
+    		Component m_dialogOwner, 
     		final Runnable closeAction) {
         this.context = m_context;
         this.dialogOwner = m_dialogOwner;

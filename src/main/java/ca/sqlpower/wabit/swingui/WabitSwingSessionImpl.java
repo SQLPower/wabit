@@ -65,6 +65,7 @@ import net.jcip.annotations.GuardedBy;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.dao.session.SPFontLoader;
 import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.SPChildEvent;
@@ -466,6 +467,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
         };
     };
 
+	
+
     /**
      * Creates a new session that belongs to the given context and delegates
      * some of its work to the given delegate session.
@@ -478,6 +481,7 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
      */
 	protected WabitSwingSessionImpl(WabitSwingSessionContext context, WabitSession delegateSession) {
 	    this.delegateSession = delegateSession;
+	    
 		sessionContext = context;
 		
 		// XXX leaking a reference to partially-constructed session!
@@ -769,10 +773,6 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
 		return this.delegateSession.isEnterpriseServerSession();
 	}
 	
-	/**
-	 * Returns the server infos if this session's delegate is a server session.
-	 * Returns null otherwise.
-	 */
 	public SPServerInfo getEnterpriseServerInfos() {
 		if (this.isEnterpriseServerSession()) {
 			return ((WabitClientSession)this.delegateSession).getWorkspaceLocation().getServiceInfo();
@@ -810,4 +810,8 @@ public class WabitSwingSessionImpl implements WabitSwingSession {
                     "Delete is currently only supported for server sessions");
         }
     }
+
+	public SPFontLoader getFontLoader() {
+		return delegateSession.getFontLoader();
+	}
 }

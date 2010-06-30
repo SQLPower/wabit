@@ -24,6 +24,7 @@ import java.net.URI;
 
 import javax.swing.JTree;
 
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
 import ca.sqlpower.swingui.db.DatabaseConnectionManager;
 import ca.sqlpower.wabit.WabitSession;
@@ -101,4 +102,10 @@ public interface WabitSwingSession extends SwingWorkerRegistry, WabitSession {
      * thread.
      */
     public void runInBackground(Runnable runner);
+    
+    /**
+	 * Returns the server infos if this session's delegate is a server session.
+	 * Returns null otherwise.
+	 */
+    public SPServerInfo getEnterpriseServerInfos();
 }

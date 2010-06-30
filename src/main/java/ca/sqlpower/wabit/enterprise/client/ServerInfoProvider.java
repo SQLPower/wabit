@@ -23,7 +23,11 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.swing.JOptionPane;
@@ -31,6 +35,7 @@ import javax.swing.SwingUtilities;
 
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpOptions;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.BasicResponseHandler;
@@ -38,6 +43,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -53,6 +59,8 @@ public abstract class ServerInfoProvider {
 	
 	private static Map<String,Boolean> licenses = new HashMap<String, Boolean>();
 	
+	private static Map<String,List<String>> fonts = new HashMap<String, List<String>>();
+	
 	private static Map<String,String> watermarkMessages = new HashMap<String, String>();
 	
 	public static Version getServerVersion(
@@ -62,8 +70,31 @@ public abstract class ServerInfoProvider {
 			String username, 
 			String password) throws MalformedURLException,IOException 
 	{
-		init(toURL(host, port, path), username, password);
+		init(host, port, path, username, password);
 		return version.get(generateServerKey(host, port, path, username, password));
+	}
+	
+	public static List<String> getServerFonts(
+			SPServerInfo infos) 
+	 	throws MalformedURLException, IOException 
+	{
+		return getServerFonts(
+				infos.getServerAddress(), 
+				String.valueOf(infos.getPort()), 
+				infos.getPath(), 
+				infos.getUsername(), 
+				infos.getPassword());
+	}
+	
+	public static List<String> getServerFonts(
+			String host,
+			String port,
+			String path, 
+			String username, 
+			String password) throws MalformedURLException, IOException 
+	{
+		init(host, port, path, username, password);
+		return fonts.get(generateServerKey(host, port, path, username, password));
 	}
 	
 	public static boolean isServerLicensed(SPServerInfo infos) 
@@ -84,11 +115,11 @@ public abstract class ServerInfoProvider {
 			String username, 
 			String password) throws MalformedURLException,IOException 
 	{
-		init(toURL(host, port, path), username, password);
+		init(host, port, path, username, password);
 		return licenses.get(generateServerKey(host, port, path, username, password));
 	}
 	
-	private static URL toURL(
+	private static URL toServerInfoURL(
 			String host,
 			String port,
 			String path) throws MalformedURLException 
@@ -105,10 +136,36 @@ public abstract class ServerInfoProvider {
 		// Spawn a connection object
 		return new URL(sb.toString());
 	}
-
-	private static void init(URL url, String username, String password) throws IOException {
+	
+	private static URL toServerFontsURL(
+			String host,
+			String port,
+			String path) throws MalformedURLException 
+	{
+		// Build the base URL
+		StringBuilder sb = new StringBuilder();
+		sb.append("http://");
+		sb.append(host);
+		sb.append(":");
+		sb.append(port);
+		sb.append(path);
+		sb.append(path.endsWith("/")?"fonts":"/fonts");
 		
-		if (version.containsKey(generateServerKey(url, username, password))) return;
+		// Spawn a connection object
+		return new URL(sb.toString());
+	}
+	
+	private static void init(
+			String host,
+			String port,
+			String path, 
+			String username, 
+			String password) 
+		throws IOException 
+	{
+		
+		URL serverInfoUrl = toServerInfoURL(host, port, path);
+		if (version.containsKey(generateServerKey(host, port, path, username, password))) return;
 		
 		try {
 			HttpParams params = new BasicHttpParams();
@@ -116,10 +173,10 @@ public abstract class ServerInfoProvider {
 	        DefaultHttpClient httpClient = new DefaultHttpClient(params);
 	        httpClient.setCookieStore(WabitClientSession.getCookieStore());
 	        httpClient.getCredentialsProvider().setCredentials(
-	            new AuthScope(url.getHost(), AuthScope.ANY_PORT), 
+	            new AuthScope(serverInfoUrl.getHost(), AuthScope.ANY_PORT), 
 	            new UsernamePasswordCredentials(username, password));
 	        
-	        HttpUriRequest request = new HttpOptions(url.toURI());
+	        HttpUriRequest request = new HttpOptions(serverInfoUrl.toURI());
     		String responseBody = httpClient.execute(request, new BasicResponseHandler());
 			
 			// Decode the message
@@ -136,9 +193,9 @@ public abstract class ServerInfoProvider {
 			}
 			
 			// Save found values
-			version.put(generateServerKey(url, username, password), new Version(serverVersion));
-			licenses.put(generateServerKey(url, username, password), licensedServer);
-			watermarkMessages.put(generateServerKey(url, username, password), watermarkMessage);
+			version.put(generateServerKey(host, port, path, username, password), new Version(serverVersion));
+			licenses.put(generateServerKey(host, port, path, username, password), licensedServer);
+			watermarkMessages.put(generateServerKey(host, port, path, username, password), watermarkMessage);
 			
 			// Notify the user if the server is not licensed.
 			if (!licensedServer) {
@@ -153,6 +210,24 @@ public abstract class ServerInfoProvider {
 				});
 			}
 			
+			// Now get the available fonts.
+			URL serverFontsURL = toServerFontsURL(host, port, path);
+			HttpUriRequest fontsRequest = new HttpGet(serverFontsURL.toURI());
+    		String fontsResponseBody = httpClient.execute(fontsRequest, new BasicResponseHandler());
+			try {
+				JSONArray fontsArray = new JSONArray(fontsResponseBody);
+				List<String> fontNames = new ArrayList<String>();
+				for (int i = 0; i < fontsArray.length(); i++) {
+					fontNames.add(fontsArray.getString(i));
+				}
+				// Sort the list.
+				Collections.sort(fontNames);
+				fonts.put(generateServerKey(host, port, path, username, password), fontNames);
+			} catch (JSONException e) {
+				throw new IOException(e.getMessage());
+			}
+    		
+    		
 		} catch (URISyntaxException e) {
 			throw new IOException(e.getLocalizedMessage());
 		}
@@ -196,22 +271,12 @@ public abstract class ServerInfoProvider {
 			String username, 
 			String password) throws MalformedURLException 
 	{
-		return generateServerKey(
-			toURL(host, port, path), 
-			username, 
-			password);
-	}
-	
-	private static String generateServerKey(
-			URL url, 
-			String username, 
-			String password) 
-	{
-		return 
-			String.valueOf(
-				url.toString()
-					.concat(username)
-					.concat(password)
+		return
+			String.valueOf(host
+				.concat(port)
+				.concat(path)
+				.concat(username)
+				.concat(password)
 				.hashCode());
 	}
 }

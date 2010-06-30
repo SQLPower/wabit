@@ -27,6 +27,8 @@ import java.util.List;
 
 import javax.swing.JTree;
 
+import ca.sqlpower.dao.session.SPFontLoader;
+import ca.sqlpower.enterprise.client.SPServerInfo;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
@@ -177,5 +179,16 @@ public class StubWabitSwingSession implements WabitSwingSession {
 
 	public WabitWorkspace getSystemWorkspace() {
 		return this.delegateSession.getSystemWorkspace();
+	}
+
+	@Override
+	public SPServerInfo getEnterpriseServerInfos() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public SPFontLoader getFontLoader() {
+		return delegateSession.getFontLoader();
 	}
 }
