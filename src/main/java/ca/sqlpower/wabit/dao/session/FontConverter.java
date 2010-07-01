@@ -20,6 +20,8 @@
 package ca.sqlpower.wabit.dao.session;
 
 import java.awt.Font;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.beanutils.ConversionException;
 
@@ -30,9 +32,20 @@ import ca.sqlpower.wabit.FontStyle;
 public class FontConverter implements BidirectionalConverter<String, Font> {
 
 	private final SPFontLoader loader;
-
+	private final Map<String, String> vendorToGenericMap;
+	
 	public FontConverter(SPFontLoader loader) {
 		this.loader = loader;
+		
+		/*
+		 * This converter must convert vendor specific font names
+		 * to their generic equivalent. For example, on a Mac OS
+		 * machine, if you do Font.decode("Arial"), it will in fact
+		 * return a ArialMT font. There is no workaround. Some
+		 * platforms wont decode the fonts properly; period.
+		 */
+		vendorToGenericMap = new HashMap<String, String>();
+		vendorToGenericMap.put("ArialMT", "Arial");
 	}
 
 	public Font convertToComplexType(String convertFrom)
@@ -42,11 +55,20 @@ public class FontConverter implements BidirectionalConverter<String, Font> {
 
 	public String convertToSimpleType(Font convertFrom, Object ... additionalInfo) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(convertFrom.getFontName());
+		buffer.append(
+				convertToStandardFontName(convertFrom.getFontName()));
 		buffer.append("-");
 		buffer.append(FontStyle.getStyleByValue(convertFrom.getStyle()).getEncodedName());
 		buffer.append("-");
 		buffer.append(convertFrom.getSize());
 		return buffer.toString();
+	}
+	
+	private String convertToStandardFontName(String vendorName) {
+		if (vendorToGenericMap.containsKey(vendorName)) {
+			return vendorToGenericMap.get(vendorName);
+		} else {
+			return vendorName;
+		}
 	}
 }
