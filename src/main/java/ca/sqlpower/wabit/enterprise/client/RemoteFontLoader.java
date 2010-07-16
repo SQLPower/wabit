@@ -124,7 +124,7 @@ public class RemoteFontLoader implements SPFontLoader {
 		// Null font names are possible. This means we return the 
 		// system default.
 		if (fontName == null) {
-			return Font.decode(fontName);
+			return Font.decode("Arial");
 		}
 		
 		// Check the cache.
