@@ -1418,9 +1418,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 Class osxAdapter = ClassLoader.getSystemClassLoader().loadClass("ca.sqlpower.architect.swingui.OSXAdapter"); //$NON-NLS-1$
 
                 // The main registration method.  Takes quitAction, prefsAction, aboutAction.
-                Class[] defArgs = { Action.class, Action.class, Action.class };
+                Class[] defArgs = { Action.class, Action.class, Action.class, Action.class };
                 Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
-                Object[] args = { exitAction, prefsAction, aboutAction };
+                Object[] args = { exitAction, prefsAction, aboutAction, new OpenWorkspaceAction(this) };
                 registerMethod.invoke(osxAdapter, args);
 
                 // The enable prefs method.  Takes a boolean.

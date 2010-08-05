@@ -575,6 +575,7 @@ SQL Power Wabit Ant build file
 				dir="${staging.dir.mac}" 
 				name="Wabit" 
 				version="${app.version}"
+				bundleid="ca.sqlpower.wabit"
 				mainclass="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"
 				icon="src/main/resources/icons/wabit.icns"
 				jvmversion="1.6+" 
@@ -585,6 +586,10 @@ SQL Power Wabit Ant build file
 			<jarfileset dir="${staging.dir.mac}/tmp" includes="**/*" />
 			
 			<extraclasspathfilelist dir="KICKME" files="jdbc" />
+			
+			<documenttype name="SQL Power Wabit Workspace"
+							extensions="wabit"
+							role="Editor"/>
 			
 		</jarbundler>
 		
