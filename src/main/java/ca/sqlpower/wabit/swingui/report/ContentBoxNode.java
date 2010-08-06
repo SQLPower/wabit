@@ -56,7 +56,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.RepaintListener;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
@@ -109,7 +109,7 @@ public class ContentBoxNode extends PNode implements ReportNode {
             super.mouseClicked(event);
             if (event.getClickCount() == 2) {
                 if (contentBox.getContentRenderer() == null) {
-                    Label newLabel = new Label();
+                    WabitLabel newLabel = new WabitLabel();
                     contentBox.setContentRenderer(newLabel);
                     setSwingContentRenderer(newLabel);
                 }
@@ -332,8 +332,8 @@ public class ContentBoxNode extends PNode implements ReportNode {
             swingRenderer = new ImageSwingRenderer(workspace, (ImageRenderer) renderer);
         } else if (renderer instanceof ChartRenderer) {
             swingRenderer = new ChartSwingRenderer(workspace, (ChartRenderer) renderer);
-        } else if (renderer instanceof Label) {
-            swingRenderer = new SwingLabel((Label) renderer);
+        } else if (renderer instanceof WabitLabel) {
+            swingRenderer = new SwingLabel((WabitLabel) renderer);
         } else if (renderer == null) {
             swingRenderer = null;
         } else {
@@ -566,13 +566,14 @@ public class ContentBoxNode extends PNode implements ReportNode {
         	return null;
         }
         
-        if (swingRenderer.getPropertiesPanel() == null)
+        DataEntryPanel dep = swingRenderer.getPropertiesPanel();
+		if (dep == null)
         {
         	logger.debug("Content renderer has no properties dialog: " + contentBox.getContentRenderer());
         	return null;
         }
         
-        return swingRenderer.getPropertiesPanel();
+        return dep;
     }
     
     public PInputEventListener getKeyboardListener() {

@@ -55,6 +55,8 @@ import org.xml.sax.helpers.AttributesImpl;
 import org.xml.sax.helpers.DefaultHandler;
 
 import ca.sqlpower.dao.session.DateConverter;
+import ca.sqlpower.object.HorizontalAlignment;
+import ca.sqlpower.object.VerticalAlignment;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.SQLGroupFunction;
@@ -84,15 +86,13 @@ import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
@@ -967,7 +967,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         		}
          	}
         } else if (name.equals("content-label")) {
-        	Label label = new Label();
+        	WabitLabel label = new WabitLabel();
         	createdObject = label;
         	contentBox.setContentRenderer(label);
          	for (int i = 0; i < attributes.getLength(); i++) {
@@ -1291,7 +1291,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	} else if (parentIs("content-box")) {
         		contentBox.setFont(font);
         	} else if (parentIs("content-label")) {
-        		((Label) contentBox.getContentRenderer()).setFont(font);
+        		((WabitLabel) contentBox.getContentRenderer()).setFont(font);
         	}
         } else {
             createdObject = null;
@@ -1529,7 +1529,7 @@ public class WorkspaceSAXHandler extends DefaultHandler {
         	}
             
         } else if (name.equals("text") && parentIs("content-label")) {
-            ((Label) contentBox.getContentRenderer()).setText(stream.toString());
+            ((WabitLabel) contentBox.getContentRenderer()).setText(stream.toString());
             
         } else if (name.equals("text") && parentIs("query")) {
             cache.setUserModifiedQuery(stream.toString());

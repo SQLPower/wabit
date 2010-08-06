@@ -50,6 +50,7 @@ import org.olap4j.metadata.Property;
 
 import ca.sqlpower.object.AbstractPoolingSPListener;
 import ca.sqlpower.object.CleanupExceptions;
+import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;

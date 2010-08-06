@@ -109,10 +109,10 @@ public class ContentBoxTest extends AbstractWabitObjectTest {
      * renderer of the content box is replaced.
      */
     public void testPersistingChildAndRollbackResetsRenderer() throws Exception {
-    	Label label = new Label();
+    	WabitLabel label = new WabitLabel();
     	cb.setContentRenderer(label);
     	
-    	Label newLabel = new Label();
+    	WabitLabel newLabel = new WabitLabel();
     	
     	WabitSession session = getWorkspace().getSession();
 		WabitSessionPersister persister = 

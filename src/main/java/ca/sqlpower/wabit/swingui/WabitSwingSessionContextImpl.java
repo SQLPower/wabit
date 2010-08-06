@@ -178,7 +178,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
@@ -1149,8 +1149,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					name = ((CellSetRenderer) content).getContent().getName();
 				} else if (content instanceof ResultSetRenderer) {
 					name = ((ResultSetRenderer) content).getContent().getName();
-				} else if (content instanceof Label) {
-					name = ((Label) content).getText();
+				} else if (content instanceof WabitLabel) {
+					name = ((WabitLabel) content).getText();
 				} else if (content instanceof ChartRenderer) {
 					name = ((ChartRenderer) content).getContent().getName();
 				} else if (content instanceof ImageRenderer) {

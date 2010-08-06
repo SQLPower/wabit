@@ -32,12 +32,12 @@ import net.miginfocom.swing.MigLayout;
 
 import org.apache.log4j.Logger;
 
+import ca.sqlpower.object.HorizontalAlignment;
+import ca.sqlpower.object.VerticalAlignment;
+import ca.sqlpower.swingui.AlignmentIcons;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.WabitWorkspace;
-import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.VerticalAlignment;
-import ca.sqlpower.wabit.swingui.Icons;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
 public class ImageSwingRenderer implements SwingContentRenderer {
@@ -74,9 +74,9 @@ public class ImageSwingRenderer implements SwingContentRenderer {
             JLabel alignmentLabel = new JLabel("Alignment");
             
             ButtonGroup vAlignButtonGroup = new ButtonGroup();
-            alignTop = new JToggleButton(Icons.TOP_ALIGN_ICON);
-            alignMiddle = new JToggleButton(Icons.MIDDLE_ALIGN_ICON);
-            alignBottom = new JToggleButton(Icons.BOTTOM_ALIGN_ICON);
+            alignTop = new JToggleButton(AlignmentIcons.TOP_ALIGN_ICON);
+            alignMiddle = new JToggleButton(AlignmentIcons.MIDDLE_ALIGN_ICON);
+            alignBottom = new JToggleButton(AlignmentIcons.BOTTOM_ALIGN_ICON);
             vAlignButtonGroup.add(alignTop);
             vAlignButtonGroup.add(alignMiddle);
             vAlignButtonGroup.add(alignBottom);
@@ -93,9 +93,9 @@ public class ImageSwingRenderer implements SwingContentRenderer {
             }
             
             ButtonGroup hAlignButtonGroup = new ButtonGroup();
-            alignLeft = new JToggleButton(Icons.LEFT_ALIGN_ICON);
-            alignCentre = new JToggleButton(Icons.CENTRE_ALIGN_ICON);
-            alignRight = new JToggleButton(Icons.RIGHT_ALIGN_ICON);
+            alignLeft = new JToggleButton(AlignmentIcons.LEFT_ALIGN_ICON);
+            alignCentre = new JToggleButton(AlignmentIcons.CENTRE_ALIGN_ICON);
+            alignRight = new JToggleButton(AlignmentIcons.RIGHT_ALIGN_ICON);
             hAlignButtonGroup.add(alignLeft);
             hAlignButtonGroup.add(alignCentre);
             hAlignButtonGroup.add(alignRight);

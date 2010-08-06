@@ -33,7 +33,9 @@ import ca.sqlpower.enterprise.client.Grant;
 import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
+import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.VerticalAlignment;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.ItemContainer;
@@ -53,13 +55,11 @@ import ca.sqlpower.wabit.image.WabitImage;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.HorizontalAlignment;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
@@ -181,7 +181,7 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	newValue = cb;
         	
         } else if (valueType.equals(ReportContentRenderer.class)) {
-        	Label label = new Label();
+        	WabitLabel label = new WabitLabel();
         	
         	ContentBox cb = (ContentBox) makeNewValue(ContentBox.class, null, "Made for Label");
         	cb.setContentRenderer(label);
@@ -489,8 +489,8 @@ public class WabitNewValueMaker extends GenericNewValueMaker {
         	//The new workspace has to be in the workspace, 
         	//but the workspace cannot have a new workspace in the workspace....?
         	newValue = workspace;
-        } else if (valueType.equals(Label.class)) {
-        	newValue = new Label();
+        } else if (valueType.equals(WabitLabel.class)) {
+        	newValue = new WabitLabel();
         } else if (SPDataSource.class.isAssignableFrom(valueType)) {
         	newValue = super.makeNewValue(valueType, oldVal, propName);
         	if (!workspace.dsAlreadyAdded((SPDataSource) newValue)) {

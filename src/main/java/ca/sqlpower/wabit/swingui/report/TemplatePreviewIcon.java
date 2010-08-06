@@ -36,7 +36,7 @@ import javax.swing.ImageIcon;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
@@ -83,9 +83,9 @@ public class TemplatePreviewIcon implements Icon {
 			if (contentRenderer instanceof ImageRenderer) {
 				Image image = ((ImageRenderer) contentRenderer).getImage().getImage();
 				graphics.drawImage(image, cbX, cbY, cbWidth, cbHeight, null);
-			} else if (contentRenderer instanceof Label) {
+			} else if (contentRenderer instanceof WabitLabel) {
 				graphics.setColor(Color.BLACK);
-				Label label = (Label) contentRenderer;
+				WabitLabel label = (WabitLabel) contentRenderer;
 				Font font = label.getFont();
 				graphics.setFont(font.deriveFont((float) (font.getSize() / 3)));
 

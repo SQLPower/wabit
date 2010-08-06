@@ -38,11 +38,11 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
+import ca.sqlpower.object.HorizontalAlignment;
+import ca.sqlpower.swingui.AlignmentIcons;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.CellSetRenderer;
-import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ReportUtil;
-import ca.sqlpower.wabit.swingui.Icons;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
@@ -82,13 +82,13 @@ public class CellSetSwingRenderer implements SwingContentRenderer {
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(
-                Icons.LEFT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.LEFT);
+                AlignmentIcons.LEFT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.LEFT);
         hAlignmentGroup.add(leftAlign);
         final JToggleButton centreAlign = new JToggleButton(
-                Icons.CENTRE_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.CENTER);
+                AlignmentIcons.CENTRE_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.CENTER);
         hAlignmentGroup.add(centreAlign);
         final JToggleButton rightAlign = new JToggleButton(
-                Icons.RIGHT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.RIGHT);
+                AlignmentIcons.RIGHT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.RIGHT);
         hAlignmentGroup.add(rightAlign);
         Box alignmentBox = Box.createHorizontalBox();
         alignmentBox.add(leftAlign);

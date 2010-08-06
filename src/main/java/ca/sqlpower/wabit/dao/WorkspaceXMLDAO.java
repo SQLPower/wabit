@@ -68,7 +68,7 @@ import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
@@ -355,8 +355,8 @@ public class WorkspaceXMLDAO {
 				}
 				
 				if (box.getContentRenderer() != null) {
-					if (box.getContentRenderer() instanceof Label) {
-						Label label = (Label) box.getContentRenderer();
+					if (box.getContentRenderer() instanceof WabitLabel) {
+						WabitLabel label = (WabitLabel) box.getContentRenderer();
 						xml.print(out, "<content-label");
 						printCommonAttributes(label);
 						printAttribute("horizontal-align", label.getHorizontalAlignment().name());

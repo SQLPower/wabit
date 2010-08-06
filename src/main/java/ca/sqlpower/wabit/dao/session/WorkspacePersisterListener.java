@@ -66,7 +66,7 @@ import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.WabitObjectReportRenderer;
@@ -573,8 +573,8 @@ public class WorkspacePersisterListener implements SPListener {
 					DataType.BOOLEAN, converter.convertToBasicType(
 							iRenderer.isPreservingAspectRatio()));
 
-		} else if (child instanceof Label) {
-			Label label = (Label) child;
+		} else if (child instanceof WabitLabel) {
+			WabitLabel label = (WabitLabel) child;
 
 			this.persistProperty(uuid, "font", DataType.STRING,
 					converter.convertToBasicType(label.getFont()));

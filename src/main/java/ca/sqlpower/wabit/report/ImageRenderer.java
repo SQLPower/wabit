@@ -31,9 +31,11 @@ import javax.swing.ImageIcon;
 import org.apache.log4j.Logger;
 
 import ca.sqlpower.object.AbstractPoolingSPListener;
+import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.object.VerticalAlignment;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.image.WabitImage;

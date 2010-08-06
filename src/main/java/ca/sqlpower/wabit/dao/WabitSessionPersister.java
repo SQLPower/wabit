@@ -57,10 +57,12 @@ import ca.sqlpower.enterprise.client.Group;
 import ca.sqlpower.enterprise.client.GroupMember;
 import ca.sqlpower.enterprise.client.User;
 import ca.sqlpower.object.AbstractSPListener;
+import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPChildEvent;
 import ca.sqlpower.object.SPListener;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.object.VerticalAlignment;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.QueryImpl;
@@ -87,15 +89,13 @@ import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.Label;
+import ca.sqlpower.wabit.report.WabitLabel;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.Template;
-import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.report.Page.PageOrientation;
@@ -763,8 +763,8 @@ public class WabitSessionPersister implements SPPersister {
 			
 			spo = renderer;
 
-		} else if (type.equals(Label.class.getSimpleName())) {
-			spo = new Label();
+		} else if (type.equals(WabitLabel.class.getSimpleName())) {
+			spo = new WabitLabel();
 
 		} else if (type.equals(OlapQuery.class.getSimpleName())) {
 			String name = (String) converter.convertToComplexType(
@@ -1141,8 +1141,8 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (spo instanceof ImageRenderer) {
 			commitImageRendererProperty((ImageRenderer) spo,
 					propertyName, newValue);
-		} else if (spo instanceof Label) {
-			commitLabelProperty((Label) spo, propertyName, newValue);
+		} else if (spo instanceof WabitLabel) {
+			commitLabelProperty((WabitLabel) spo, propertyName, newValue);
 		} else if (spo instanceof Layout) {
 			commitLayoutProperty((Layout) spo, propertyName, newValue);
 		} else if (spo instanceof OlapQuery) {
@@ -1522,8 +1522,8 @@ public class WabitSessionPersister implements SPPersister {
 				} else if (spo instanceof ImageRenderer) {
 					propertyValue = getImageRendererProperty((ImageRenderer) spo,
 							propertyName);
-				} else if (spo instanceof Label) {
-					propertyValue = getLabelProperty((Label) spo, propertyName);
+				} else if (spo instanceof WabitLabel) {
+					propertyValue = getLabelProperty((WabitLabel) spo, propertyName);
 				} else if (spo instanceof Layout) {
 					propertyValue = getLayoutProperty((Layout) spo, propertyName);
 				} else if (spo instanceof OlapQuery) {
@@ -3465,12 +3465,12 @@ public class WabitSessionPersister implements SPPersister {
 	}
 
 	/**
-	 * Retrieves a property value from a {@link Label} object based on the
+	 * Retrieves a property value from a {@link WabitLabel} object based on the
 	 * property name and converts it to something that can be passed to a
 	 * persister.
 	 * 
 	 * @param label
-	 *            The {@link Label} object to retrieve the named property from.
+	 *            The {@link WabitLabel} object to retrieve the named property from.
 	 * @param propertyName
 	 *            The property name that needs to be retrieved and converted.
 	 *            This is the name of the property in the class itself based on
@@ -3485,7 +3485,7 @@ public class WabitSessionPersister implements SPPersister {
 	 * @throws SPPersistenceException
 	 *             Thrown if the property name is not known in this method.
 	 */
-	private Object getLabelProperty(Label label, String propertyName)
+	private Object getLabelProperty(WabitLabel label, String propertyName)
 			throws SPPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
 			return converter.convertToBasicType(label.getHorizontalAlignment());
@@ -3509,17 +3509,17 @@ public class WabitSessionPersister implements SPPersister {
 	}
 
 	/**
-	 * Commits a persisted {@link Label} object property
+	 * Commits a persisted {@link WabitLabel} object property
 	 * 
 	 * @param label
-	 *            The {@link Label} object to commit the persisted property upon
+	 *            The {@link WabitLabel} object to commit the persisted property upon
 	 * @param propertyName
 	 *            The property name
 	 * @param newValue
 	 *            The persisted property value to be committed
 	 * @throws SPPersistenceException
 	 */
-	private void commitLabelProperty(Label label, String propertyName,
+	private void commitLabelProperty(WabitLabel label, String propertyName,
 			Object newValue) throws SPPersistenceException {
 		if (propertyName.equals("horizontalAlignment")) {
 			label.setHorizontalAlignment((HorizontalAlignment) converter

@@ -64,7 +64,7 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
 	 * enhancements. http://trillian.sqlpower.ca/bugzilla/show_bug.cgi?id=2327
 	 */
 	public enum SPObjectOrder {
-		REPORT_CONTENT_RENDERER(ReportContentRenderer.class, ChartRenderer.class, Label.class, CellSetRenderer.class, ImageRenderer.class, ResultSetRenderer.class),
+		REPORT_CONTENT_RENDERER(ReportContentRenderer.class, ChartRenderer.class, WabitLabel.class, CellSetRenderer.class, ImageRenderer.class, ResultSetRenderer.class),
 		SELECTOR(Selector.class, ComboBoxSelector.class, DateSelector.class, TextBoxSelector.class);
 		
 		/**
@@ -221,8 +221,8 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
     		newContentRenderer = new CellSetRenderer((CellSetRenderer) oldContentRenderer);
     	} else if (oldContentRenderer instanceof ImageRenderer) {
     		newContentRenderer = new ImageRenderer((ImageRenderer) oldContentRenderer);
-    	} else if (oldContentRenderer instanceof Label) {
-    		Label newLabel = new Label((Label) oldContentRenderer);
+    	} else if (oldContentRenderer instanceof WabitLabel) {
+    		WabitLabel newLabel = new WabitLabel((WabitLabel) oldContentRenderer);
 			newContentRenderer = newLabel;
     		newLabel.setParent(this);
     	} else if (oldContentRenderer instanceof ChartRenderer) {
@@ -472,7 +472,7 @@ public class ContentBox extends AbstractWabitObject implements SPVariableResolve
     	types.add(CellSetRenderer.class);
     	types.add(ChartRenderer.class);
     	types.add(ImageRenderer.class);
-    	types.add(Label.class);
+    	types.add(WabitLabel.class);
     	types.add(Selector.class);
     	return types;
     }
