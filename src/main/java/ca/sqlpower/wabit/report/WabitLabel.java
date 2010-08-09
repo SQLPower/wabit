@@ -43,6 +43,7 @@ import ca.sqlpower.wabit.WabitObject;
 public class WabitLabel extends SPLabel implements ReportContentRenderer {
 
     private static final Logger logger = Logger.getLogger(WabitLabel.class);
+	private Font font;
     
     /**
      * Creates a new label with the given initial text.
@@ -73,13 +74,19 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
     }
     
     public Font getFont() {
-        if (super.getFont() != null) {
-            return super.getFont();
+        if (font != null) {
+            return font;
         } else if (getParent() != null) {
             return getParent().getFont();
         } else {
             return null;
         }
+    }
+    
+    public void setFont(Font font) {
+    	Font oldVal = getFont();
+    	this.font = font;
+    	firePropertyChange("font", oldVal, font);
     }
     
 	/**
