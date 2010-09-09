@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.dao;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Image;
 import java.awt.geom.Point2D;
@@ -3501,6 +3502,15 @@ public class WabitSessionPersister implements SPPersister {
 
 		} else if (propertyName.equals("font")) {
 			return converter.convertToBasicType(label.getFont());
+			
+		} else if (propertyName.equals("borderColour")) {
+			return converter.convertToBasicType(label.getBorderColour());
+			
+		} else if (propertyName.equals("foregroundColour")) {
+			return converter.convertToBasicType(label.getForegroundColour());
+			
+		} else if (propertyName.equals("padding")) {
+			return converter.convertToBasicType(label.getPadding());
 
 		} else {
 			throw new SPPersistenceException(label.getUUID(),
@@ -3540,6 +3550,18 @@ public class WabitSessionPersister implements SPPersister {
 		} else if (propertyName.equals("font")) {
 			label.setFont((Font) converter.convertToComplexType(newValue,
 					Font.class));
+			
+		} else if (propertyName.equals("borderColour")) {
+			label.setBorderColour((Color) converter.convertToComplexType(newValue,
+					Color.class));
+			
+		} else if (propertyName.equals("foregroundColour")) {
+			label.setForegroundColour((Color) converter.convertToComplexType(newValue,
+					Color.class));
+			
+		} else if (propertyName.equals("padding")) {
+			label.setPadding((Dimension) converter.convertToComplexType(newValue,
+					Dimension.class));
 
 		} else {
 			throw new SPPersistenceException(label.getUUID(),

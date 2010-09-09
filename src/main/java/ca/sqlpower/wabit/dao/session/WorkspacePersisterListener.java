@@ -578,6 +578,12 @@ public class WorkspacePersisterListener implements SPListener {
 
 			this.persistProperty(uuid, "font", DataType.STRING,
 					converter.convertToBasicType(label.getFont()));
+			this.persistProperty(uuid, "foregroundColour", DataType.STRING,
+					converter.convertToBasicType(label.getForegroundColour()));
+			this.persistProperty(uuid, "borderColour", DataType.STRING,
+					converter.convertToBasicType(label.getBorderColour()));
+			this.persistProperty(uuid, "padding", DataType.STRING,
+					converter.convertToBasicType(label.getPadding()));
 			this.persistProperty(uuid, "horizontalAlignment",
 					DataType.STRING, converter.convertToBasicType(
 							label.getHorizontalAlignment()));

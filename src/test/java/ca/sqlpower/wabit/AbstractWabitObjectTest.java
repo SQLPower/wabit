@@ -656,9 +656,17 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignorableProperties.addAll(getPropertiesToIgnoreForEvents());
     	
     	List<PersistedSPOProperty> changesOnObject = new ArrayList<PersistedSPOProperty>();
+    	
+    	logger.debug("Looking through properties registered to persist...");
     	for (int i = allPropertyChanges.size() - 1; i >= 0; i--) {
     		if (allPropertyChanges.get(i).getUUID().equals(wo.getUUID())) {
     			changesOnObject.add(allPropertyChanges.get(i));
+    			logger.debug("The property "+allPropertyChanges.get(i).getPropertyName() +
+    					" is ready to persist!");
+    		} else {
+    			logger.debug("The property " + allPropertyChanges.get(i).getPropertyName() +
+    					" has not been set in WabitSessionPersister and" +
+    					" WorkspacePersisterListener to persist properly!");
     		}
     	}
     	
