@@ -185,10 +185,4 @@ public class StubWabitObject implements WabitObject {
 		return null;
 	}
 
-	@Override
-	public void commit(String message) {
-		// TODO Auto-generated method stub
-		
-	}
-
 }

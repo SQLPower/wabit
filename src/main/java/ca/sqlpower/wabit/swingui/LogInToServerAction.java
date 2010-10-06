@@ -39,10 +39,7 @@ public class LogInToServerAction extends AbstractAction {
     private final Component dialogOwner;
     private final WabitSessionContext context;
     
-    public LogInToServerAction(
-    		Component dialogOwner, 
-    		SPServerInfo si, 
-    		WabitSessionContext context) {
+    public LogInToServerAction(Component dialogOwner, SPServerInfo si, WabitSessionContext context) {
         super(SQLPowerUtils.serviceInfoSummary(si));
         this.dialogOwner = dialogOwner;
         this.serviceInfo = si;

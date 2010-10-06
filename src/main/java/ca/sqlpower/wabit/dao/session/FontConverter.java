@@ -20,55 +20,66 @@
 package ca.sqlpower.wabit.dao.session;
 
 import java.awt.Font;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.commons.beanutils.ConversionException;
 
 import ca.sqlpower.dao.session.BidirectionalConverter;
-import ca.sqlpower.dao.session.SPFontLoader;
-import ca.sqlpower.wabit.FontStyle;
 
 public class FontConverter implements BidirectionalConverter<String, Font> {
-
-	private final SPFontLoader loader;
-	private final Map<String, String> vendorToGenericMap;
 	
-	public FontConverter(SPFontLoader loader) {
-		this.loader = loader;
+	/**
+	 * This enum comes from the documentation on {@link Font#decode(String)}
+	 * to convert from the font style to a string defined in the documentation
+	 * and back.
+	 */
+	private enum FontStyle {
+		BOLD("BOLD", Font.BOLD),
+		ITALIC("ITALIC", Font.ITALIC),
+		PLAIN("PLAIN", Font.PLAIN),
+		BOLDITALIC("BOLDITALIC", Font.BOLD + Font.ITALIC);
 		
-		/*
-		 * This converter must convert vendor specific font names
-		 * to their generic equivalent. For example, on a Mac OS
-		 * machine, if you do Font.decode("Arial"), it will in fact
-		 * return a ArialMT font. There is no workaround. Some
-		 * platforms wont decode the fonts properly; period.
-		 */
-		vendorToGenericMap = new HashMap<String, String>();
-		vendorToGenericMap.put("ArialMT", "Arial");
+		private final String encodedName;
+		private final int value;
+
+		private FontStyle(String encodedName, int value) {
+			this.encodedName = encodedName;
+			this.value = value;
+			
+		}
+
+		public String getEncodedName() {
+			return encodedName;
+		}
+
+		public int getValue() {
+			return value;
+		}
+		
+		public static FontStyle getStyleByValue(int value) {
+			for (FontStyle style : values()) {
+				if (style.getValue() == value) {
+					return style;
+				}
+			}
+			throw new IllegalArgumentException("Unknown format for font integer value " + value);
+		}
+		
 	}
 
 	public Font convertToComplexType(String convertFrom)
 			throws ConversionException {
-		return loader.loadFontFromSpecs(convertFrom);
+		return Font.decode(convertFrom);
 	}
 
 	public String convertToSimpleType(Font convertFrom, Object ... additionalInfo) {
 		StringBuffer buffer = new StringBuffer();
-		buffer.append(
-				convertToStandardFontName(convertFrom.getFontName()));
+		buffer.append(convertFrom.getFontName());
 		buffer.append("-");
 		buffer.append(FontStyle.getStyleByValue(convertFrom.getStyle()).getEncodedName());
 		buffer.append("-");
 		buffer.append(convertFrom.getSize());
+		
 		return buffer.toString();
 	}
-	
-	private String convertToStandardFontName(String vendorName) {
-		if (vendorToGenericMap.containsKey(vendorName)) {
-			return vendorToGenericMap.get(vendorName);
-		} else {
-			return vendorName;
-		}
-	}
+
 }

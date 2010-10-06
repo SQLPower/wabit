@@ -234,7 +234,7 @@ public class WabitAccessManager implements SPAccessManager{
 		// Architect EE, this will have to change.
 		List<Grant> grants = aggregateGrants(getCurrentUser());
 		for (Grant grant : grants) {
-			if (!grant.isSystemLevel()) {
+			if (grant.getSubject() != null) {
 				if (grant.getSubject().equals(subject)) {
 					if (grant.isModifyPrivilege()) {
 						permissions.remove(Permission.MODIFY);
@@ -370,7 +370,7 @@ public class WabitAccessManager implements SPAccessManager{
 		}
 		
 		for (Grant grant : grants) {
-			if (grant.isSystemLevel()) {
+			if (grant.getSubject() == null) {
 				if (grant.getType().equals(type)) {
 					if (grant.isModifyPrivilege()) {
 						permissions.remove(Permission.MODIFY);
@@ -419,7 +419,7 @@ public class WabitAccessManager implements SPAccessManager{
 		boolean grantPrivilege = newGrant.isGrantPrivilege();
 		
 		String type = newGrant.getType();
-		if (!newGrant.isSystemLevel()) {
+		if (newGrant.getSubject() != null) {
 			String subject = newGrant.getSubject();
 			
 			if (subject.equals(getCurrentUser().getUUID())
@@ -431,7 +431,7 @@ public class WabitAccessManager implements SPAccessManager{
 
 			List<Grant> grants = aggregateGrants(getCurrentUser());
 			for (Grant grant : grants) {
-				if (!grant.isSystemLevel()) {
+				if (grant.getSubject() != null) {
 					if (grant.getSubject().equals(subject)) {
 						if (grant.isModifyPrivilege())
 							modifyPrivilege = false;
@@ -460,7 +460,7 @@ public class WabitAccessManager implements SPAccessManager{
 			grantPrivilege = true;
 			List<Grant> grants = aggregateGrants(getCurrentUser());
 			for (Grant grant : grants) {
-				if (grant.isSystemLevel()
+				if (grant.getSubject() == null
 						&& grant.getType().equals(type)) {
 					if (grant.isCreatePrivilege())
 						createPrivilege = false;

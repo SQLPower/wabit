@@ -24,7 +24,6 @@ import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.List;
 
-import ca.sqlpower.dao.session.SPFontLoader;
 import ca.sqlpower.object.CleanupExceptions;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.SPDataSource;
@@ -48,12 +47,9 @@ public class WabitSessionImpl implements WabitSession {
 	
 	private final List<SessionLifecycleListener<WabitSession>> lifecycleListeners =
 		new ArrayList<SessionLifecycleListener<WabitSession>>();
-
-	protected SPFontLoader fontLoader = null;
 	
     public WabitSessionImpl(WabitSessionContext context) {
     	this.sessionContext = context;
-		this.fontLoader = new LocalFontLoader(); 
     	workspace = new WabitWorkspace();
     	workspace.setSession(this); // XXX leaking a reference to partially-constructed session!
     }
@@ -129,8 +125,4 @@ public class WabitSessionImpl implements WabitSession {
 		return null;
 	}
 	
-	@Override
-	public SPFontLoader getFontLoader() {
-		return this.fontLoader;
-	}
 }

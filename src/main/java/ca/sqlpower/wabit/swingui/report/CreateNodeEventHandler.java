@@ -23,7 +23,7 @@ import javax.swing.JFrame;
 
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
-import ca.sqlpower.wabit.report.WabitLabel;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Guide.Axis;
 import ca.sqlpower.wabit.swingui.WabitSwingSession;
@@ -60,7 +60,7 @@ public class CreateNodeEventHandler extends PBasicInputEventHandler {
 				ContentBox contentBox = new ContentBox();
 				
 				if (panel.getMouseState().equals(MouseStates.CREATE_LABEL)) {
-					contentBox.setContentRenderer(new WabitLabel("New Content Box"));
+					contentBox.setContentRenderer(new Label("New Content Box"));
 				}
 				
 				ContentBoxNode newCBNode = 

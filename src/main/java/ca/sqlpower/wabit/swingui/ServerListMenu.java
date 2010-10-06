@@ -67,9 +67,7 @@ public class ServerListMenu extends JMenu {
      * ServerListMenu does, so you should make a new popup instance every time
      * you need one.
      */
-    public static JPopupMenu createPopupInstance(
-    		final WabitSwingSessionContext context,
-    		final Component dialogOwner) {
+    public static JPopupMenu createPopupInstance(final WabitSwingSessionContext context, final Component dialogOwner) {
         JPopupMenu popup = new JPopupMenu();
         List<SPServerInfo> servers = context.getEnterpriseServers(true);
         AbstractAction configureServersAction = makeServerManagerAction(context, dialogOwner);
@@ -87,8 +85,7 @@ public class ServerListMenu extends JMenu {
     }
 
     private static AbstractAction makeServerManagerAction(
-            final WabitSwingSessionContext context,
-            final Component dialogOwner) {
+            final WabitSwingSessionContext context, final Component dialogOwner) {
 
         return new AbstractAction("Configure Server Connections...") {
             public void actionPerformed(ActionEvent e) {
@@ -121,11 +118,8 @@ public class ServerListMenu extends JMenu {
      *            The context whose JmDNS instance to use. This is also the
      *            context that will own any sessions created on the server.
      */
-    public ServerListMenu(
-    		WabitSwingSessionContext context, 
-    		String name,
-            Component dialogOwner, 
-            ServerListMenuItemFactory itemFactory) {
+    public ServerListMenu(WabitSwingSessionContext context, String name,
+            Component dialogOwner, ServerListMenuItemFactory itemFactory) {
         super(name);
         super.setIcon(SPSUtils.createIcon("wabitServer-16", ""));
         this.context = context;

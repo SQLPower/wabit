@@ -38,11 +38,11 @@ import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
 import net.miginfocom.swing.MigLayout;
-import ca.sqlpower.object.HorizontalAlignment;
-import ca.sqlpower.swingui.AlignmentIcons;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.CellSetRenderer;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ReportUtil;
+import ca.sqlpower.wabit.swingui.Icons;
 import edu.umd.cs.piccolo.PNode;
 import edu.umd.cs.piccolo.event.PInputEvent;
 
@@ -72,23 +72,23 @@ public class CellSetSwingRenderer implements SwingContentRenderer {
         });
         headerFontExample.setFont(renderer.getHeaderFont());
         panel.add(headerFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(headerFontExample, renderer), "wrap");
+        panel.add(ReportUtil.createFontButton(headerFontExample), "wrap");
         
         panel.add(new JLabel("Body Font"), "gap related");
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(renderer.getBodyFont());
         panel.add(bodyFontExample, "gap related");
-        panel.add(ReportUtil.createFontButton(bodyFontExample, renderer), "wrap");
+        panel.add(ReportUtil.createFontButton(bodyFontExample), "wrap");
         
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(
-                AlignmentIcons.LEFT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.LEFT);
+                Icons.LEFT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.LEFT);
         hAlignmentGroup.add(leftAlign);
         final JToggleButton centreAlign = new JToggleButton(
-                AlignmentIcons.CENTRE_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.CENTER);
+                Icons.CENTRE_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.CENTER);
         hAlignmentGroup.add(centreAlign);
         final JToggleButton rightAlign = new JToggleButton(
-                AlignmentIcons.RIGHT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.RIGHT);
+                Icons.RIGHT_ALIGN_ICON, renderer.getBodyAlignment() == HorizontalAlignment.RIGHT);
         hAlignmentGroup.add(rightAlign);
         Box alignmentBox = Box.createHorizontalBox();
         alignmentBox.add(leftAlign);

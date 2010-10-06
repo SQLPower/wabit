@@ -43,7 +43,7 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 	
 	private final CubeConverter cubeConverter;
 	
-	private final FontConverter fontConverter;
+	private static final FontConverter fontConverter = new FontConverter();
 	
 	private final SQLJoinConverter sqlJoinConverter;
 	
@@ -74,7 +74,6 @@ public class WabitSessionPersisterSuperConverter extends SessionPersisterSuperCo
 	public WabitSessionPersisterSuperConverter(WabitSession session, WabitObject root, boolean containerDoPopulate) {
 		super(session.getDataSources(), root);
 		cubeConverter = new CubeConverter(session.getContext(), session.getDataSources());
-		fontConverter = new FontConverter(session.getFontLoader());
 		containerConverter = new ContainerConverter(session, containerDoPopulate);
 		sqlJoinConverter = new SQLJoinConverter(root);
 		jdbcDataSourceConverter = new JDBCDataSourceConverter(session.getDataSources());

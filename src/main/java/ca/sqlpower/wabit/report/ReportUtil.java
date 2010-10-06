@@ -34,10 +34,6 @@ import javax.swing.SwingUtilities;
 
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.FontSelector;
-import ca.sqlpower.wabit.WabitObject;
-import ca.sqlpower.wabit.WabitUtils;
-import ca.sqlpower.wabit.enterprise.client.ServerInfoProvider;
-import ca.sqlpower.wabit.swingui.WabitSwingSessionImpl;
 
 /**
  * This class contains a collection of static methods that are useful
@@ -67,28 +63,11 @@ public class ReportUtil {
      * @return A button that will display a {@link FontSelector} to choose a new font
      *         for the JComponent.
      */
-    public static JButton createFontButton(final JComponent fontTarget, final WabitObject objectTarget) {
+    public static JButton createFontButton(final JComponent fontTarget) {
         JButton button = new JButton("Choose...");
         button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-            	// We might need to constrain the list of fonts available 
-                // to those on the server.
-                final FontSelector fs;
-                if (WabitUtils.getWorkspace(objectTarget).isServerWorkspace()) {
-                	List<String> fonts;
-        			try {
-        				fonts = ServerInfoProvider.getServerFonts(
-            				((WabitSwingSessionImpl)WabitUtils.getWorkspace(objectTarget).getSession()).getEnterpriseServerInfos());
-        			} catch (Exception e1) {
-        				throw new RuntimeException("Failed to obtain a list of available fonts from the server.");
-        			}
-                	fs = new FontSelector(
-                			fontTarget.getFont(), 
-                			fonts.toArray(new String[fonts.size()]),
-                			WabitUtils.getWorkspace(objectTarget).getSession().getFontLoader());
-                } else {
-                	fs = new FontSelector(fontTarget.getFont());
-                }
+                FontSelector fs = new FontSelector(fontTarget.getFont());
                 Window dialogParent = SwingUtilities.getWindowAncestor(fontTarget);
                 JDialog d = DataEntryPanelBuilder.createDataEntryPanelDialog(fs, dialogParent, "Choose a Font", "OK");
                 d.setModal(true);

@@ -68,25 +68,21 @@ public class OpenWorkspaceAction extends AbstractAction {
 	}
 
 	public void actionPerformed(ActionEvent e) {
-		final File importFile;
-		if (!e.getActionCommand().startsWith("file:")) {
-			File defaultFile = null;
-			if (context.getActiveSession() != null) {
-				defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
-			}
-			JFileChooser fc = new JFileChooser(defaultFile);
-			fc.setDialogTitle("Select the file to load from.");
-			fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
+	    File defaultFile = null;
+        if (context.getActiveSession() != null) {
+            defaultFile = context.getActiveSwingSession().getCurrentURIAsFile();
+        }
+		JFileChooser fc = new JFileChooser(defaultFile);
+		fc.setDialogTitle("Select the file to load from.");
+		fc.addChoosableFileFilter(SPSUtils.WABIT_FILE_FILTER);
+		
+		File importFile = null;
+		int fcChoice = fc.showOpenDialog(context.getFrame());
 
-			int fcChoice = fc.showOpenDialog(context.getFrame());
-
-			if (fcChoice != JFileChooser.APPROVE_OPTION) {
-				return;
-			}
-			importFile = fc.getSelectedFile();
-		} else {
-			importFile = new File(e.getActionCommand().substring("file:".length()));
+		if (fcChoice != JFileChooser.APPROVE_OPTION) {
+		    return;
 		}
+		importFile = fc.getSelectedFile();
 		loadFiles(context, importFile.toURI());
 	}
 

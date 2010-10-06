@@ -35,7 +35,7 @@ import ca.sqlpower.sqlobject.SQLDatabase;
 import ca.sqlpower.sqlobject.SQLDatabaseMapping;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.WabitLabel;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.chart.Chart;
@@ -183,7 +183,7 @@ public class WorkspaceGraphModelTest extends TestCase {
         report.getPage().addContentBox(cb2);
         report.getPage().addContentBox(cb3);
         
-        WabitLabel label = new WabitLabel();
+        Label label = new Label();
         cb1.setContentRenderer(label);
         
         final QueryCache query = new QueryCache(context);

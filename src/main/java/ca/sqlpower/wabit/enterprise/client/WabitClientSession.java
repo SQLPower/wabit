@@ -135,20 +135,19 @@ public class WabitClientSession extends WabitSessionImpl {
 
     public WabitClientSession(
     		@Nonnull WorkspaceLocation workspaceLocation,
-    		@Nonnull WabitSessionContext context) 
-    {
+    		@Nonnull WabitSessionContext context) {
         super(context);
 		this.workspaceLocation = workspaceLocation;
         if (workspaceLocation == null) {
         	throw new NullPointerException("workspaceLocation must not be null");
         }
 
-        super.fontLoader = new RemoteFontLoader(workspaceLocation.getServiceInfo());
         outboundHttpClient = createHttpClient(workspaceLocation.getServiceInfo());
         
         getWorkspace().setUUID(workspaceLocation.getUuid());
         getWorkspace().setName("Loading Workspace...");
         getWorkspace().setSession(this); // XXX leaking a reference to partially-constructed session!
+        
         
         sessionPersister = new WabitSessionPersister(
         		"inbound-" + workspaceLocation.getUuid(),
@@ -756,6 +755,4 @@ public class WabitClientSession extends WabitSessionImpl {
 	public static CookieStore getCookieStore() {
 		return cookieStore;
 	}
-	
-	
 }

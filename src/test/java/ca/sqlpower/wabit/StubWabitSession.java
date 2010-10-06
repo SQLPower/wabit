@@ -30,7 +30,6 @@ import javax.naming.NamingException;
 
 import org.olap4j.OlapConnection;
 
-import ca.sqlpower.dao.session.SPFontLoader;
 import ca.sqlpower.sql.DataSourceCollection;
 import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.Olap4jDataSource;
@@ -182,10 +181,5 @@ public class StubWabitSession implements WabitSession {
 	
 	public boolean isForegroundThread() {
 		return true;
-	}
-	
-	@Override
-	public SPFontLoader getFontLoader() {
-		return new LocalFontLoader();
 	}
 }

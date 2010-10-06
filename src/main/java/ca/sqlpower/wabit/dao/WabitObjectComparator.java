@@ -37,7 +37,7 @@ import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.Guide;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.WabitLabel;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
@@ -120,7 +120,7 @@ public class WabitObjectComparator implements Comparator<WabitObject> {
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ColumnInfo.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ChartRenderer.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ImageRenderer.class)));
-        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(WabitLabel.class)));
+        classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Label.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(Guide.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(ComboBoxSelector.class)));
         classOrderList.add(new HashSet<Class<? extends WabitObject>>(Collections.singleton(TextBoxSelector.class)));

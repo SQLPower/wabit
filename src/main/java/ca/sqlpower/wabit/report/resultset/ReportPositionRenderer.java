@@ -37,11 +37,11 @@ import java.util.Map;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.sql.CachedRowSet;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.DataType;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;

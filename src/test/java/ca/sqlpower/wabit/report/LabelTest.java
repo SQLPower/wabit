@@ -26,7 +26,7 @@ import ca.sqlpower.wabit.WabitObject;
 
 public class LabelTest extends AbstractWabitObjectTest {
 
-    private WabitLabel label;
+    private Label label;
     
     @Override
     public Class<? extends WabitObject> getParentClass() {
@@ -44,7 +44,7 @@ public class LabelTest extends AbstractWabitObjectTest {
     @Override
     protected void setUp() throws Exception {
         super.setUp();
-        label = new WabitLabel();
+        label = new Label();
         ContentBox cb = new ContentBox();
         cb.addChild(label, 0);
         

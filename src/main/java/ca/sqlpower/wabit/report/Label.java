@@ -29,10 +29,10 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.SPLabel;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.object.SPVariableHelper;
 import ca.sqlpower.object.SPVariableResolver;
+import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
 /**
@@ -40,10 +40,29 @@ import ca.sqlpower.wabit.WabitObject;
  * substitution. Variables are described in the documentation for the
  * {@link Variables} class.
  */
-public class WabitLabel extends SPLabel implements ReportContentRenderer {
+public class Label extends AbstractWabitObject implements ReportContentRenderer {
 
-    private static final Logger logger = Logger.getLogger(WabitLabel.class);
-	private Font font;
+    private static final Logger logger = Logger.getLogger(Label.class);
+    
+    /**
+     * The current text of this label. May include variables encoded as
+     * described in the class-level docs.
+     */
+    private String text;
+
+    private HorizontalAlignment hAlignment = HorizontalAlignment.LEFT;
+    private VerticalAlignment vAlignment = VerticalAlignment.MIDDLE;
+    
+    /**
+     * The font that this label is using to display text. If null, getFont()
+     * will return the parent content box's font.
+     */
+    private Font font;
+
+    /**
+     * The background colour defined for this label.
+     */
+	private Color backgroundColour;
     
     /**
      * Creates a new label with the given initial text.
@@ -51,8 +70,8 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
      * @param variableContext
      * @param text
      */
-    public WabitLabel(String text) {
-        setText(text);
+    public Label(String text) {
+        this.text = text;
         setName("Label");
         setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
     }
@@ -60,17 +79,59 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
     /**
      * Copy constructor
      */
-    public WabitLabel(WabitLabel label) {
-    	setText(label.getText());
-    	setFont(label.getFont());
-    	setHorizontalAlignment(label.getHorizontalAlignment());
-    	setBackgroundColour(label.getBackgroundColour());
-    	setVerticalAlignment(label.getVerticalAlignment());
+    public Label(Label label) {
+    	this.text = label.getText();
+    	this.font = label.getFont();
+    	this.hAlignment = label.getHorizontalAlignment();
+    	this.backgroundColour = label.getBackgroundColour();
+    	this.vAlignment = label.getVerticalAlignment();
     	setName(label.getName());
     }
     
-    public WabitLabel() {
+    public Label() {
         this("");
+    }
+    
+    /**
+     * Sets the new text for this label.
+     */
+    public void setText(String text) {
+        String oldText = this.text;
+        this.text = text;
+        firePropertyChange("text", oldText, text);
+    }
+    
+    /**
+     * Returns the text of this label without substituting the variables.
+     */
+    public String getText() {
+        return text;
+    }
+
+    public HorizontalAlignment getHorizontalAlignment() {
+        return hAlignment;
+    }
+
+    public void setHorizontalAlignment(HorizontalAlignment alignment) {
+        HorizontalAlignment oldAlignment = this.hAlignment;
+        hAlignment = alignment;
+        firePropertyChange("horizontalAlignment", oldAlignment, alignment);
+    }
+
+    public VerticalAlignment getVerticalAlignment() {
+        return vAlignment;
+    }
+
+    public void setVerticalAlignment(VerticalAlignment alignment) {
+        VerticalAlignment oldAlignment = vAlignment;
+        vAlignment = alignment;
+        firePropertyChange("verticalAlignment", oldAlignment, alignment);
+    }
+
+    public void setFont(Font font) {
+        Font oldFont = getFont();
+        this.font = font;
+        firePropertyChange("font", oldFont, font);
     }
     
     public Font getFont() {
@@ -82,13 +143,7 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
             return null;
         }
     }
-    
-    public void setFont(Font font) {
-    	Font oldVal = getFont();
-    	this.font = font;
-    	firePropertyChange("font", oldVal, font);
-    }
-    
+
 	/**
 	 * Renders this label to the given graphics, with the baseline centered in
 	 * the content box. Note that specifying a pageIndex has no effect, since
@@ -104,7 +159,7 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
     		SPVariableResolver variablesContext) 
     {
         logger.debug("Rendering label...");
-        logger.debug("Text before: " + getText());
+        logger.debug("Text before: " + text);
         String[] textToRender = getVariableSubstitutedText();
         g.setFont(getFont());
         FontMetrics fm = g.getFontMetrics();
@@ -116,10 +171,10 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
 	        g.setColor(Color.BLACK);
         }
         logger.debug("Rendering label text: " + Arrays.toString(textToRender));
-        double y = getVerticalAlignment().calculateStartY(height, textHeight, fm);
+        double y = vAlignment.calculateStartY(height, textHeight, fm);
         for (String text : textToRender) {
             int textWidth = fm.stringWidth(text);
-            double x = getHorizontalAlignment().computeStartX(width, textWidth);
+            double x = hAlignment.computeStartX(width, textWidth);
             g.drawString(text, (int)x, (int)y);
             y += fm.getHeight();
         }
@@ -130,7 +185,7 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
      * Return the Label text with variables substituted.
      */
     public String[] getVariableSubstitutedText() {
-    	return SPVariableHelper.substitute(getText(), new SPVariableHelper(this)).split("\n");
+    	return SPVariableHelper.substitute(text, new SPVariableHelper(this)).split("\n");
 	}
 
     @Override
@@ -154,12 +209,21 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
         // no op -- labels don't paginate
     }
 
+	public Color getBackgroundColour() {
+		return backgroundColour;
+	}
+
+	public void setBackgroundColour(Color backgroundColour) {
+		firePropertyChange("backgroundColour", this.backgroundColour, backgroundColour);
+		this.backgroundColour = backgroundColour;
+	}
+
     public List<WabitObject> getDependencies() {
         return Collections.emptyList();
     }
     
     public void removeDependency(SPObject dependency) {
-        ((ContentBox) getParent()).setContentRenderer(null);
+        ((ContentBox) getParent()).setContentRenderer(null);        
     }
 
 	public void refresh() {

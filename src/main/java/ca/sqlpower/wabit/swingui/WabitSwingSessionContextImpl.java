@@ -145,10 +145,8 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.swingui.SPSwingWorker;
 import ca.sqlpower.swingui.Search;
 import ca.sqlpower.swingui.SearchTextField;
-import ca.sqlpower.swingui.StackedTabComponent;
 import ca.sqlpower.swingui.SwingUIUserPrompterFactory;
 import ca.sqlpower.swingui.SwingWorkerRegistry;
-import ca.sqlpower.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.swingui.action.ForumAction;
 import ca.sqlpower.swingui.action.OpenUrlAction;
 import ca.sqlpower.swingui.event.SessionLifecycleEvent;
@@ -178,7 +176,7 @@ import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ChartRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
 import ca.sqlpower.wabit.report.ImageRenderer;
-import ca.sqlpower.wabit.report.WabitLabel;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Layout;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
@@ -187,6 +185,7 @@ import ca.sqlpower.wabit.report.Template;
 import ca.sqlpower.wabit.report.chart.Chart;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
+import ca.sqlpower.wabit.swingui.StackedTabComponent.StackedTab;
 import ca.sqlpower.wabit.swingui.action.AboutAction;
 import ca.sqlpower.wabit.swingui.action.CheckForUpdateAction;
 import ca.sqlpower.wabit.swingui.action.CloseWorkspaceAction;
@@ -1149,8 +1148,8 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
 					name = ((CellSetRenderer) content).getContent().getName();
 				} else if (content instanceof ResultSetRenderer) {
 					name = ((ResultSetRenderer) content).getContent().getName();
-				} else if (content instanceof WabitLabel) {
-					name = ((WabitLabel) content).getText();
+				} else if (content instanceof Label) {
+					name = ((Label) content).getText();
 				} else if (content instanceof ChartRenderer) {
 					name = ((ChartRenderer) content).getContent().getName();
 				} else if (content instanceof ImageRenderer) {
@@ -1418,9 +1417,9 @@ public class WabitSwingSessionContextImpl implements WabitSwingSessionContext {
                 Class osxAdapter = ClassLoader.getSystemClassLoader().loadClass("ca.sqlpower.architect.swingui.OSXAdapter"); //$NON-NLS-1$
 
                 // The main registration method.  Takes quitAction, prefsAction, aboutAction.
-                Class[] defArgs = { Action.class, Action.class, Action.class, Action.class };
+                Class[] defArgs = { Action.class, Action.class, Action.class };
                 Method registerMethod = osxAdapter.getDeclaredMethod("registerMacOSXApplication", defArgs); //$NON-NLS-1$
-                Object[] args = { exitAction, prefsAction, aboutAction, new OpenWorkspaceAction(this) };
+                Object[] args = { exitAction, prefsAction, aboutAction };
                 registerMethod.invoke(osxAdapter, args);
 
                 // The enable prefs method.  Takes a boolean.

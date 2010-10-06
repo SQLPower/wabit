@@ -26,17 +26,17 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 
-import ca.sqlpower.object.HorizontalAlignment;
-import ca.sqlpower.object.VerticalAlignment;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.report.CellSetRenderer;
 import ca.sqlpower.wabit.report.ContentBox;
-import ca.sqlpower.wabit.report.WabitLabel;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
+import ca.sqlpower.wabit.report.Label;
 import ca.sqlpower.wabit.report.Page;
 import ca.sqlpower.wabit.report.Report;
 import ca.sqlpower.wabit.report.ReportContentRenderer;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
+import ca.sqlpower.wabit.report.VerticalAlignment;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.query.QueryCache;
 import ca.sqlpower.wabit.swingui.WabitIcons;
@@ -137,7 +137,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         body.setY(p.getUpperMarginOffset());
         
         ContentBox header = new ContentBox();
-        header.setContentRenderer(new WabitLabel(layoutName));
+        header.setContentRenderer(new Label(layoutName));
         p.addContentBox(header);
         header.setWidth(pageBodyWidth / 2);
         header.setHeight(Page.DPI / 2); // TODO base this on the actual font metrics or something
@@ -146,7 +146,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         // shameless self promotion
         ContentBox dateHeader = new ContentBox();
-        WabitLabel dateLabel = new WabitLabel("Generated on ${now}");
+        Label dateLabel = new Label("Generated on ${now}");
         dateHeader.setContentRenderer(dateLabel);
         p.addContentBox(dateHeader);
         dateLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
@@ -156,7 +156,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         dateHeader.setY(p.getUpperMarginOffset() - dateHeader.getHeight());
         
         ContentBox footer = new ContentBox();
-        WabitLabel footerLabel = new WabitLabel("Page ${page_number} of ${page_count}");
+        Label footerLabel = new Label("Page ${page_number} of ${page_count}");
         footerLabel.setHorizontalAlignment(HorizontalAlignment.CENTER);
         footer.setContentRenderer(footerLabel);
         // TODO add option for horizontal and vertical alignment (left, center, right, top, middle, bottom) in label
@@ -168,7 +168,7 @@ public class CreateLayoutFromQueryAction extends AbstractAction {
         
         // shameless self promotion
         ContentBox shameless = new ContentBox();
-        WabitLabel selfPromotionLabel = new WabitLabel(
+        Label selfPromotionLabel = new Label(
                 "Made with Wabit ${wabit_version} - Free Reporting That Just Works.  http://www.sqlpower.ca/wabit");
         selfPromotionLabel.setHorizontalAlignment(HorizontalAlignment.RIGHT);
         selfPromotionLabel.setVerticalAlignment(VerticalAlignment.TOP);

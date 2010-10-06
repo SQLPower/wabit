@@ -53,15 +53,15 @@ import javax.swing.SpinnerNumberModel;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.HorizontalAlignment;
-import ca.sqlpower.swingui.AlignmentIcons;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.ColumnInfo;
 import ca.sqlpower.wabit.report.DataType;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 import ca.sqlpower.wabit.report.ReportUtil;
 import ca.sqlpower.wabit.report.ResultSetRenderer;
 import ca.sqlpower.wabit.report.ColumnInfo.GroupAndBreak;
 import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
+import ca.sqlpower.wabit.swingui.Icons;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -125,13 +125,13 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         
         final JLabel headerFontExample = new JLabel("Header Font Example");
         headerFontExample.setFont(renderer.getHeaderFont());
-        fb.append("Headers Font", headerFontExample, ReportUtil.createFontButton(headerFontExample, renderer));
+        fb.append("Headers Font", headerFontExample, ReportUtil.createFontButton(headerFontExample));
         fb.nextLine();
         fb.append("");
         
         final JLabel bodyFontExample = new JLabel("Body Font Example");
         bodyFontExample.setFont(renderer.getBodyFont());
-        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample, renderer));
+        fb.append("Body Font", bodyFontExample, ReportUtil.createFontButton(bodyFontExample));
         fb.nextLine();
         fb.append("");
         
@@ -425,13 +425,13 @@ public class ResultSetSwingRenderer implements SwingContentRenderer {
         final JLabel alignmentLabel = new JLabel("Alignment");
         ButtonGroup hAlignmentGroup = new ButtonGroup();
         final JToggleButton leftAlign = new JToggleButton(
-        		AlignmentIcons.LEFT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.LEFT);
+                Icons.LEFT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.LEFT);
         hAlignmentGroup.add(leftAlign);
         final JToggleButton centreAlign = new JToggleButton(
-        		AlignmentIcons.CENTRE_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.CENTER);
+                Icons.CENTRE_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.CENTER);
         hAlignmentGroup.add(centreAlign);
         final JToggleButton rightAlign = new JToggleButton(
-        		AlignmentIcons.RIGHT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.RIGHT);
+                Icons.RIGHT_ALIGN_ICON, ci.getHorizontalAlignment() == HorizontalAlignment.RIGHT);
         hAlignmentGroup.add(rightAlign);
         Box alignmentBox = Box.createHorizontalBox();
         alignmentBox.add(leftAlign);

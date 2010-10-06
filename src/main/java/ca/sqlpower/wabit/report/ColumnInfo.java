@@ -23,7 +23,6 @@ import java.text.Format;
 import java.util.Collections;
 import java.util.List;
 
-import ca.sqlpower.object.HorizontalAlignment;
 import ca.sqlpower.object.SPObject;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.wabit.AbstractWabitObject;

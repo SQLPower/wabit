@@ -31,7 +31,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import ca.sqlpower.object.HorizontalAlignment;
+import ca.sqlpower.wabit.report.HorizontalAlignment;
 
 /**
  * This represents one cell in the result set. This includes each cell that
