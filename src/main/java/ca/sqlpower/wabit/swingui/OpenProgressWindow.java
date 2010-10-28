@@ -83,6 +83,7 @@ public class OpenProgressWindow {
                     progressDialog.setVisible(false);
                     progressDialog.dispose();
                     parent.setEnabled(true);
+                    parent.toFront(); // hack for bug in Windows which sends parent behind other applications
                 }
             }
         });
