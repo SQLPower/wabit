@@ -31,12 +31,17 @@ import org.apache.log4j.Logger;
 import org.olap4j.Axis;
 import org.olap4j.OlapException;
 import org.olap4j.metadata.Hierarchy;
+import org.olap4j.metadata.Member;
 import org.olap4j.query.Query;
 import org.olap4j.query.QueryDimension;
 import org.olap4j.query.Selection;
 import org.olap4j.query.QueryDimension.HierarchizeMode;
 
+import ca.sqlpower.object.ObjectDependentException;
 import ca.sqlpower.object.SPObject;
+import ca.sqlpower.util.UserPrompter.UserPromptOptions;
+import ca.sqlpower.util.UserPrompter.UserPromptResponse;
+import ca.sqlpower.util.UserPrompterFactory.UserPromptType;
 import ca.sqlpower.wabit.AbstractWabitObject;
 import ca.sqlpower.wabit.WabitObject;
 
@@ -178,27 +183,69 @@ public class WabitOlapDimension extends AbstractWabitObject {
 	/**
 	 * Initializes the WabitOlapDimension, and finds the wrapped Dimension based
 	 * on the given name. Also recursively initializes its children.
+	 * <p>
+	 * Note: The dimension can remove itself from the axis if it has had all
+	 * inclusions removed from it.
+	 * 
+	 * @return True if the dimension was successfully initialized and should be
+	 *         added to the axis. False if the dimension was not successfully
+	 *         initialized and it should removed from the axis as its members no
+	 *         longer exist.
 	 */
-	void init(OlapQuery query, Query mdxQuery) throws QueryInitializationException {
+	boolean init(OlapQuery query, Query mdxQuery) throws QueryInitializationException {
 		logger.debug("Initializing Dimension " + getName());
 		
 		dimension = mdxQuery.getDimension(getName());
 		dimension.setHierarchizeMode(HierarchizeMode.PRE);
 		
-		for (WabitOlapInclusion inclusion : inclusions) {
-			dimension.include(inclusion.getOperator(), query.findMember(inclusion.getUniqueMemberName()));
+		Iterator<WabitOlapInclusion> inclusionIter = inclusions.iterator();
+		while (inclusionIter.hasNext()) {
+			WabitOlapInclusion inclusion = inclusionIter.next();
+			Member includedMember = query.findMember(inclusion.getUniqueMemberName());
+			if (includedMember == null) {
+				getSession().getContext().createUserPrompter(
+						"Cannot find inclusion " + inclusion.getName() + " for dimension " + 
+						dimension.getName(), 
+						UserPromptType.MESSAGE, UserPromptOptions.OK, 
+						UserPromptResponse.OK, null, "OK").promptUser();
+				inclusionIter.remove();
+				continue;
+			}
+			dimension.include(inclusion.getOperator(), includedMember);
 			inclusion.init(query);
 		}
-		for (WabitOlapExclusion exclusion : exclusions) {
-			dimension.exclude(exclusion.getOperator(), query.findMember(exclusion.getUniqueMemberName()));
+		
+		//The dimension is meaningless without inclusions
+		if (inclusions.size() == 0) {
+			try {
+				getParent().removeChild(this);
+			} catch (ObjectDependentException e) {
+				throw new RuntimeException(e);
+			}
+			return false;
+		}
+		
+		Iterator<WabitOlapExclusion> exclusionIter = exclusions.iterator();
+		while (exclusionIter.hasNext()) {
+			WabitOlapExclusion exclusion = exclusionIter.next();
+			Member excludedMember = query.findMember(exclusion.getUniqueMemberName());
+			if (excludedMember == null) {
+				getSession().getContext().createUserPrompter(
+						"Cannot find inclusion " + exclusion.getName() + " for dimension " + 
+						dimension.getName(), 
+						UserPromptType.MESSAGE, UserPromptOptions.OK, 
+						UserPromptResponse.OK, null, "OK").promptUser();
+				exclusionIter.remove();
+				continue;
+			}
+			dimension.exclude(exclusion.getOperator(), excludedMember);
 			exclusion.init(query);
 		}
-		//XXX what if there are no inclusions? possibly occurrs when a query is saved
-		//with an empty axis?
 		if (((WabitOlapAxis) getParent()).getQueryAxis().getLocation() != Axis.FILTER) {
 			hierarchy = inclusions.get(0).getSelection().getMember().getHierarchy();
 		}
 		initialized = true;
+		return true;
 	}
 	
 	@Override

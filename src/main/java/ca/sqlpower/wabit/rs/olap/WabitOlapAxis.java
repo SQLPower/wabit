@@ -115,8 +115,13 @@ public class WabitOlapAxis extends AbstractWabitObject {
 			initialized = true;
 		}
 		
+		for (int i = dimensions.size() - 1; i >= 0; i--) {
+			WabitOlapDimension dimension = dimensions.get(i);
+			if (!dimension.init(query, mdxQuery)) {
+				dimensions.remove(dimension);
+			}
+		}
 		for (WabitOlapDimension dimension : dimensions) {
-			dimension.init(query, mdxQuery);
 			queryAxis.addDimension(dimension.getDimension());
 		}
 	}
