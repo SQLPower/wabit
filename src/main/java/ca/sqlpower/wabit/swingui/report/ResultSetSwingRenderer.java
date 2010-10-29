@@ -65,7 +65,7 @@ import ca.sqlpower.wabit.report.ResultSetRenderer.BorderStyles;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 import edu.umd.cs.piccolo.event.PInputEvent;
 

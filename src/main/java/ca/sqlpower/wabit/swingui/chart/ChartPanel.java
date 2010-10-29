@@ -94,7 +94,7 @@ import ca.sqlpower.wabit.swingui.chart.effect.ChartAnimation;
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.debug.FormDebugPanel;
 import com.jgoodies.forms.layout.FormLayout;
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 /**
  * Provides a complete GUI for setting up and modifying a Wabit Chart object.

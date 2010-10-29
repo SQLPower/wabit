@@ -52,7 +52,7 @@ import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.rs.olap.OlapQuery;
 import ca.sqlpower.wabit.rs.olap.QueryInitializationException;
 
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 /**
  * This is the slicer panel which shows at the bottom of the cell set viewer

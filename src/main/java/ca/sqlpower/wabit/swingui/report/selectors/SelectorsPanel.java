@@ -49,7 +49,7 @@ import ca.sqlpower.wabit.swingui.WabitIcons;
 import ca.sqlpower.wabit.swingui.action.DeleteReportParameterAction;
 import ca.sqlpower.wabit.swingui.action.EditReportParameterAction;
 
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 public class SelectorsPanel extends JPanel {
 

@@ -20,6 +20,7 @@
 package ca.sqlpower.wabit.swingui.chart;
 
 import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Paint;
 import java.awt.Shape;
@@ -81,7 +82,7 @@ public class WabitDrawingSupplier implements DrawingSupplier {
     private Paint makeGradient(int i) {
         Paint p = new GradientPaint(
                 0.0f, 0.0f, SERIES_COLOURS[i][0],
-                0.0f, 0.0f, SERIES_COLOURS[i][1]);
+                0.0f, 1.0f, SERIES_COLOURS[i][1]);
         return p;
     }
 

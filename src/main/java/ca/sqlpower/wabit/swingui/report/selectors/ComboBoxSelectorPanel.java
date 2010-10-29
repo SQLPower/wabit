@@ -46,7 +46,7 @@ import ca.sqlpower.swingui.object.VariableInserter;
 import ca.sqlpower.wabit.report.selectors.ComboBoxSelector;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 public class ComboBoxSelectorPanel implements DataEntryPanel {
 	

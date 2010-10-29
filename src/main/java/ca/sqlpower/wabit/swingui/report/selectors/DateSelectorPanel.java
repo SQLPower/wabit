@@ -39,7 +39,7 @@ import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.wabit.report.selectors.DateSelector;
 import ca.sqlpower.wabit.swingui.WabitIcons;
 
-import com.lowagie.text.Font;
+import com.itextpdf.text.Font;
 
 public class DateSelectorPanel implements DataEntryPanel {
 	
