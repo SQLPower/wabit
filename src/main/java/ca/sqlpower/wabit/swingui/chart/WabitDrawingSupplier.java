@@ -42,20 +42,20 @@ public class WabitDrawingSupplier implements DrawingSupplier {
      */
     public static final WebColour[][] SERIES_COLOURS =
     {
-        { new WebColour(0x0060B6), new WebColour(0x003399) },
-        { new WebColour(0xFFBF00), new WebColour(0xFF7F00) },
-        { new WebColour(0x00A33D), new WebColour(0x006B33) },
-        { new WebColour(0xBF0000), new WebColour(0x8F0000) },
-        { new WebColour(0x885997), new WebColour(0x602169) },
-        { new WebColour(0x99CCFF), new WebColour(0x00A0C6) },
-        { new WebColour(0xFFFF00), new WebColour(0xFFBF00) },
-        { new WebColour(0xD9C6C5), new WebColour(0xB0A790) },
-        { new WebColour(0xABD498), new WebColour(0x7FB24A) },
-        { new WebColour(0x809EAD), new WebColour(0x466F82) },
-        { new WebColour(0x9A7F55), new WebColour(0x574109) },
-        { new WebColour(0xC6C8CA), new WebColour(0x7A7C7E) },
-        { new WebColour(0xCFDED8), new WebColour(0x8DBAA6) },
-        { new WebColour(0xEBC5D0), new WebColour(0xE786B6) }
+        { new WebColour(0x0060B6), new WebColour(0x003399) }, // BLUE
+        { new WebColour(0xFFBF00), new WebColour(0xFF7F00) }, // ORANGE
+        { new WebColour(0x00A33D), new WebColour(0x006B33) }, // EMERALD
+        { new WebColour(0xBF0000), new WebColour(0x8F0000) }, // BURGUNDY
+        { new WebColour(0x885997), new WebColour(0x602169) }, // VIOLET
+        { new WebColour(0x99CCFF), new WebColour(0x00A0C6) }, // TURQUOISE
+        { new WebColour(0xFFFF00), new WebColour(0xFFBF00) }, // YELLOW
+        { new WebColour(0xD9C6C5), new WebColour(0xB0A790) }, // TAUPE
+        { new WebColour(0xABD498), new WebColour(0x7FB24A) }, // LIME
+        { new WebColour(0x809EAD), new WebColour(0x466F82) }, // AZURE
+        { new WebColour(0x9A7F55), new WebColour(0x574109) }, // BROWN
+        { new WebColour(0xC6C8CA), new WebColour(0x7A7C7E) }, // GREY
+        { new WebColour(0xCFDED8), new WebColour(0x8DBAA6) }, // MINT
+        { new WebColour(0xEBC5D0), new WebColour(0xE786B6) } // PINK
     };
     
     /**
