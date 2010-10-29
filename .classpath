@@ -67,6 +67,7 @@
 	<classpathentry kind="lib" path="lib/swingx-1.6.jar" sourcepath="/sources/swingx-1.6-src.zip"/>
 	<classpathentry kind="lib" path="lib/architect-core-1.0.0-preview-02.jar"/>
 	<classpathentry kind="lib" path="lib/architect-dbtree-1.0.0-preview-02.jar"/>
+	<classpathentry kind="lib" path="lib/iText-5.0.4.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/sqlpower_library"/>
 	<classpathentry kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v6.0">
 		<attributes>
