@@ -32,7 +32,6 @@
 	<classpathentry kind="lib" path="lib/httpclient-4.0.jar"/>
 	<classpathentry kind="lib" path="lib/httpcore-4.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/httpmime-4.0.jar"/>
-	<classpathentry kind="lib" path="/Users/vwilliam/Projects/eclipse/wabit/lib/iText-5.0.4.jar"/>
 	<classpathentry kind="lib" path="lib/javacup-10k.jar"/>
 	<classpathentry kind="lib" path="lib/jcommon-1.0.15.jar"/>
 	<classpathentry kind="lib" path="lib/jfreechart-1.0.12.jar"/>
