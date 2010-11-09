@@ -47,6 +47,8 @@ import org.apache.log4j.Logger;
 import ca.sqlpower.query.Container;
 import ca.sqlpower.query.Item;
 import ca.sqlpower.query.Query;
+import ca.sqlpower.query.QueryChangeEvent;
+import ca.sqlpower.query.QueryChangeListener;
 import ca.sqlpower.query.QueryImpl;
 import ca.sqlpower.query.SQLGroupFunction;
 import ca.sqlpower.query.QueryImpl.OrderByArgument;
@@ -54,6 +56,7 @@ import ca.sqlpower.sql.JDBCDataSource;
 import ca.sqlpower.sql.SPDataSource;
 import ca.sqlpower.swingui.querypen.QueryPen;
 import ca.sqlpower.swingui.table.TableModelSortDecorator;
+import ca.sqlpower.util.TransactionEvent;
 
 /**
  * This is the controller between the QueryCache and the QueryPen.
@@ -253,6 +256,66 @@ public class QueryController {
 		}
 	};
 	
+	private final QueryChangeListener queryChangeListener = new QueryChangeListener() {
+
+		@Override
+		public void joinAdded(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void joinRemoved(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void joinPropertyChangeEvent(PropertyChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void itemPropertyChangeEvent(PropertyChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void itemAdded(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void itemRemoved(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void containerAdded(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void containerRemoved(QueryChangeEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void propertyChangeEvent(PropertyChangeEvent evt) {
+			if("database".equals(evt.getPropertyName())) {
+				dataSourceComboBox.setSelectedItem(query.getDataSource());
+			}
+		}
+
+		@Override
+		public void compoundEditStarted(TransactionEvent evt) {
+			// do nothing
+		}
+
+		@Override
+		public void compoundEditEnded(TransactionEvent evt) {
+			// do nothing
+		}
+	};
+	
 	/**
 	 * This constructor will attach listeners to the {@link QueryPen} to update
 	 * the state of the {@link QueryImpl}. The dataSourceComboBox will also have
@@ -269,6 +332,7 @@ public class QueryController {
 		dataSourceComboBox.addActionListener(dataSourceListener);
 		queryText.getDocument().addDocumentListener(queryTextListener);
 		zoomSlider.addChangeListener(zoomListener );
+		query.addQueryChangeListener(queryChangeListener);
 	}
 	
 	/**
@@ -281,6 +345,7 @@ public class QueryController {
 		queryText.getDocument().removeDocumentListener(queryTextListener);
 		zoomSlider.removeChangeListener(zoomListener);
 		unlistenToCellRenderer();
+		query.removeQueryChangeListener(queryChangeListener);
 	}
 	
 	public void listenToCellRenderer(ComponentCellRenderer renderer) {
