@@ -39,6 +39,9 @@ SQL Power Wabit Ant build file
 	     by the Wabit at runtime -->
 	<property name="lib" value="lib"/>
 	
+	<!-- A temp directory where we will put everything that needs to be in the jar manifest -->
+	<property name="manifest.dir" value="manifest"/>
+	
 	<!-- The directory with all the JAR files that are required
 		     by the Wabit at compile time but are not part of
 		     the runtime dependencies -->
@@ -258,9 +261,7 @@ SQL Power Wabit Ant build file
 				srcdir="${src}" 
 				destdir="${build}" 
 				classpathref="compile.classpath" 
-				debug="true"
-				compiler="modern"
-				target="1.6"/>
+				debug="true"/>
 		
 		<copy includeEmptyDirs="true" flatten="false" todir="${build}" >
 			<fileset dir="${resources}">
@@ -277,9 +278,7 @@ SQL Power Wabit Ant build file
 				srcdir="${test.src}" 
 				destdir="${build.tests}"
 				classpathref="test.classpath"
-				debug="true"
-				compiler="modern"
-				target="1.6"/>
+				debug="true"/>
 		
 		<copy includeEmptyDirs="true" flatten="false" todir="${build.tests}" >
 			<fileset dir="${test.resources}">
@@ -438,30 +437,46 @@ SQL Power Wabit Ant build file
 	<!-- *******************************************************************************
 	     ************    Assembly and distribution targets   *************************** --> 
 	
+	<target name="build.manifest">
+		<mkdir dir="${manifest.dir}"/>
+    	<copy todir="${manifest.dir}/lib">
+    		<fileset dir="${lib}">
+    			<include name="*.jar"/>
+    		</fileset>
+    		<fileset dir="${buildlib}">
+    			<include name="sqlpower_library.jar"/>
+    		</fileset>
+    		<fileset dir="${sqlpower.library.home}/lib/main">
+    			<include name="*.jar"/>
+    		</fileset>
+    	</copy>
+		
+		<manifestclasspath property="wabit.jar.classpath" jarfile="${manifest.dir}/wabit.jar">
+    		<classpath>
+	    		<pathelement path="${manifest.dir}/jdbc"/>
+    			<fileset dir="${manifest.dir}/">
+    				<include name="lib/*.jar"/>
+    			</fileset>
+    		</classpath>
+    	 </manifestclasspath>
+
+    	<manifest file="${build}/manifest">
+    		<attribute name="Main-Class" value="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"/>
+    		<attribute name="Class-Path" value="${wabit.jar.classpath}" />
+    	</manifest>
+		
+		<delete dir="${manifest.dir}"/>
+		
+	</target>
 	
-	<target 
-			name="jar"
-			description="Creates the embedable JAR"
-			depends="compile-tests">
+	<target name="jar" description="Creates the embedable JAR" depends="compile-tests, build.manifest">
 		
 		<property file="src/main/resources/ca/sqlpower/wabit/wabit.properties" />
 		<tstamp/>
 		
-		<jar jarfile="${dist.base}/wabit.jar" basedir="${build}"
-			includes="**/*">
-			
-			<manifest>
-			  <attribute name="Main-Class" value="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"/>
-			  <attribute name="Implementation-Version" value="${app.version}"/>   
-			  <attribute name="Built-Date" value="${TODAY}"/>
-			  <attribute name="Class-Path" value="${mf.classpath} jdbc/" />
-			</manifest>
-			
-		</jar>
+		<jar jarfile="${dist.base}/wabit.jar" basedir="${build}" includes="**/*" manifest="${build}/manifest"/>
 		
-		<jar jarfile="${dist.base}/wabit-tests.jar" basedir="${build.tests}"
-			includes="**/*">
-		</jar>
+		<jar jarfile="${dist.base}/wabit-tests.jar" basedir="${build.tests}" includes="**/*" manifest="${build}/manifest"/>
 		
 	</target>
 		
