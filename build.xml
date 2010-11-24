@@ -261,7 +261,9 @@ SQL Power Wabit Ant build file
 				srcdir="${src}" 
 				destdir="${build}" 
 				classpathref="compile.classpath" 
-				debug="true"/>
+				debug="true"
+				compiler="modern"
+				target="1.6"/>
 		
 		<copy includeEmptyDirs="true" flatten="false" todir="${build}" >
 			<fileset dir="${resources}">
@@ -278,7 +280,9 @@ SQL Power Wabit Ant build file
 				srcdir="${test.src}" 
 				destdir="${build.tests}"
 				classpathref="test.classpath"
-				debug="true"/>
+				debug="true"
+				compiler="modern"
+				target="1.6"/>
 		
 		<copy includeEmptyDirs="true" flatten="false" todir="${build.tests}" >
 			<fileset dir="${test.resources}">
@@ -462,6 +466,8 @@ SQL Power Wabit Ant build file
 
     	<manifest file="${build}/manifest">
     		<attribute name="Main-Class" value="ca.sqlpower.wabit.swingui.WabitSwingSessionContextImpl"/>
+			<attribute name="Implementation-Version" value="${app.version}"/>   
+			<attribute name="Built-Date" value="${TODAY}"/>
     		<attribute name="Class-Path" value="${wabit.jar.classpath}" />
     	</manifest>
 		
