@@ -19,6 +19,7 @@
 
 package ca.sqlpower.wabit.report;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -113,8 +114,13 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
         if (getBackgroundColour() != null) {
 	        g.setColor(getBackgroundColour());
 	        g.fillRect(0, 0, (int)width, (int)height);
-	        g.setColor(Color.BLACK);
         }
+        if (getBorderColour() != null) {
+        	g.setColor(getBorderColour());
+        	g.setStroke(new BasicStroke());
+        	g.drawRect(0, 0, (int)width, (int)height);
+        }
+        g.setColor(getForegroundColour() == null? Color.BLACK : getForegroundColour());
         logger.debug("Rendering label text: " + Arrays.toString(textToRender));
         double y = getVerticalAlignment().calculateStartY(height, textHeight, fm);
         for (String text : textToRender) {
