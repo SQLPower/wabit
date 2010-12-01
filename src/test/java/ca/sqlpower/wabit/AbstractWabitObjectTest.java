@@ -174,6 +174,7 @@ public abstract class AbstractWabitObjectTest extends TestCase {
     	ignore.add("runnableDispatcher");
     	ignore.add("allowedChildTypes");
     	ignore.add("magicEnabled");
+    	ignore.add("permsString");
     	return ignore;
     }
     
