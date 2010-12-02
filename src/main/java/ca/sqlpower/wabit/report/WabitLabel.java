@@ -55,7 +55,6 @@ public class WabitLabel extends SPLabel implements ReportContentRenderer {
     public WabitLabel(String text) {
         setText(text);
         setName("Label");
-        setBackgroundColour(BackgroundColours.DEFAULT_BACKGROUND_COLOUR.getColour());
     }
     
     /**
