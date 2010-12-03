@@ -19,122 +19,24 @@
 
 package ca.sqlpower.wabit.swingui.action;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
-import java.io.ByteArrayInputStream;
-import java.lang.reflect.Method;
-import java.util.Properties;
 
 import javax.swing.AbstractAction;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.border.Border;
 
-import net.miginfocom.swing.MigLayout;
-
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.http.params.BasicHttpParams;
-import org.apache.log4j.Logger;
-
-import ca.sqlpower.util.Version;
+import ca.sqlpower.swingui.SPSUtils;
 import ca.sqlpower.wabit.WabitVersion;
 
+/**
+ * This action will check for a newer version of this product so a user knows
+ * they can/should update.
+ */
 public class CheckForUpdateAction extends AbstractAction {
 
-	private final static Logger logger = 
-			Logger.getLogger(CheckForUpdateAction.class);
-	
 	private final static String UPDATER_URL = 
 			"http://wabit.googlecode.com/svn/trunk/doc/currentVersion.xml";
 	
-	private static final String errMsg = 
-			"Error attempting to launch web browser";
-
 	private final JFrame owner;
-	
-	private final static class DownloadAction extends AbstractAction {
-
-		private final String downloadUrl;
-		private final JDialog dialog;
-
-		public DownloadAction(JDialog dialog, String downloadUrl) {
-			super("Download Now");
-			this.dialog = dialog;
-			this.downloadUrl = downloadUrl;
-		}
-		
-		@SuppressWarnings("unchecked")
-		public void actionPerformed(ActionEvent event) {
-			
-			/*
-			 * Thanks to http://sourceforge.net/projects/browserlaunch2/
-			 * for the browser detection code.
-			 */
-			
-			String osName = System.getProperty("os.name");
-			
-			try {
-				
-				if (osName.startsWith("Mac OS")) {
-
-					Class fileMgr = Class.forName("com.apple.eio.FileManager");
-					
-					Method openURL = fileMgr.getDeclaredMethod(
-							"openURL",
-							new Class[] {String.class});
-					
-					openURL.invoke(
-							null, 
-							new Object[] {downloadUrl});
-				}
-
-				else if (osName.startsWith("Windows")) {
-					
-					Runtime.getRuntime().exec(
-							"rundll32 url.dll,FileProtocolHandler " + downloadUrl);
-					
-				} else {
-					
-					String[] browsers = {
-							"firefox", "opera", "konqueror", "epiphany", "mozilla", "netscape" };
-					
-					String browser = null;
-					
-					for (int count = 0; count < browsers.length && browser == null; count++) {
-						
-						if (Runtime.getRuntime().exec(
-								new String[] {"which", browsers[count]}).waitFor() == 0) {
-							
-							browser = browsers[count];
-							
-						}
-					}
-					
-					if (browser == null) {
-						
-						throw new Exception("Could not find web browser");
-					
-					} else {
-						
-						Runtime.getRuntime().exec(new String[] {browser, downloadUrl});
-						
-					}
-				}
-			}
-			catch (Exception e) {
-				JOptionPane.showMessageDialog(null, errMsg + ":\n" + e.getLocalizedMessage());
-			} finally {
-				dialog.dispose();
-			}
-		}
-	}
 	
 	public CheckForUpdateAction(JFrame owner) {
 		this.owner = owner;
@@ -146,90 +48,11 @@ public class CheckForUpdateAction extends AbstractAction {
 	}
 	
 	public void actionPerformed(ActionEvent event) {
-		checkForUpdate(owner, false);
+		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, false, true);
 	}
 	
 	public static void checkForUpdate(JFrame owner) {
-		checkForUpdate(owner, true);
+		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, true, true);
 	}
 	
-	public static void checkForUpdate(JFrame owner, boolean silent) {
-		
-		try {
-			
-			GetMethod request = new GetMethod(UPDATER_URL);
-			BasicHttpParams params = new BasicHttpParams();
-			params.setIntParameter("http.socket.timeout", new Integer(1000));
-			HttpClient connection = new HttpClient();
-			connection.executeMethod(request);
-
-			Properties results = new Properties();
-			results.loadFromXML(
-					new ByteArrayInputStream(
-							request.getResponseBody()));
-			
-			Version currentVersion = new Version(
-					results.getProperty("currentVersion"));
-			
-			if (currentVersion.compareTo(WabitVersion.VERSION) > 0) {
-				
-				final JDialog dialog = new JDialog(owner, "New SQL Power Wabit version available!");
-				dialog.setAlwaysOnTop(true);
-				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-				
-				JPanel panel = new JPanel(new MigLayout("fill", "[grow]", "[shrink][grow][shrink]"));
-				dialog.setContentPane(panel);
-				
-				JLabel title = new JLabel("A new version of SQL Power Wabit is available for download.");
-				title.setFont(title.getFont().deriveFont(16f));
-				panel.add(
-						title,
-						"wrap, gapbottom 10px, center");
-				
-				JLabel notes = new JLabel(results.getProperty("releaseNotes"));
-				notes.setBackground(Color.WHITE);
-				notes.setOpaque(true);
-				Border gap = BorderFactory.createEmptyBorder(4, 4, 4, 4);
-			    Border blackline = BorderFactory.createLineBorder(Color.black);
-			    Border compound = BorderFactory.createCompoundBorder(blackline, gap);
-				notes.setBorder(compound);
-				panel.add(notes, "wrap, center, grow");
-				
-				Box buttons = Box.createHorizontalBox();
-				JButton downloadButton = new JButton(new DownloadAction(dialog, results.getProperty("downloadUrl")));
-				JButton cancelButton = new JButton(new AbstractAction("No thanks") {
-					public void actionPerformed(ActionEvent e) {
-						dialog.dispose();
-					}
-				});
-				buttons.add(downloadButton);
-				buttons.add(cancelButton);
-				panel.add(buttons, "center");
-				
-				dialog.pack();
-				dialog.setVisible(true);
-			} else if (!silent) {
-				JOptionPane.showMessageDialog(
-						owner, 
-						"No updates available.", 
-						"Update checker", 
-						JOptionPane.INFORMATION_MESSAGE);
-			}
-			
-		} catch (Exception ex) {
-			logger.warn("Failed to check for update.", ex);
-			if (!silent) {
-				JOptionPane.showMessageDialog(
-						owner, 
-						"Failed to check for updates. Are you connected to the internet?", 
-						"Update checker", 
-						JOptionPane.INFORMATION_MESSAGE);
-			}
-		}
-		
-	}
-
-	public static void main(String[] args) {
-		checkForUpdate(null, false);
-	}
 }
