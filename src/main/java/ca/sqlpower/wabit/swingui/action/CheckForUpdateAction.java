@@ -48,11 +48,11 @@ public class CheckForUpdateAction extends AbstractAction {
 	}
 	
 	public void actionPerformed(ActionEvent event) {
-		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, false, true);
+		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, false, true, null);
 	}
 	
 	public static void checkForUpdate(JFrame owner) {
-		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, true, true);
+		SPSUtils.checkForUpdate(owner, "SQL Power Wabit", WabitVersion.VERSION, UPDATER_URL, true, true, null);
 	}
 	
 }
