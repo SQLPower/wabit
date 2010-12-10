@@ -1,5 +1,11 @@
 SQL Power Wabit Release Notes
 
+Noteworthy changes in 1.3.3
+Bug Fixes:
+    * Improved performance of OLAP (XML/A) queries.
+    * Improved PDF exports
+    * Minor bug fixes.
+
 Noteworthy changes in 1.3.2
 Bug Fixes:
 
