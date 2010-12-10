@@ -739,14 +739,14 @@ public class WorkspaceTreeListener extends MouseAdapter {
 				!(lastPathComponent instanceof SQLObject) &&
 				!(lastPathComponent instanceof Olap4jTreeObject) &&
 				menu.getComponentCount() > 0) {
+			// Prevent orphan separator at the end of the menu.
+			if (menu.getComponent(menu.getComponentCount()-1) instanceof JPopupMenu.Separator) {
+				menu.remove(menu.getComponentCount()-1);
+				menu.pack();
+			}
 			menu.show(e.getComponent(), e.getX(), e.getY());
 		}
 		
-		// Prevent orphan separator at the end of the menu.
-		if (menu.getComponent(menu.getComponentCount()-1) instanceof JPopupMenu.Separator) {
-			menu.remove(menu.getComponentCount()-1);
-			menu.pack();
-		}
 	}
 
 	
