@@ -23,11 +23,13 @@
 		
 	</comment>
 	
-	<entry key="currentVersion">1.3.0-RC2</entry>
+	<entry key="currentVersion">1.3.3</entry>
 	<entry key="downloadUrl">http://www.sqlpower.ca/wabit-download</entry>
 	<entry key="releaseNotes"><![CDATA[<html>
-<p><b>Noteworthy changes in 1.3.0-RC2</b></p>
+<p><b>Noteworthy changes in 1.3.3</b></p>
 <ul>
+<li>Improved performance for OLAP (XML/A) queries.</li>
+<li>Improved PDF exports.</li>
 <li>Various bug fixes.</li>
 </ul>
 </html>]]>
