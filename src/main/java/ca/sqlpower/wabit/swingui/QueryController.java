@@ -28,6 +28,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.event.ChangeEvent;
@@ -208,7 +209,21 @@ public class QueryController {
 				throw new IllegalStateException("The data source combo box does not have data sources in it.");
 			}
 			JDBCDataSource ds = (JDBCDataSource) selectedItem;
-			query.setDataSource(ds);
+			int response = 0;
+			JDBCDataSource olds = query.getDataSource();
+			if (!olds.equals(ds) || olds == null) {
+				String options[] = {"Yes","No"};
+				response = JOptionPane.showOptionDialog(null, "This query is currently being performed on "
+						+ olds.toString() + 
+						".\nChanging databases will remove all tables in this query. Continue?", "Warning",
+						JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE, 
+						null, options, options[1]);
+			}
+			if (response == 0) {
+				query.setDataSource(ds);
+			} else {
+				dataSourceComboBox.setSelectedItem(olds);
+			}
 			if (logger.isDebugEnabled()) {
 				logger.debug("Data source in the model is " + ((SPDataSource) selectedItem).getName());
 			}

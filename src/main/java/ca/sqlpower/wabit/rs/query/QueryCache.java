@@ -741,7 +741,7 @@ public class QueryCache extends AbstractWabitObject implements StatementExecutor
     			return;
     		}
     	} else {
-    		query.setDataSourceWithoutSideEffects(ds);
+    		query.setDataSource(ds);
     	}
 		firePropertyChange("dataSource", oldValue, ds);
     }
