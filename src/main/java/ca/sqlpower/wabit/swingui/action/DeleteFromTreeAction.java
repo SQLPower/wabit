@@ -46,12 +46,12 @@ import ca.sqlpower.object.WorkspaceGraphModel;
 import ca.sqlpower.swingui.DataEntryPanel;
 import ca.sqlpower.swingui.DataEntryPanelBuilder;
 import ca.sqlpower.swingui.SPSUtils;
+import ca.sqlpower.swingui.object.WorkspaceGraphTreeModel;
 import ca.sqlpower.util.SQLPowerUtils;
 import ca.sqlpower.util.UserPrompterFactory;
 import ca.sqlpower.wabit.WabitObject;
 import ca.sqlpower.wabit.WabitWorkspace;
 import ca.sqlpower.wabit.swingui.WabitIcons;
-import ca.sqlpower.wabit.swingui.WorkspaceGraphTreeModel;
 import ca.sqlpower.wabit.swingui.tree.WorkspaceTreeCellRenderer;
 
 /**
