@@ -47,7 +47,6 @@
 	<classpathentry kind="lib" path="lib/osx_adapter.jar"/>
 	<classpathentry kind="lib" path="lib/piccolo-1.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/piccolox-1.2.1.jar"/>
-	<classpathentry kind="lib" path="lib/rsyntaxtextarea-1.0.jar"/>
 	<classpathentry kind="lib" path="lib/simple-jndi-0.11.4.1.jar"/>
 	<classpathentry kind="lib" path="lib/spring-aop-2.0.8.jar"/>
 	<classpathentry kind="lib" path="lib/spring-beans-2.0.8.jar"/>

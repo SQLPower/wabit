@@ -571,8 +571,8 @@ public class OlapQueryPanel implements WabitPanel {
         this.mdxTextArea = new RSyntaxTextArea();
         this.mdxTextArea.setText("");
         this.mdxTextArea.setLineWrap(true);
-        this.mdxTextArea.restoreDefaultSyntaxHighlightingColorScheme();
-        this.mdxTextArea.setSyntaxEditingStyle(RSyntaxTextArea.SQL_SYNTAX_STYLE);
+        this.mdxTextArea.restoreDefaultSyntaxScheme();
+        this.mdxTextArea.setSyntaxEditingStyle(RSyntaxTextArea.SYNTAX_STYLE_SQL);
         
         // Add support for undo
         this.mdxTextArea.getDocument().addUndoableEditListener(new UndoableEditListener() {

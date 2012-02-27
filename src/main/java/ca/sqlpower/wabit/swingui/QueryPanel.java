@@ -767,7 +767,7 @@ public class QueryPanel implements WabitPanel {
 		JTabbedPane resultPane = queryUIComponents.getResultTabPane();
 		
 		queryUIComponents.getQueryArea().setLineWrap(true);
-		queryToolPanel = new RTextScrollPane(300,200, queryUIComponents.getQueryArea(), true);
+		queryToolPanel = new RTextScrollPane(queryUIComponents.getQueryArea(), true);
     	
     	queryPenAndTextTabPane = new JTabbedPane();
     	JPanel playPen = queryPen.createQueryPen();
