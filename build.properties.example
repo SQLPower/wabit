@@ -1,6 +1,6 @@
 
 # SQL Power Library project directory (set this to the sqlpower-library project directory)
-sqlpower.library.home=../../Documents/workspace2/sqlpower_library
+sqlpower.library.home=../sqlpower_library
 
 #Tells the build script that we are building a release and
 #all dependant libraries are part of the SCM. No need to copy libraries.
